@@ -2,11 +2,14 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PlayStation 5 Game Vault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#050814">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>PlayStation 5 Game Vault • Astro Bot Edition</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -14,18 +17,13 @@
       --ps-blue: #00439c;
       --ps-accent-blue: #0070d1;
       --ps-neon-cyan: #00f0ff;
-      --ps-light-blue: #2e6db4;
-      --ps-dark-bg: #070913;
-      --ps-card-bg: rgba(18, 24, 43, 0.75);
-      --ps-card-border: rgba(255, 255, 255, 0.08);
-      --ps-card-border-hover: rgba(0, 112, 209, 0.5);
+      --ps-electric-purple: #7928ca;
+      --ps-dark-bg: #050814;
+      --ps-card-bg: rgba(13, 19, 36, 0.78);
+      --ps-card-border: rgba(255, 255, 255, 0.09);
+      --ps-card-border-hover: rgba(0, 240, 255, 0.65);
       --ps-text-main: #f3f5fc;
       --ps-text-muted: #8b9bb4;
-      --status-completed: #10b981;
-      --status-playing: #3b82f6;
-      --status-backlog: #8b5cf6;
-      --status-wishlist: #f59e0b;
-      --status-dropped: #ef4444;
       --font-body: 'Outfit', sans-serif;
       --font-display: 'Space Grotesk', sans-serif;
     }
@@ -38,43 +36,120 @@
 
     body {
       background-color: var(--ps-dark-bg);
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(0, 67, 156, 0.28) 0%, transparent 40%),
-        radial-gradient(circle at 85% 15%, rgba(0, 240, 255, 0.12) 0%, transparent 35%),
-        radial-gradient(circle at 50% 90%, rgba(46, 109, 180, 0.18) 0%, transparent 50%);
-      background-attachment: fixed;
       color: var(--ps-text-main);
       font-family: var(--font-body);
       min-height: 100vh;
       overflow-x: hidden;
+      position: relative;
     }
 
-    /* Ambient particles & subtle PS logo shapes */
-    .ambient-glow {
+    /* Dynamic Hero Fullscreen Backdrop with smooth fade */
+    .hero-dynamic-backdrop {
       position: fixed;
-      top: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 350px;
-      background: radial-gradient(ellipse, rgba(0, 112, 209, 0.25), transparent 70%);
+      inset: 0;
+      background-size: cover;
+      background-position: center 20%;
+      background-repeat: no-repeat;
+      filter: blur(28px) saturate(1.4) brightness(0.28);
+      transform: scale(1.12);
+      transition: background-image 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: -2;
       pointer-events: none;
-      z-index: 0;
-      filter: blur(80px);
     }
 
-    header {
+    /* DualSense Geometric Micro-texture: △ ○ ✕ □ */
+    .ps-micro-texture {
+      position: fixed;
+      inset: 0;
+      opacity: 0.038;
+      pointer-events: none;
+      z-index: -1;
+      background-image: url("data:image/svg+xml,%3Csvg width='48' height='48' viewBox='0 0 48 48' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 8L16 14H8z' fill='%23ffffff' fill-opacity='0.9'/%3E%3Ccircle cx='36' cy='11' r='3.5' stroke='%23ffffff' stroke-width='1.2' fill='none' fill-opacity='0.9'/%3E%3Cpath d='M9 33l6 6m0-6l-6 6' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' fill-opacity='0.9'/%3E%3Crect x='33' y='33' width='6' height='6' stroke='%23ffffff' stroke-width='1.2' fill='none' fill-opacity='0.9'/%3E%3C/svg%3E");
+    }
+
+    /* PlayStation Top System Bar */
+    .ps-top-system-bar {
+      background: rgba(4, 7, 18, 0.92);
+      backdrop-filter: blur(25px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.45rem 2rem;
+      font-size: 0.8rem;
+      color: var(--ps-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       position: sticky;
       top: 0;
+      z-index: 60;
+    }
+
+    .system-left-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .trophy-cabinet-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+
+    .trophy-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .trophy-plat { color: #38bdf8; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5); }
+    .trophy-gold { color: #facc15; }
+    .trophy-silver { color: #cbd5e1; }
+    .trophy-bronze { color: #f97316; }
+
+    .system-right-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dualsense-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .battery-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    /* Main Navigation Header */
+    header {
+      position: sticky;
+      top: 35px;
       z-index: 50;
       backdrop-filter: blur(20px);
-      background: rgba(7, 9, 19, 0.85);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 1rem 2rem;
+      background: rgba(7, 11, 25, 0.82);
+      border-bottom: 1px solid rgba(0, 112, 209, 0.25);
+      padding: 0.9rem 2rem;
     }
 
     .nav-container {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -89,32 +164,35 @@
       cursor: pointer;
     }
 
+    /* Astro Bot Brand Badge */
     .brand-badge {
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       background: linear-gradient(135deg, #00439c 0%, #0070d1 100%);
-      border-radius: 12px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px rgba(0, 112, 209, 0.5), inset 0 1px 1px rgba(255,255,255,0.4);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 25px rgba(0, 112, 209, 0.6), inset 0 1px 2px rgba(255,255,255,0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      position: relative;
     }
 
-    .brand-badge svg {
-      width: 26px;
-      height: 26px;
-      fill: #ffffff;
+    .astro-badge-mascot {
+      width: 38px;
+      height: 38px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+      animation: astroBob 3s ease-in-out infinite;
     }
 
-    .brand-title {
-      display: flex;
-      flex-direction: column;
+    @keyframes astroBob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
     }
 
     .brand-title h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
+      font-size: 1.3rem;
+      font-weight: 800;
       letter-spacing: 0.5px;
       font-family: var(--font-display);
       display: flex;
@@ -123,49 +201,51 @@
     }
 
     .brand-title h1 span {
-      background: linear-gradient(90deg, #00f0ff, #3b82f6);
+      background: linear-gradient(90deg, #00f0ff, #38bdf8, #818cf8);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .brand-title p {
-      font-size: 0.75rem;
-      color: var(--ps-text-muted);
-      letter-spacing: 1.2px;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      letter-spacing: 1.4px;
       text-transform: uppercase;
+      font-weight: 600;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.8rem;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.65rem 1.2rem;
+      padding: 0.6rem 1.15rem;
       border-radius: 10px;
       font-family: var(--font-body);
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid transparent;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       user-select: none;
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #0060c2 0%, #0070d1 100%);
+      background: linear-gradient(135deg, #0056b3 0%, #0070d1 50%, #00f0ff 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(0, 112, 209, 0.35);
+      box-shadow: 0 4px 18px rgba(0, 112, 209, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 112, 209, 0.55);
-      background: linear-gradient(135deg, #0070d1 0%, #1e88e5 100%);
+      box-shadow: 0 6px 24px rgba(0, 240, 255, 0.5);
     }
 
     .btn-secondary {
@@ -175,81 +255,110 @@
     }
 
     .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(0, 240, 255, 0.4);
+      transform: translateY(-1px);
     }
 
-    /* Container */
+    .btn-astro-pick {
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.25), rgba(121, 40, 202, 0.35));
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      color: #00f0ff;
+    }
+
+    .btn-astro-pick:hover {
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.45), rgba(121, 40, 202, 0.55));
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+
+    /* Main Container */
     main {
-      max-width: 1400px;
+      max-width: 1440px;
       margin: 0 auto;
       padding: 2rem;
       position: relative;
       z-index: 1;
     }
 
-    /* Stats Banner */
+    /* Live Stats Banner with PS5 Hardware Accent */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.2rem;
       margin-bottom: 2rem;
     }
 
     .stat-card {
       background: var(--ps-card-bg);
       border: 1px solid var(--ps-card-border);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 1.25rem 1.5rem;
       backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
       gap: 1.2rem;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #00f0ff, #0070d1);
+      opacity: 0.6;
     }
 
     .stat-card:hover {
       transform: translateY(-3px);
-      border-color: var(--ps-card-border-hover);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      border-color: rgba(0, 240, 255, 0.4);
+      box-shadow: 0 12px 30px rgba(0, 112, 209, 0.25);
     }
 
     .stat-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
+      box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.05);
     }
 
     .stat-info .stat-value {
-      font-size: 1.8rem;
+      font-size: 1.9rem;
       font-weight: 800;
       font-family: var(--font-display);
       line-height: 1.1;
     }
 
     .stat-info .stat-label {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--ps-text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
       margin-top: 4px;
+      font-weight: 600;
     }
 
-    /* Controls Bar: Search, Filters, Sort */
+    /* Controls Panel */
     .controls-panel {
       background: var(--ps-card-bg);
       border: 1px solid var(--ps-card-border);
-      border-radius: 16px;
-      padding: 1.2rem 1.5rem;
+      border-radius: 18px;
+      padding: 1.2rem 1.6rem;
       margin-bottom: 2rem;
       backdrop-filter: blur(16px);
       display: flex;
       flex-direction: column;
       gap: 1.2rem;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
     }
 
     .controls-row-top {
@@ -268,9 +377,9 @@
 
     .search-box input {
       width: 100%;
-      background: rgba(10, 14, 26, 0.85);
+      background: rgba(6, 10, 22, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 0.75rem 1rem 0.75rem 2.8rem;
       color: var(--ps-text-main);
       font-family: var(--font-body);
@@ -280,8 +389,8 @@
     }
 
     .search-box input:focus {
-      border-color: var(--ps-accent-blue);
-      box-shadow: 0 0 15px rgba(0, 112, 209, 0.35);
+      border-color: var(--ps-neon-cyan);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
     }
 
     .search-icon {
@@ -295,7 +404,7 @@
 
     .filter-tabs {
       display: flex;
-      background: rgba(10, 14, 26, 0.8);
+      background: rgba(6, 10, 22, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
       padding: 4px;
@@ -304,7 +413,7 @@
     }
 
     .filter-tab {
-      padding: 0.5rem 1rem;
+      padding: 0.55rem 1.1rem;
       border-radius: 8px;
       font-size: 0.85rem;
       font-weight: 600;
@@ -320,9 +429,9 @@
     }
 
     .filter-tab.active {
-      background: var(--ps-accent-blue);
+      background: linear-gradient(135deg, #0052a3, #0070d1);
       color: white;
-      box-shadow: 0 2px 10px rgba(0, 112, 209, 0.5);
+      box-shadow: 0 2px 10px rgba(0, 112, 209, 0.6);
     }
 
     .controls-row-bottom {
@@ -343,10 +452,10 @@
     }
 
     .custom-select {
-      background: rgba(10, 14, 26, 0.85);
+      background: rgba(6, 10, 22, 0.85);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      padding: 0.5rem 0.9rem;
+      border-radius: 10px;
+      padding: 0.55rem 0.95rem;
       color: var(--ps-text-main);
       font-family: var(--font-body);
       font-size: 0.85rem;
@@ -361,31 +470,66 @@
     .results-count {
       font-size: 0.85rem;
       color: var(--ps-text-muted);
+      font-weight: 500;
     }
 
     /* Games Grid */
     .games-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+      gap: 1.6rem;
     }
 
+    /* PS5 Case Card Style */
     .game-card {
       background: var(--ps-card-bg);
       border: 1px solid var(--ps-card-border);
-      border-radius: 18px;
+      border-radius: 20px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       position: relative;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
     .game-card:hover {
-      transform: translateY(-8px) scale(1.015);
-      border-color: rgba(0, 240, 255, 0.4);
-      box-shadow: 0 16px 36px rgba(0, 112, 209, 0.3), 0 0 20px rgba(0, 240, 255, 0.15);
+      transform: translateY(-9px) scale(1.02);
+      border-color: var(--ps-card-border-hover);
+      box-shadow: 0 18px 45px rgba(0, 112, 209, 0.35), 0 0 25px rgba(0, 240, 255, 0.2);
+    }
+
+    /* PS5 Top Box Header */
+    .ps5-case-header {
+      background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #050814;
+      padding: 5px 12px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #00439c;
+    }
+
+    .ps5-case-logo {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .ps5-case-logo svg {
+      width: 14px;
+      height: 14px;
+      fill: #00439c;
+    }
+
+    .ps5-case-format {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
     }
 
     .game-cover-wrap {
@@ -408,25 +552,7 @@
     }
 
     .game-card:hover .game-cover {
-      transform: scale(1.08);
-    }
-
-    .game-format-badge {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      display: flex;
-      align-items: center;
-      gap: 4px;
+      transform: scale(1.06);
     }
 
     .game-status-badge {
@@ -440,15 +566,39 @@
       letter-spacing: 0.4px;
       text-transform: uppercase;
       backdrop-filter: blur(10px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
     }
 
-    .status-in_corso { background: rgba(59, 130, 246, 0.85); color: #fff; }
-    .status-completato { background: rgba(16, 185, 129, 0.85); color: #fff; }
-    .status-platinato { background: linear-gradient(135deg, #818cf8, #c084fc); color: #fff; }
-    .status-da_iniziare { background: rgba(139, 92, 246, 0.85); color: #fff; }
-    .status-wishlist { background: rgba(245, 158, 11, 0.85); color: #fff; }
-    .status-abbandonato { background: rgba(239, 68, 68, 0.85); color: #fff; }
+    .status-in_corso { background: rgba(59, 130, 246, 0.9); color: #fff; }
+    .status-completato { background: rgba(16, 185, 129, 0.9); color: #fff; }
+    .status-platinato { background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc); color: #fff; font-weight: 800; box-shadow: 0 0 15px rgba(56, 189, 248, 0.6); }
+    .status-da_iniziare { background: rgba(139, 92, 246, 0.9); color: #fff; }
+    .status-wishlist { background: rgba(245, 158, 11, 0.9); color: #fff; }
+    .status-abbandonato { background: rgba(239, 68, 68, 0.9); color: #fff; }
+
+    /* Astro Bot Mascot Mini Badge on Platinumed games */
+    .vip-astro-stamp {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(7, 11, 25, 0.85);
+      border: 1px solid rgba(0, 240, 255, 0.6);
+      backdrop-filter: blur(8px);
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #00f0ff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .vip-astro-stamp img {
+      width: 18px;
+      height: 18px;
+    }
 
     .game-info {
       padding: 1.2rem;
@@ -488,7 +638,7 @@
     }
 
     .genre-tag {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 4px;
@@ -531,8 +681,8 @@
 
     .trophy-badge.plat {
       color: #38bdf8;
-      font-weight: 700;
-      text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+      font-weight: 800;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
     }
 
     .game-actions {
@@ -580,12 +730,79 @@
       border-color: rgba(239, 68, 68, 0.4);
     }
 
+    /* Floating Astro Bot Interactive Assistant Widget */
+    .astro-floating-companion {
+      position: fixed;
+      bottom: 2rem;
+      left: 2rem;
+      z-index: 45;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(8, 14, 30, 0.88);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      padding: 8px 16px 8px 10px;
+      border-radius: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 112, 209, 0.4);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .astro-floating-companion:hover {
+      transform: translateY(-4px) scale(1.03);
+      border-color: var(--ps-neon-cyan);
+      box-shadow: 0 15px 35px rgba(0, 240, 255, 0.35);
+    }
+
+    .astro-avatar-wrap {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #00439c, #00f0ff);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .astro-avatar-wrap img {
+      width: 32px;
+      height: 32px;
+      animation: astroWiggle 4s infinite ease-in-out;
+    }
+
+    @keyframes astroWiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(-8deg); }
+      75% { transform: rotate(8deg); }
+    }
+
+    .astro-bubble-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .astro-bubble-text .astro-name {
+      font-size: 0.72rem;
+      color: #00f0ff;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .astro-bubble-text .astro-msg {
+      font-size: 0.82rem;
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+
     /* Modal */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(3, 6, 14, 0.85);
-      backdrop-filter: blur(12px);
+      background: rgba(3, 6, 14, 0.88);
+      backdrop-filter: blur(14px);
       z-index: 100;
       display: flex;
       align-items: center;
@@ -602,14 +819,14 @@
     }
 
     .modal-window {
-      background: #0f1627;
-      border: 1px solid rgba(0, 112, 209, 0.35);
+      background: #0d1527;
+      border: 1px solid rgba(0, 112, 209, 0.4);
       border-radius: 20px;
       width: 100%;
       max-width: 620px;
       max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 112, 209, 0.2);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 112, 209, 0.25);
       display: flex;
       flex-direction: column;
       transform: scale(0.95);
@@ -647,9 +864,7 @@
       transition: color 0.2s;
     }
 
-    .modal-close:hover {
-      color: #fff;
-    }
+    .modal-close:hover { color: #fff; }
 
     .modal-body {
       padding: 1.75rem;
@@ -691,8 +906,8 @@
     }
 
     .form-input:focus, .form-textarea:focus, .form-select:focus {
-      border-color: var(--ps-accent-blue);
-      box-shadow: 0 0 10px rgba(0, 112, 209, 0.3);
+      border-color: var(--ps-neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
     }
 
     .modal-footer {
@@ -704,7 +919,6 @@
       background: rgba(6, 10, 20, 0.4);
     }
 
-    /* Preset cover buttons */
     .preset-covers {
       display: flex;
       gap: 0.5rem;
@@ -713,13 +927,13 @@
     }
 
     .preset-cover-thumb {
-      width: 54px;
-      height: 68px;
+      width: 56px;
+      height: 72px;
       border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
       border: 2px solid transparent;
-      opacity: 0.7;
+      opacity: 0.75;
       transition: all 0.2s;
       flex-shrink: 0;
     }
@@ -736,7 +950,6 @@
       object-fit: cover;
     }
 
-    /* Empty state */
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
@@ -749,33 +962,18 @@
     .empty-icon {
       font-size: 3.5rem;
       margin-bottom: 1rem;
-      filter: drop-shadow(0 0 15px rgba(0, 112, 209, 0.4));
     }
 
-    .empty-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .empty-desc {
-      color: var(--ps-text-muted);
-      font-size: 0.9rem;
-      max-width: 420px;
-      margin: 0 auto 1.5rem auto;
-    }
-
-    /* Toast Notification */
     .toast {
       position: fixed;
       bottom: 2rem;
       right: 2rem;
-      background: #0f182b;
-      border: 1px solid var(--ps-accent-blue);
+      background: #0b1224;
+      border: 1px solid var(--ps-neon-cyan);
       color: white;
       padding: 0.9rem 1.4rem;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 112, 209, 0.4);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.3);
       z-index: 200;
       display: flex;
       align-items: center;
@@ -792,38 +990,241 @@
       opacity: 1;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
+    /* Mobile & Responsive Optimization */
+    @media (max-width: 900px) {
+      .ps-top-system-bar {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.72rem;
+      }
+      .trophy-cabinet-bar {
+        gap: 8px;
+        padding: 2px 8px;
+        font-size: 0.72rem;
+      }
       header {
-        padding: 1rem;
+        top: 31px;
+        padding: 0.65rem 0.85rem;
       }
-      main {
-        padding: 1rem;
+      .nav-container {
+        gap: 0.8rem;
       }
-      .form-row {
-        grid-template-columns: 1fr;
+      .brand-title h1 {
+        font-size: 1.1rem;
       }
       .brand-title p {
         display: none;
+      }
+      .header-actions {
+        gap: 0.4rem;
+      }
+      .btn {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.78rem;
+      }
+      main {
+        padding: 0.85rem;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.2rem;
+      }
+      .stat-card {
+        padding: 0.9rem 1rem;
+        gap: 0.8rem;
+      }
+      .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      .stat-info .stat-value {
+        font-size: 1.4rem;
+      }
+      .stat-info .stat-label {
+        font-size: 0.65rem;
+      }
+      .controls-panel {
+        padding: 0.9rem 1rem;
+        gap: 0.9rem;
+        margin-bottom: 1.2rem;
+      }
+      .controls-row-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+      .filter-tabs {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
+      }
+      .filter-tab {
+        padding: 0.45rem 0.8rem;
+        font-size: 0.78rem;
+      }
+      .controls-row-bottom {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+      .secondary-filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .secondary-filters select:last-child {
+        grid-column: span 2;
+      }
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.1rem;
+      }
+      .game-cover-wrap {
+        height: 300px;
+      }
+      .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+      }
+      .modal-window {
+        max-width: 95%;
+        max-height: 94vh;
+        border-radius: 16px;
+      }
+      .modal-header {
+        padding: 1rem 1.2rem;
+      }
+      .modal-body {
+        padding: 1.1rem;
+        gap: 0.9rem;
+      }
+      .modal-footer {
+        padding: 0.9rem 1.2rem;
+      }
+      .astro-floating-companion {
+        bottom: 1rem;
+        left: 1rem;
+        right: 1rem;
+        justify-content: center;
+        padding: 8px 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .ps-top-system-bar {
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 0.35rem 0.6rem;
+      }
+      .system-right-info {
+        display: none;
+      }
+      .trophy-cabinet-bar {
+        font-size: 0.68rem;
+        gap: 6px;
+        padding: 2px 6px;
+      }
+      header {
+        top: 27px;
+        padding: 0.5rem 0.6rem;
+      }
+      .nav-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+      }
+      .brand {
+        justify-content: center;
+      }
+      .header-actions {
+        justify-content: center;
+        width: 100%;
+      }
+      .header-actions button {
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.74rem;
+      }
+      #cloudStatusBadge {
+        width: 100%;
+        justify-content: center;
+        order: -1;
+      }
+      .games-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+      }
+      .game-cover-wrap {
+        height: 340px;
+      }
+      .secondary-filters {
+        grid-template-columns: 1fr;
+      }
+      .secondary-filters select:last-child {
+        grid-column: span 1;
+      }
+      .toast {
+        left: 1rem;
+        right: 1rem;
+        bottom: 4.8rem;
+        font-size: 0.82rem;
+        padding: 0.75rem 1rem;
+        justify-content: center;
       }
     }
   </style>
 </head>
 <body>
-  <div class="ambient-glow"></div>
+  <!-- Dynamic Hero Fullscreen Backdrop -->
+  <div class="hero-dynamic-backdrop" id="heroBackdrop"></div>
+  <div class="ps-micro-texture"></div>
+
+  <!-- PlayStation 5 Top System Bar -->
+  <div class="ps-top-system-bar">
+    <div class="system-left-badge">
+      <span style="font-weight:700; color:#fff;">PlayStation® Network</span>
+      <div class="trophy-cabinet-bar" title="Bacheca Trofei PlayStation Network">
+        <span class="trophy-item trophy-plat">💎 <span id="sysPlatCount">0</span></span>
+        <span class="trophy-item trophy-gold">🥇 <span id="sysGoldCount">0</span></span>
+        <span class="trophy-item trophy-silver">🥈 <span id="sysSilverCount">0</span></span>
+        <span class="trophy-item trophy-bronze">🥉 <span id="sysBronzeCount">0</span></span>
+      </div>
+    </div>
+    <div class="system-right-info">
+      <div class="dualsense-pill" title="Controller DualSense Connesso">
+        <span class="battery-dot"></span>
+        <span>DualSense™</span>
+      </div>
+      <span id="systemClock" style="font-weight:700; color:#fff; font-family:var(--font-display);">12:00</span>
+    </div>
+  </div>
 
   <!-- Header -->
   <header>
     <div class="nav-container">
       <div class="brand" onclick="window.scrollTo({top:0, behavior:'smooth'})">
         <div class="brand-badge">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-4-8h-2V7h2v2zm4 0h-2V7h2v2z"/>
+          <!-- Astro Bot vector icon -->
+          <svg class="astro-badge-mascot" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="14" y="16" width="36" height="30" rx="15" fill="#FFFFFF" stroke="#00439C" stroke-width="2.5"/>
+            <rect x="18" y="22" width="28" height="18" rx="8" fill="#0A0E1A"/>
+            <ellipse cx="26" cy="30" rx="3.5" ry="4.5" fill="#00F0FF"/>
+            <ellipse cx="38" cy="30" rx="3.5" ry="4.5" fill="#00F0FF"/>
+            <circle cx="27" cy="29" r="1.2" fill="#FFFFFF"/>
+            <circle cx="39" cy="29" r="1.2" fill="#FFFFFF"/>
+            <rect x="29" y="8" width="6" height="8" rx="3" fill="#0070D1"/>
+            <circle cx="32" cy="7" r="3.5" fill="#00F0FF"/>
           </svg>
         </div>
         <div class="brand-title">
           <h1>PS5 <span>VAULT</span></h1>
-          <p>Libreria Personale PlayStation 5</p>
+          <p>Astro Bot • Game Library</p>
         </div>
       </div>
 
@@ -832,6 +1233,9 @@
           <span style="width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981;"></span>
           Cloud Supabase
         </span>
+        <button class="btn btn-astro-pick" onclick="pickRandomBacklog()" title="Chiedi ad Astro Bot cosa giocare stasera">
+          🤖 Cosa Gioco?
+        </button>
         <button class="btn btn-secondary" onclick="loadFromSupabase(true)" title="Sincronizza subito con il Database Cloud">
           🔄 Sync Cloud
         </button>
@@ -887,14 +1291,14 @@
       <div class="controls-row-top">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="Cerca per titolo, genere, sviluppatore..." oninput="renderGames()">
+          <input type="text" id="searchInput" placeholder="Cerca titolo, genere, sviluppatore..." oninput="renderGames()">
         </div>
         <div class="filter-tabs" id="statusFilterTabs">
           <button class="filter-tab active" data-status="all" onclick="setStatusFilter('all')">Tutti</button>
           <button class="filter-tab" data-status="in_corso" onclick="setStatusFilter('in_corso')">In Corso</button>
           <button class="filter-tab" data-status="da_iniziare" onclick="setStatusFilter('da_iniziare')">Backlog</button>
           <button class="filter-tab" data-status="completato" onclick="setStatusFilter('completato')">Completati</button>
-          <button class="filter-tab" data-status="platinato" onclick="setStatusFilter('platinato')">Platinati</button>
+          <button class="filter-tab" data-status="platinato" onclick="setStatusFilter('platinato')">Platinati 💎</button>
           <button class="filter-tab" data-status="wishlist" onclick="setStatusFilter('wishlist')">Wishlist</button>
         </div>
       </div>
@@ -917,7 +1321,7 @@
             <option value="Sparatutto">Sparatutto</option>
             <option value="Corse">Corse</option>
             <option value="Horror">Horror</option>
-            <option value="Picchiaduro">Picchiaduro</option>
+            <option value="Platform">Platform</option>
           </select>
 
           <select class="custom-select" id="sortFilter" onchange="renderGames()">
@@ -934,10 +1338,28 @@
     </section>
 
     <!-- Games Grid -->
-    <section class="games-grid" id="gamesContainer">
-      <!-- Generated via JS -->
-    </section>
+    <section class="games-grid" id="gamesContainer"></section>
   </main>
+
+  <!-- Astro Bot Floating Companion -->
+  <div class="astro-floating-companion" onclick="pickRandomBacklog()" title="Clicca su Astro Bot per un consiglio rapido!">
+    <div class="astro-avatar-wrap">
+      <svg viewBox="0 0 64 64" fill="none" style="width:30px; height:30px;">
+        <rect x="14" y="16" width="36" height="30" rx="15" fill="#FFFFFF" stroke="#00439C" stroke-width="2.5"/>
+        <rect x="18" y="22" width="28" height="18" rx="8" fill="#0A0E1A"/>
+        <ellipse cx="26" cy="30" rx="3.5" ry="4.5" fill="#00F0FF"/>
+        <ellipse cx="38" cy="30" rx="3.5" ry="4.5" fill="#00F0FF"/>
+        <circle cx="27" cy="29" r="1.2" fill="#FFFFFF"/>
+        <circle cx="39" cy="29" r="1.2" fill="#FFFFFF"/>
+        <rect x="29" y="8" width="6" height="8" rx="3" fill="#0070D1"/>
+        <circle cx="32" cy="7" r="3.5" fill="#00F0FF"/>
+      </svg>
+    </div>
+    <div class="astro-bubble-text">
+      <span class="astro-name">Astro Bot</span>
+      <span class="astro-msg" id="astroSpeech">Tocca qui per estrarre dal Backlog!</span>
+    </div>
+  </div>
 
   <!-- Add/Edit Game Modal -->
   <div class="modal-backdrop" id="gameModal" onclick="closeModalOnBackdrop(event)">
@@ -952,7 +1374,7 @@
 
         <div class="form-group">
           <label class="form-label">Titolo del Gioco *</label>
-          <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, God of War Ragnarök" required>
+          <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot, God of War" required>
         </div>
 
         <div class="form-row">
@@ -981,12 +1403,12 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Genere</label>
-            <input type="text" id="gameGenre" class="form-input" placeholder="es. Azione, Open World, Soulslike">
+            <input type="text" id="gameGenre" class="form-input" placeholder="es. Azione, Platform, Open World">
           </div>
 
           <div class="form-group">
             <label class="form-label">Sviluppatore / Studio</label>
-            <input type="text" id="gameDeveloper" class="form-input" placeholder="es. Insomniac, Santa Monica Studio">
+            <input type="text" id="gameDeveloper" class="form-input" placeholder="es. Team ASOBI, Naughty Dog">
           </div>
         </div>
 
@@ -998,24 +1420,24 @@
 
           <div class="form-group">
             <label class="form-label">Voto Personale (1 - 10)</label>
-            <input type="number" id="gameRating" class="form-input" min="1" max="10" step="0.5" placeholder="8.5">
+            <input type="number" id="gameRating" class="form-input" min="1" max="10" step="0.5" placeholder="9.5">
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">Percentuale Trofei / Platino</label>
           <div class="form-row">
-            <input type="number" id="gameTrophies" class="form-input" min="0" max="100" placeholder="% Trofei (es. 75)">
+            <input type="number" id="gameTrophies" class="form-input" min="0" max="100" placeholder="% Trofei (es. 85)">
             <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;">
               <input type="checkbox" id="gamePlatCheckbox" style="width:18px; height:18px;">
-              🏆 Trofeo Platino Ottenuto
+              💎 Trofeo Platino Ottenuto
             </label>
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label">URL Copertina Gioco</label>
-          <input type="url" id="gameCoverUrl" class="form-input" placeholder="https://images.unsplash.com/... o lascia vuoto per preset">
+          <input type="url" id="gameCoverUrl" class="form-input" placeholder="Lascia vuoto per rilevamento automatico PlayStation">
           
           <span style="font-size:0.75rem; color:var(--ps-text-muted); margin-top:4px;">Oppure seleziona una copertina rapida:</span>
           <div class="preset-covers" id="presetCoversList"></div>
@@ -1023,7 +1445,7 @@
 
         <div class="form-group">
           <label class="form-label">Note Personali / Recensione</label>
-          <textarea id="gameNotes" class="form-textarea" rows="3" placeholder="Pensieri sul gameplay, boss memorabili, comparto grafico DualSense..."></textarea>
+          <textarea id="gameNotes" class="form-textarea" rows="3" placeholder="Pensieri sul gameplay, grilletti DualSense, grafica..."></textarea>
         </div>
       </div>
 
@@ -1037,33 +1459,32 @@
   <!-- Toast -->
   <div class="toast" id="toastNotification">
     <span id="toastIcon">✨</span>
-    <span id="toastMessage">Operazione completata con successo!</span>
+    <span id="toastMessage">Operazione completata!</span>
   </div>
 
   <script>
     // Presets with real official PlayStation 5 box covers
     const PRESET_COVERS = [
+      { name: "Astro Bot", url: "https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png" },
       { name: "Marvel's Spider-Man 2", url: "https://image.api.playstation.com/vulcan/ap/rnd/202306/1219/1c7b75d8ed9271516546560d219ad0b22ee0a263b4537bd8.png" },
+      { name: "The Last of Us Part I", url: "https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/zhGgq29AdgwsNEVImar3m716.png" },
       { name: "God of War Ragnarök", url: "https://image.api.playstation.com/vulcan/ap/rnd/202503/2016/b69c06fb108299866057126b0d3a0530bdf96a39d2ce1cb9.png" },
       { name: "Elden Ring", url: "https://image.api.playstation.com/vulcan/ap/rnd/202108/0410/0Jz6uJLxOK7JOMMfcfHFBi1D.png" },
+      { name: "Horizon Forbidden West", url: "https://image.api.playstation.com/vulcan/ap/rnd/202107/3100/cb7gh5N3DjSRathadczu40S9.png" },
       { name: "Final Fantasy VII Rebirth", url: "https://image.api.playstation.com/vulcan/ap/rnd/202308/3005/6de6b1c4b0c475b5c28fd2011655ab8206ed846926fa1671.png" },
       { name: "Ghost of Yōtei", url: "https://image.api.playstation.com/vulcan/ap/rnd/202607/2723/890df32c227f619c5bd80e9f34ba2be53d0fea4b1615adee.png" },
       { name: "Gran Turismo 7", url: "https://image.api.playstation.com/vulcan/ap/rnd/202511/0707/4c622dfa581566c2647bc907e5119cd375ce3a11c03e916e.png" },
-      { name: "The Last of Us Part I", url: "https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/zhGgq29AdgwsNEVImar3m716.png" },
-      { name: "Horizon Forbidden West", url: "https://image.api.playstation.com/vulcan/ap/rnd/202107/3100/cb7gh5N3DjSRathadczu40S9.png" },
-      { name: "Astro Bot", url: "https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png" },
       { name: "Stellar Blade", url: "https://image.api.playstation.com/vulcan/ap/rnd/202401/2211/40e7cfd126a11fe5118310ebce6d9b3a23e7cabaca717217.png" },
-      { name: "Demon's Souls", url: "https://image.api.playstation.com/vulcan/img/rnd/202011/1717/GemRaOZaCMhGxQ9dRhnQQyT5.png" },
       { name: "Returnal", url: "https://image.api.playstation.com/vulcan/ap/rnd/202011/1621/fYZQHZ42eXXUt7c6D5YjLrq5.png" },
-      { name: "Black Myth: Wukong", url: "https://image.api.playstation.com/vulcan/ap/rnd/202405/2117/bd406f42e9352fdb398efcf21a4ffe575b2306ac40089d21.png" },
+      { name: "Demon's Souls", url: "https://image.api.playstation.com/vulcan/img/rnd/202011/1717/GemRaOZaCMhGxQ9dRhnQQyT5.png" },
       { name: "Resident Evil 4", url: "https://image.api.playstation.com/vulcan/ap/rnd/202210/0706/EVWyZD63pahuh95eKloFaJuC.png" },
-      { name: "Silent Hill 2", url: "https://image.api.playstation.com/vulcan/ap/rnd/202210/2000/IgwsFz9BiBrFvyV7pIWpoVgd.png" },
-      { name: "Death Stranding Director's Cut", url: "https://image.api.playstation.com/vulcan/ap/rnd/202106/2214/7aFAQ28D5avzogf7TFg11ryH.png" }
+      { name: "Black Myth: Wukong", url: "https://image.api.playstation.com/vulcan/ap/rnd/202405/2117/bd406f42e9352fdb398efcf21a4ffe575b2306ac40089d21.png" }
     ];
 
-    // Map of official game covers by title keyword
     const OFFICIAL_COVERS_MAP = {
+      "astro bot": "https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png",
       "spider-man 2": "https://image.api.playstation.com/vulcan/ap/rnd/202306/1219/1c7b75d8ed9271516546560d219ad0b22ee0a263b4537bd8.png",
+      "last of us": "https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/zhGgq29AdgwsNEVImar3m716.png",
       "ragnarök": "https://image.api.playstation.com/vulcan/ap/rnd/202503/2016/b69c06fb108299866057126b0d3a0530bdf96a39d2ce1cb9.png",
       "ragnarok": "https://image.api.playstation.com/vulcan/ap/rnd/202503/2016/b69c06fb108299866057126b0d3a0530bdf96a39d2ce1cb9.png",
       "elden ring": "https://image.api.playstation.com/vulcan/ap/rnd/202108/0410/0Jz6uJLxOK7JOMMfcfHFBi1D.png",
@@ -1071,30 +1492,55 @@
       "rebirth": "https://image.api.playstation.com/vulcan/ap/rnd/202308/3005/6de6b1c4b0c475b5c28fd2011655ab8206ed846926fa1671.png",
       "yōtei": "https://image.api.playstation.com/vulcan/ap/rnd/202607/2723/890df32c227f619c5bd80e9f34ba2be53d0fea4b1615adee.png",
       "yotei": "https://image.api.playstation.com/vulcan/ap/rnd/202607/2723/890df32c227f619c5bd80e9f34ba2be53d0fea4b1615adee.png",
-      "last of us": "https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/zhGgq29AdgwsNEVImar3m716.png",
-      "astro bot": "https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png",
       "horizon": "https://image.api.playstation.com/vulcan/ap/rnd/202107/3100/cb7gh5N3DjSRathadczu40S9.png",
       "returnal": "https://image.api.playstation.com/vulcan/ap/rnd/202011/1621/fYZQHZ42eXXUt7c6D5YjLrq5.png",
       "demon's souls": "https://image.api.playstation.com/vulcan/img/rnd/202011/1717/GemRaOZaCMhGxQ9dRhnQQyT5.png",
       "stellar blade": "https://image.api.playstation.com/vulcan/ap/rnd/202401/2211/40e7cfd126a11fe5118310ebce6d9b3a23e7cabaca717217.png",
       "wukong": "https://image.api.playstation.com/vulcan/ap/rnd/202405/2117/bd406f42e9352fdb398efcf21a4ffe575b2306ac40089d21.png",
-      "resident evil 4": "https://image.api.playstation.com/vulcan/ap/rnd/202210/0706/EVWyZD63pahuh95eKloFaJuC.png",
-      "silent hill 2": "https://image.api.playstation.com/vulcan/ap/rnd/202210/2000/IgwsFz9BiBrFvyV7pIWpoVgd.png"
+      "resident evil 4": "https://image.api.playstation.com/vulcan/ap/rnd/202210/0706/EVWyZD63pahuh95eKloFaJuC.png"
     };
 
     function getOfficialCoverForTitle(title) {
       if (!title) return null;
       const lower = title.toLowerCase();
       for (const [key, url] of Object.entries(OFFICIAL_COVERS_MAP)) {
-        if (lower.includes(key)) {
-          return url;
-        }
+        if (lower.includes(key)) return url;
       }
       return null;
     }
 
-    // Initial default demo collection with official PlayStation key art
+    // Default Seed Games
     const INITIAL_GAMES = [
+      {
+        id: "game-8",
+        title: "Astro Bot",
+        status: "platinato",
+        format: "Digitale",
+        genre: "Platform, Avventura",
+        developer: "Team ASOBI",
+        hours: 21,
+        rating: 10,
+        trophies: 100,
+        platinum: true,
+        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png",
+        notes: "Capolavoro assoluto! Puro divertimento, colonna sonora indimenticabile e il miglior uso di sempre del controller DualSense.",
+        createdAt: 1724000000000
+      },
+      {
+        id: "game-7",
+        title: "The Last of Us Part I",
+        status: "completato",
+        format: "Disco",
+        genre: "Azione, Avventura",
+        developer: "Naughty Dog",
+        hours: 24,
+        rating: 10,
+        trophies: 100,
+        platinum: true,
+        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/zhGgq29AdgwsNEVImar3m716.png",
+        notes: "Ricostruito da zero per PS5 con fotorealismo, animazioni facciali allo stato dell'arte e audio 3D.",
+        createdAt: 1723000000000
+      },
       {
         id: "game-1",
         title: "Marvel's Spider-Man 2",
@@ -1108,7 +1554,7 @@
         platinum: true,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202306/1219/1c7b75d8ed9271516546560d219ad0b22ee0a263b4537bd8.png",
         notes: "Uso eccezionale del feedback aptico del DualSense e viaggi rapidi istantanei grazie all'SSD.",
-        createdAt: 1710000000000
+        createdAt: 1722000000000
       },
       {
         id: "game-2",
@@ -1123,7 +1569,7 @@
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202503/2016/b69c06fb108299866057126b0d3a0530bdf96a39d2ce1cb9.png",
         notes: "Narrazione magistrale. La sequenza finale è da brividi. DLC Valhalla imperdibile.",
-        createdAt: 1711000000000
+        createdAt: 1721000000000
       },
       {
         id: "game-3",
@@ -1138,82 +1584,7 @@
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202108/0410/0Jz6uJLxOK7JOMMfcfHFBi1D.png",
         notes: "Sto esplorando Leyndell, la capitale reale. Atmosfera incredibile e direzione artistica unica.",
-        createdAt: 1712000000000
-      },
-      {
-        id: "game-4",
-        title: "Gran Turismo 7",
-        status: "in_corso",
-        format: "Digitale",
-        genre: "Corse, Simulazione",
-        developer: "Polyphony Digital",
-        hours: 45,
-        rating: 8.8,
-        trophies: 45,
-        platinum: false,
-        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202511/0707/4c622dfa581566c2647bc907e5119cd375ce3a11c03e916e.png",
-        notes: "Grafica fotorealistica su PS5 con Ray Tracing. Ottimo supporto al controller.",
-        createdAt: 1713000000000
-      },
-      {
-        id: "game-5",
-        title: "Final Fantasy VII Rebirth",
-        status: "da_iniziare",
-        format: "Disco",
-        genre: "GDR, Avventura",
-        developer: "Square Enix",
-        hours: 0,
-        rating: null,
-        trophies: 0,
-        platinum: false,
-        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202308/3005/6de6b1c4b0c475b5c28fd2011655ab8206ed846926fa1671.png",
-        notes: "Comprato in edizione fisica con custodia Steelbook. Prossimo in lista!",
-        createdAt: 1714000000000
-      },
-      {
-        id: "game-6",
-        title: "Ghost of Yōtei",
-        status: "wishlist",
-        format: "Digitale",
-        genre: "Azione, Open World",
-        developer: "Sucker Punch",
-        hours: 0,
-        rating: null,
-        trophies: 0,
-        platinum: false,
-        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202607/2723/890df32c227f619c5bd80e9f34ba2be53d0fea4b1615adee.png",
-        notes: "Attesissimo seguito di Tsushima ambientato attorno al monte Yōtei nel 1603.",
-        createdAt: 1715000000000
-      },
-      {
-        id: "game-7",
-        title: "The Last of Us Part I",
-        status: "completato",
-        format: "Disco",
-        genre: "Azione, Avventura",
-        developer: "Naughty Dog",
-        hours: 24,
-        rating: 10,
-        trophies: 100,
-        platinum: true,
-        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202206/0720/zhGgq29AdgwsNEVImar3m716.png",
-        notes: "Ricostruito da zero per PS5 con grafica fotorealistica, supporto grilletti adattivi DualSense e audio 3D.",
-        createdAt: 1716000000000
-      },
-      {
-        id: "game-8",
-        title: "Astro Bot",
-        status: "platinato",
-        format: "Digitale",
-        genre: "Platform, Avventura",
-        developer: "Team ASOBI",
-        hours: 18.5,
-        rating: 9.7,
-        trophies: 100,
-        platinum: true,
-        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png",
-        notes: "Puro divertimento videoludico e celebrazione di 30 anni di storia PlayStation.",
-        createdAt: 1717000000000
+        createdAt: 1720000000000
       },
       {
         id: "game-9",
@@ -1228,7 +1599,52 @@
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202107/3100/cb7gh5N3DjSRathadczu40S9.png",
         notes: "Uno dei comparti grafici più sbalorditivi su PS5. Meraviglioso anche il DLC Burning Shores.",
+        createdAt: 1719000000000
+      },
+      {
+        id: "game-4",
+        title: "Gran Turismo 7",
+        status: "in_corso",
+        format: "Digitale",
+        genre: "Corse, Simulazione",
+        developer: "Polyphony Digital",
+        hours: 45,
+        rating: 8.8,
+        trophies: 45,
+        platinum: false,
+        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202511/0707/4c622dfa581566c2647bc907e5119cd375ce3a11c03e916e.png",
+        notes: "Grafica fotorealistica su PS5 con Ray Tracing. Ottimo supporto al controller.",
         createdAt: 1718000000000
+      },
+      {
+        id: "game-5",
+        title: "Final Fantasy VII Rebirth",
+        status: "da_iniziare",
+        format: "Disco",
+        genre: "GDR, Avventura",
+        developer: "Square Enix",
+        hours: 0,
+        rating: null,
+        trophies: 0,
+        platinum: false,
+        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202308/3005/6de6b1c4b0c475b5c28fd2011655ab8206ed846926fa1671.png",
+        notes: "Comprato in edizione fisica con custodia Steelbook. Prossimo in lista!",
+        createdAt: 1717000000000
+      },
+      {
+        id: "game-6",
+        title: "Ghost of Yōtei",
+        status: "wishlist",
+        format: "Digitale",
+        genre: "Azione, Open World",
+        developer: "Sucker Punch",
+        hours: 0,
+        rating: null,
+        trophies: 0,
+        platinum: false,
+        coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202607/2723/890df32c227f619c5bd80e9f34ba2be53d0fea4b1615adee.png",
+        notes: "Attesissimo seguito di Tsushima ambientato attorno al monte Yōtei nel 1603.",
+        createdAt: 1716000000000
       },
       {
         id: "game-10",
@@ -1242,8 +1658,8 @@
         trophies: 55,
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202011/1621/fYZQHZ42eXXUt7c6D5YjLrq5.png",
-        notes: "Miglior utilizzo in assoluto del feedback aptico del DualSense su PS5. Difficile ma assuefacente.",
-        createdAt: 1719000000000
+        notes: "Miglior utilizzo del feedback aptico del DualSense su PS5. Difficile ma assuefacente.",
+        createdAt: 1715000000000
       },
       {
         id: "game-11",
@@ -1257,8 +1673,8 @@
         trophies: 0,
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/img/rnd/202011/1717/GemRaOZaCMhGxQ9dRhnQQyT5.png",
-        notes: "Remake leggendario di Bluepoint. Atmosfera gotica cupa e illuminazione da nuova generazione.",
-        createdAt: 1720000000000
+        notes: "Remake leggendario di Bluepoint. Atmosfera gotica cupa e illuminazione next-gen.",
+        createdAt: 1714000000000
       },
       {
         id: "game-12",
@@ -1272,8 +1688,8 @@
         trophies: 68,
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202401/2211/40e7cfd126a11fe5118310ebce6d9b3a23e7cabaca717217.png",
-        notes: "Combat system frenetico e soddisfacente basato su parry e schivate perfette, con colonna sonora top.",
-        createdAt: 1721000000000
+        notes: "Combat system frenetico basato su parry e schivate perfette, con colonna sonora eccezionale.",
+        createdAt: 1713000000000
       },
       {
         id: "game-13",
@@ -1288,26 +1704,27 @@
         platinum: false,
         coverUrl: "https://image.api.playstation.com/vulcan/ap/rnd/202210/0706/EVWyZD63pahuh95eKloFaJuC.png",
         notes: "Rivisitazione impeccabile del classico survival horror. Giocabile anche in VR con PS VR2!",
-        createdAt: 1722000000000
+        createdAt: 1712000000000
       }
     ];
 
     // Supabase Configuration
     const SUPABASE_URL = 'https://czbeweslykntgqywplrr.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_NVfiAmHluZNMec_fKHTA-Q_2apTDkRG';
-    let supabaseClient = null;
 
-    if (window.supabase) {
-      try {
-        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } catch (err) {
-        console.warn('Could not initialize Supabase SDK:', err);
-      }
-    }
-
-    // State
     let games = [];
     let activeStatusFilter = 'all';
+
+    // Clock updater
+    function updateClock() {
+      const now = new Date();
+      const el = document.getElementById('systemClock');
+      if (el) {
+        el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
 
     function updateCloudStatus(status, text) {
       const badge = document.getElementById('cloudStatusBadge');
@@ -1340,9 +1757,7 @@
           }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -1373,7 +1788,6 @@
         updateCloudStatus('offline');
       }
 
-      // Fallback local storage
       loadFromLocalStorage();
     }
 
@@ -1440,13 +1854,6 @@
       }
     }
 
-    function init() {
-      renderPresetThumbnails();
-      loadFromLocalStorage();
-      // Asynchronously fetch from Supabase Cloud
-      loadFromSupabase(false);
-    }
-
     function saveToLocalStorage() {
       try {
         localStorage.setItem('ps5_games_library_v5', JSON.stringify(games));
@@ -1481,23 +1888,61 @@
       const inCorso = games.filter(g => g.status === 'in_corso').length;
       const completati = games.filter(g => g.status === 'completato' || g.status === 'platinato').length;
       const totalHours = games.reduce((acc, g) => acc + (parseFloat(g.hours) || 0), 0);
+      const platCount = games.filter(g => g.platinum || g.status === 'platinato').length;
 
       document.getElementById('statTotalGames').textContent = total;
       document.getElementById('statInCorso').textContent = inCorso;
       document.getElementById('statCompletati').textContent = completati;
       document.getElementById('statTotalHours').textContent = totalHours % 1 === 0 ? totalHours + 'h' : totalHours.toFixed(1) + 'h';
+
+      // Update Top Trophy Cabinet
+      document.getElementById('sysPlatCount').textContent = platCount;
+      document.getElementById('sysGoldCount').textContent = completati * 3 + platCount * 2;
+      document.getElementById('sysSilverCount').textContent = Math.round(totalHours * 0.4);
+      document.getElementById('sysBronzeCount').textContent = total * 12 + inCorso * 4;
     }
 
     function getStatusLabel(status) {
       switch (status) {
         case 'in_corso': return 'In Corso';
         case 'completato': return 'Completato';
-        case 'platinato': return 'Platino 🏆';
+        case 'platinato': return 'Platino 💎';
         case 'da_iniziare': return 'Backlog';
         case 'wishlist': return 'Wishlist';
         case 'abbandonato': return 'Abbandonato';
         default: return status;
       }
+    }
+
+    function setHeroBackdrop(coverUrl) {
+      const backdrop = document.getElementById('heroBackdrop');
+      if (backdrop && coverUrl) {
+        backdrop.style.backgroundImage = `url('${coverUrl}')`;
+      }
+    }
+
+    function pickRandomBacklog() {
+      const backlog = games.filter(g => g.status === 'da_iniziare' || g.status === 'in_corso');
+      const pool = backlog.length > 0 ? backlog : games;
+      if (pool.length === 0) return;
+
+      const randomGame = pool[Math.floor(Math.random() * pool.length)];
+      setHeroBackdrop(randomGame.coverUrl);
+
+      // Playful message
+      const speech = document.getElementById('astroSpeech');
+      if (speech) {
+        speech.textContent = `Astro consiglia: "${randomGame.title}"!`;
+      }
+
+      showToast(`🤖 Astro Bot ha scelto: "${randomGame.title}"! Buon divertimento!`);
+      triggerConfetti();
+
+      // Highlight card in grid
+      const searchBox = document.getElementById('searchInput');
+      searchBox.value = randomGame.title;
+      renderGames();
+      setTimeout(() => { searchBox.value = ''; }, 3000);
     }
 
     function renderGames() {
@@ -1507,32 +1952,19 @@
       const sortBy = document.getElementById('sortFilter').value;
 
       let filtered = games.filter(game => {
-        // Status filter
-        if (activeStatusFilter !== 'all' && game.status !== activeStatusFilter) {
-          return false;
-        }
-        // Format filter
-        if (format !== 'all' && game.format !== format) {
-          return false;
-        }
-        // Genre filter
-        if (genre !== 'all' && (!game.genre || !game.genre.toLowerCase().includes(genre.toLowerCase()))) {
-          return false;
-        }
-        // Search filter
+        if (activeStatusFilter !== 'all' && game.status !== activeStatusFilter) return false;
+        if (format !== 'all' && game.format !== format) return false;
+        if (genre !== 'all' && (!game.genre || !game.genre.toLowerCase().includes(genre.toLowerCase()))) return false;
         if (search) {
-          const matchTitle = game.title.toLowerCase().includes(search);
+          const matchTitle = (game.title || '').toLowerCase().includes(search);
           const matchGenre = (game.genre || '').toLowerCase().includes(search);
           const matchDev = (game.developer || '').toLowerCase().includes(search);
           const matchNotes = (game.notes || '').toLowerCase().includes(search);
-          if (!matchTitle && !matchGenre && !matchDev && !matchNotes) {
-            return false;
-          }
+          if (!matchTitle && !matchGenre && !matchDev && !matchNotes) return false;
         }
         return true;
       });
 
-      // Sorting
       filtered.sort((a, b) => {
         if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
         if (sortBy === 'title_desc') return b.title.localeCompare(a.title);
@@ -1549,27 +1981,48 @@
           <div class="empty-state">
             <div class="empty-icon">🎮</div>
             <div class="empty-title">Nessun gioco trovato</div>
-            <div class="empty-desc">Non ci sono titoli che corrispondono ai filtri o alla ricerca selezionata.</div>
+            <div class="empty-desc">Non ci sono titoli corrispondenti ai filtri attuali.</div>
             <button class="btn btn-primary" onclick="openAddGameModal()">Aggiungi un Gioco Ora</button>
           </div>
         `;
         return;
       }
 
+      // Default backdrop to first game
+      if (filtered[0] && filtered[0].coverUrl) {
+        setHeroBackdrop(filtered[0].coverUrl);
+      }
+
       container.innerHTML = filtered.map(game => {
-        const cover = game.coverUrl || 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600&auto=format&fit=crop&q=80';
+        const cover = game.coverUrl || 'https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png';
         const genres = (game.genre || '').split(',').map(s => s.trim()).filter(Boolean);
+        const isPlat = game.platinum || game.status === 'platinato';
 
         return `
-          <div class="game-card">
-            <div class="game-cover-wrap">
-              <img src="${cover}" alt="${game.title}" class="game-cover" loading="lazy">
-              <div class="game-format-badge">
-                ${game.format === 'Disco' ? '💿' : game.format === 'Digitale' ? '💾' : '⭐'} ${game.format}
+          <div class="game-card" onmouseenter="setHeroBackdrop('${cover}')">
+            <!-- PS5 Case Header Strip -->
+            <div class="ps5-case-header">
+              <div class="ps5-case-logo">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-4-8h-2V7h2v2zm4 0h-2V7h2v2z"/>
+                </svg>
+                <span>PlayStation® 5</span>
               </div>
+              <span class="ps5-case-format">${game.format === 'Disco' ? '💿 BLU-RAY™' : game.format === 'Digitale' ? '💾 DIGITAL' : '⭐ PS PLUS'}</span>
+            </div>
+
+            <div class="game-cover-wrap">
+              <img src="${cover}" alt="${escapeHtml(game.title)}" class="game-cover" loading="lazy">
+              
               <div class="game-status-badge status-${game.status}">
                 ${getStatusLabel(game.status)}
               </div>
+
+              ${isPlat ? `
+                <div class="vip-astro-stamp" title="Gioco Platinato con successo!">
+                  🤖 VIP Bot Sbloccato
+                </div>
+              ` : ''}
             </div>
 
             <div class="game-info">
@@ -1598,8 +2051,8 @@
                 <div class="playtime-badge">
                   ⏱️ ${game.hours ? game.hours + 'h' : '0h'}
                 </div>
-                <div class="trophy-badge ${game.platinum ? 'plat' : ''}">
-                  ${game.platinum ? '🏆 Platino' : `🎯 ${game.trophies || 0}%`}
+                <div class="trophy-badge ${isPlat ? 'plat' : ''}">
+                  ${isPlat ? '💎 Platino 100%' : `🎯 ${game.trophies || 0}%`}
                 </div>
               </div>
 
@@ -1660,7 +2113,7 @@
       document.getElementById('gameHours').value = game.hours !== undefined ? game.hours : '';
       document.getElementById('gameRating').value = game.rating !== undefined ? game.rating : '';
       document.getElementById('gameTrophies').value = game.trophies !== undefined ? game.trophies : '';
-      document.getElementById('gamePlatCheckbox').checked = !!game.platinum;
+      document.getElementById('gamePlatCheckbox').checked = !!(game.platinum || game.status === 'platinato');
       document.getElementById('gameCoverUrl').value = game.coverUrl || '';
       document.getElementById('gameNotes').value = game.notes || '';
 
@@ -1672,9 +2125,7 @@
     }
 
     function closeModalOnBackdrop(e) {
-      if (e.target.id === 'gameModal') {
-        closeModal();
-      }
+      if (e.target.id === 'gameModal') closeModal();
     }
 
     function saveGame() {
@@ -1691,10 +2142,9 @@
         status = 'platinato';
       }
 
-      // Auto-assign official cover if input is empty or generic
       let coverUrl = document.getElementById('gameCoverUrl').value.trim();
       if (!coverUrl) {
-        coverUrl = getOfficialCoverForTitle(title) || 'https://image.api.playstation.com/vulcan/ap/rnd/202306/1219/1c7b75d8ed9271516546560d219ad0b22ee0a263b4537bd8.png';
+        coverUrl = getOfficialCoverForTitle(title) || 'https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png';
       }
 
       const gameData = {
@@ -1743,18 +2193,6 @@
       updateStats();
     }
 
-    function resetToOfficialCollection() {
-      games = JSON.parse(JSON.stringify(INITIAL_GAMES));
-      saveToLocalStorage();
-      // Sync all initial to cloud
-      for (const g of games) {
-        syncGameToCloud(g, false);
-      }
-      renderGames();
-      updateStats();
-      showToast('🔄 Libreria ripristinata con i 13 giochi ufficiali PS5!');
-    }
-
     function quickCycleStatus(id) {
       const game = games.find(g => g.id === id);
       if (!game) return;
@@ -1770,7 +2208,7 @@
         game.platinum = true;
         game.trophies = 100;
         triggerConfetti();
-        showToast(`🏆 Complimenti! Platino sbloccato su ${game.title}`);
+        showToast(`💎 Complimenti! Platino sbloccato su ${game.title}`);
       } else if (game.status === 'completato') {
         showToast(`✅ ${game.title} segnato come Completato!`);
       }
@@ -1798,10 +2236,10 @@
     function triggerConfetti() {
       if (window.confetti) {
         window.confetti({
-          particleCount: 100,
-          spread: 70,
+          particleCount: 120,
+          spread: 80,
           origin: { y: 0.6 },
-          colors: ['#00f0ff', '#0070d1', '#c084fc', '#ffffff']
+          colors: ['#00f0ff', '#0070d1', '#c084fc', '#ffffff', '#ffd700']
         });
       }
     }
@@ -1810,9 +2248,7 @@
       const toast = document.getElementById('toastNotification');
       document.getElementById('toastMessage').textContent = msg;
       toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
+      setTimeout(() => { toast.classList.remove('show'); }, 3200);
     }
 
     function exportData() {
@@ -1841,9 +2277,12 @@
           if (Array.isArray(parsed)) {
             games = parsed;
             saveToLocalStorage();
+            for (const g of games) {
+              syncGameToCloud(g, false);
+            }
             renderGames();
             updateStats();
-            showToast('📥 Libreria ripristinata con successo!');
+            showToast('📥 Libreria ripristinata e sincronizzata nel Cloud!');
           } else {
             alert('Formato file non valido. Atteso un array di giochi.');
           }
@@ -1854,10 +2293,16 @@
       reader.readAsText(file);
     }
 
-    // Keyboard shortcut ESC for modal
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
+
+    // Run
+    function init() {
+      renderPresetThumbnails();
+      loadFromLocalStorage();
+      loadFromSupabase(false);
+    }
 
     init();
   </script>
