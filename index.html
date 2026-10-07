@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
     :root {
       --ps-blue: #00439c;
@@ -1179,11 +1180,106 @@
       background: rgba(6, 10, 20, 0.5);
     }
 
-    .preset-covers {
+    .scan-box-banner {
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.18), rgba(0, 240, 255, 0.12));
+      border: 2px dashed rgba(0, 240, 255, 0.45);
+      border-radius: 18px;
+      padding: 1rem 1.2rem;
       display: flex;
-      gap: 0.6rem;
-      overflow-x: auto;
-      padding-bottom: 6px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .scan-box-banner:hover {
+      border-color: #00f0ff;
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.28), rgba(0, 240, 255, 0.22));
+    }
+
+    .scan-box-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scan-cam-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #0070d1, #00f0ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 4px 14px rgba(0, 240, 255, 0.4);
+      flex-shrink: 0;
+    }
+
+    .btn-camera-trigger {
+      background: linear-gradient(135deg, #0070d1, #00f0ff);
+      color: #050814;
+      font-weight: 800;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+    }
+
+    .btn-camera-trigger:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(0, 240, 255, 0.6);
+    }
+
+    .cover-preview-card {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      background: rgba(6, 10, 22, 0.85);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 8px 12px;
+      border-radius: 14px;
+      margin-top: 6px;
+    }
+
+    .cover-preview-card img {
+      width: 52px;
+      height: 68px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .scan-status-loading {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: #00f0ff;
+      font-weight: 700;
+    }
+
+    .scan-status-loading.active {
+      display: inline-flex;
+    }
+
+    .spinner-disc {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0, 240, 255, 0.25);
+      border-top-color: #00f0ff;
+      border-radius: 50%;
+      animation: spinDisc 0.7s linear infinite;
+    }
+
+    @keyframes spinDisc {
+      to { transform: rotate(360deg); }
     }
 
     .preset-cover-thumb {
@@ -1649,9 +1745,47 @@
       <div class="modal-body">
         <input type="hidden" id="editGameId">
 
+        <!-- AI Optical Camera Scan Section -->
+        <div class="scan-box-banner">
+          <div class="scan-box-info">
+            <div class="scan-cam-icon">📸</div>
+            <div>
+              <div style="font-weight:800; font-size:0.95rem; color:#fff;">Scansiona Copertina / Disco</div>
+              <div style="font-size:0.75rem; color:var(--ps-text-muted);">Scatta una foto per riconoscere titolo e dettagli</div>
+            </div>
+          </div>
+          <div>
+            <input type="file" id="coverCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleCoverPhotoUpload(event)">
+            <button type="button" class="btn-camera-trigger" onclick="document.getElementById('coverCameraInput').click()">
+              <span>📷 Scatta Foto</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Scanning progress feedback -->
+        <div id="scanStatusIndicator" class="scan-status-loading">
+          <span class="spinner-disc"></span>
+          <span id="scanStatusMsg">Analisi della copertina con OCR e riconoscimento in corso...</span>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Titolo del Gioco *</label>
-          <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot, God of War" required>
+          <div style="position:relative;">
+            <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot, God of War" required oninput="debounceOnlineCoverSearch(this.value)">
+            <div id="coverSearchIndicator" style="display:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:0.75rem; color:#00f0ff; align-items:center; gap:6px;">
+              <span class="spinner-disc"></span> <span>Ricerca cover...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto detected cover preview box -->
+        <div id="detectedCoverPreviewBox" class="cover-preview-card" style="display:none;">
+          <img id="detectedCoverImg" src="" alt="Copertina online">
+          <div style="flex:1;">
+            <div style="font-size:0.72rem; color:#00f0ff; font-weight:800; text-transform:uppercase;">Copertina Trovata Online</div>
+            <div id="detectedCoverTitle" style="font-size:0.88rem; font-weight:700; color:#fff;"></div>
+            <div style="font-size:0.7rem; color:var(--ps-text-muted);">Aggiornata automaticamente via PlayStation & Wikipedia</div>
+          </div>
         </div>
 
         <div class="form-row">
@@ -2537,6 +2671,155 @@
       return div.innerHTML;
     }
 
+    // Online Cover Auto-Fetch via Wikipedia & PlayStation Concept API
+    let coverSearchTimer = null;
+    function debounceOnlineCoverSearch(val) {
+      if (coverSearchTimer) clearTimeout(coverSearchTimer);
+      if (!val || val.trim().length < 2) {
+        hideDetectedCoverBox();
+        return;
+      }
+      coverSearchTimer = setTimeout(() => {
+        searchCoverOnline(val.trim());
+      }, 550);
+    }
+
+    async function searchCoverOnline(query) {
+      const indicator = document.getElementById('coverSearchIndicator');
+      if (indicator) indicator.style.display = 'inline-flex';
+
+      try {
+        // 1. Check direct curated PlayStation CDN map first
+        const directCover = getOfficialCoverForTitle(query);
+        if (directCover) {
+          applyDetectedCover(directCover, query);
+          if (indicator) indicator.style.display = 'none';
+          return;
+        }
+
+        // 2. Fetch from Wikipedia REST Summary API
+        const cleanQuery = query.replace(/[^\w\s:’'-]/gi, ' ').trim();
+        const searchApi = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery + ' video game')}&format=json&origin=*`;
+        const sRes = await fetch(searchApi);
+        if (!sRes.ok) throw new Error('Search failed');
+        const sData = await sRes.json();
+
+        const firstHit = sData?.query?.search?.[0];
+        if (firstHit && firstHit.title) {
+          const pageTitle = firstHit.title;
+          const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
+          const sumRes = await fetch(summaryApi);
+          if (sumRes.ok) {
+            const sumData = await sumRes.json();
+            const foundImg = sumData?.thumbnail?.source || sumData?.originalimage?.source;
+            if (foundImg) {
+              applyDetectedCover(foundImg, pageTitle);
+              
+              // Also auto-fill genre or description if empty
+              const genreInput = document.getElementById('gameGenre');
+              if (genreInput && !genreInput.value && sumData.description) {
+                genreInput.value = sumData.description.replace(/video game/gi, '').replace(/playstation/gi, '').replace(/,/g, '').trim() || 'Azione';
+              }
+              if (indicator) indicator.style.display = 'none';
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Cover search error:', err);
+      }
+
+      if (indicator) indicator.style.display = 'none';
+    }
+
+    function applyDetectedCover(imgUrl, titleLabel) {
+      const coverInput = document.getElementById('gameCoverUrl');
+      const box = document.getElementById('detectedCoverPreviewBox');
+      const img = document.getElementById('detectedCoverImg');
+      const label = document.getElementById('detectedCoverTitle');
+
+      if (coverInput) coverInput.value = imgUrl;
+      if (img) img.src = imgUrl;
+      if (label) label.textContent = titleLabel || 'Copertina trovata';
+      if (box) box.style.display = 'flex';
+      playSound('blip');
+    }
+
+    function hideDetectedCoverBox() {
+      const box = document.getElementById('detectedCoverPreviewBox');
+      if (box) box.style.display = 'none';
+    }
+
+    // Photo OCR Scanner for PS5 Game Covers / Discs
+    async function handleCoverPhotoUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const indicator = document.getElementById('scanStatusIndicator');
+      const statusMsg = document.getElementById('scanStatusMsg');
+      if (indicator) indicator.classList.add('active');
+      if (statusMsg) statusMsg.textContent = 'Caricamento foto e lettura testo con OCR...';
+      playSound('blip');
+
+      try {
+        if (!window.Tesseract) {
+          throw new Error('Libreria Tesseract non caricata');
+        }
+
+        // Run OCR with Tesseract
+        const { data: { text } } = await Tesseract.recognize(file, 'eng+ita', {
+          logger: m => {
+            if (statusMsg && m.status === 'recognizing text') {
+              statusMsg.textContent = `Scansione testo copertina (${Math.round((m.progress || 0) * 100)}%)...`;
+            }
+          }
+        });
+
+        if (statusMsg) statusMsg.textContent = 'Analisi titolo gioco completata!';
+
+        // Filter and clean extracted lines
+        const rawLines = text.split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length >= 3 && !l.match(/^(playstation|ps5|sony|blu-ray|disc|pegi|konami|capcom|edition|standard|disc|game|console|cero|esrb)$/i));
+
+        // Find the most likely game title line
+        let bestCandidate = '';
+        for (const line of rawLines) {
+          // Remove noise symbols
+          const clean = line.replace(/[^a-zA-Z0-9\s:’'-]/g, ' ').replace(/\s+/g, ' ').trim();
+          if (clean.length >= 3 && clean.length <= 40) {
+            bestCandidate = clean;
+            break;
+          }
+        }
+
+        if (bestCandidate) {
+          const titleInput = document.getElementById('gameTitle');
+          if (titleInput) {
+            titleInput.value = bestCandidate;
+          }
+          // Set format to Physical Disc since photo was taken of the case/disc
+          const formatSelect = document.getElementById('gameFormat');
+          if (formatSelect) {
+            formatSelect.value = 'Disco';
+          }
+
+          showToast(`📸 Testo riconosciuto: "${bestCandidate}"! Ricerca cover...`);
+          playSound('jump');
+          searchCoverOnline(bestCandidate);
+        } else {
+          showToast('📸 Foto acquisita: inserisci o correggi il titolo per trovare la cover!');
+        }
+      } catch (err) {
+        console.error('OCR Error:', err);
+        showToast('⚠️ Errore nella scansione della foto. Inserisci il titolo manualmente.');
+      } finally {
+        if (indicator) indicator.classList.remove('active');
+        // Reset file input so same file can be captured again if needed
+        event.target.value = '';
+      }
+    }
+
     function openAddGameModal() {
       playSound('blip');
       document.getElementById('modalTitle').textContent = '➕ Nuovo Gioco PS5';
@@ -2552,6 +2835,7 @@
       document.getElementById('gamePlatCheckbox').checked = false;
       document.getElementById('gameCoverUrl').value = '';
       document.getElementById('gameNotes').value = '';
+      hideDetectedCoverBox();
 
       document.getElementById('gameModal').classList.add('open');
       setTimeout(() => document.getElementById('gameTitle').focus(), 150);
@@ -2574,6 +2858,12 @@
       document.getElementById('gamePlatCheckbox').checked = !!(game.platinum || game.status === 'platinato');
       document.getElementById('gameCoverUrl').value = game.coverUrl || '';
       document.getElementById('gameNotes').value = game.notes || '';
+
+      if (game.coverUrl) {
+        applyDetectedCover(game.coverUrl, game.title);
+      } else {
+        hideDetectedCoverBox();
+      }
 
       document.getElementById('gameModal').classList.add('open');
     }
