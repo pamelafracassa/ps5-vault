@@ -654,10 +654,73 @@
       gap: 1rem;
     }
 
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+    }
+
     .search-box {
       flex: 1;
-      width: 100%;
       position: relative;
+    }
+
+    .sort-genre-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .sort-genre-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.45rem 0.95rem;
+      border-radius: 14px;
+      background: rgba(8, 14, 30, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      color: var(--ps-text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+      transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .filter-chip:hover {
+      background: rgba(0, 240, 255, 0.12);
+      border-color: rgba(0, 240, 255, 0.4);
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    .filter-chip:active {
+      transform: scale(0.95);
+    }
+
+    .filter-chip.active {
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.35), rgba(0, 240, 255, 0.3));
+      border-color: #00f0ff;
+      color: #00f0ff;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+    }
+
+    .filter-chip-divider {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+      margin: 0 4px;
     }
 
     .search-box input {
@@ -1883,14 +1946,37 @@
       </div>
     </section>
 
-    <!-- Controls Panel: Clean Instant Search -->
+    <!-- Controls Panel: Clean Search & Quick Filters -->
     <section class="controls-panel">
       <div class="controls-row-top">
-        <div class="search-box">
-          <span class="search-icon">🔍</span>
-          <input type="text" id="searchInput" placeholder="Cerca titolo, genere, sviluppatore..." oninput="renderGames()">
+        <div class="search-row">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Cerca titolo, genere, sviluppatore..." oninput="renderGames()">
+          </div>
         </div>
       </div>
+
+      <!-- Quick Sort & Genre Chips -->
+      <div class="sort-genre-bar">
+        <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:800; text-transform:uppercase; margin-right:2px; flex-shrink:0;">ORDINA:</span>
+        <button type="button" class="filter-chip active" id="sortChip_recent" onclick="setSortFilter('recent')">🕒 Più Recenti</button>
+        <button type="button" class="filter-chip" id="sortChip_rating" onclick="setSortFilter('rating_desc')">⭐ Più Votati</button>
+        <button type="button" class="filter-chip" id="sortChip_hours" onclick="setSortFilter('hours_desc')">⏱️ Più Giocati</button>
+        <button type="button" class="filter-chip" id="sortChip_title" onclick="setSortFilter('title_asc')">🔤 A - Z</button>
+
+        <div class="filter-chip-divider"></div>
+
+        <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:800; text-transform:uppercase; margin-right:2px; flex-shrink:0;">GENERE:</span>
+        <button type="button" class="filter-chip active" id="genreChip_all" onclick="setGenreFilter('all')">Tutti i Generi</button>
+        <button type="button" class="filter-chip" id="genreChip_azione" onclick="setGenreFilter('Azione')">Azione</button>
+        <button type="button" class="filter-chip" id="genreChip_avventura" onclick="setGenreFilter('Avventura')">Avventura</button>
+        <button type="button" class="filter-chip" id="genreChip_gdr" onclick="setGenreFilter('GDR')">GDR / Soulslike</button>
+        <button type="button" class="filter-chip" id="genreChip_horror" onclick="setGenreFilter('Horror')">Horror</button>
+        <button type="button" class="filter-chip" id="genreChip_platform" onclick="setGenreFilter('Platform')">Platform</button>
+        <button type="button" class="filter-chip" id="genreChip_corse" onclick="setGenreFilter('Corse')">Corse</button>
+      </div>
+
       <div class="results-count" id="resultsCount">Visualizzazione 0 giochi</div>
     </section>
 
@@ -2835,6 +2921,43 @@
 
     let games = [];
     let activeStatusFilter = 'all';
+    let activeSortFilter = 'recent'; // 'recent' | 'rating_desc' | 'hours_desc' | 'title_asc'
+    let activeGenreFilter = 'all';
+
+    function setSortFilter(sortKey) {
+      playSound('blip');
+      activeSortFilter = sortKey;
+      const chips = [
+        { key: 'recent', id: 'sortChip_recent' },
+        { key: 'rating_desc', id: 'sortChip_rating' },
+        { key: 'hours_desc', id: 'sortChip_hours' },
+        { key: 'title_asc', id: 'sortChip_title' }
+      ];
+      chips.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (el) el.classList.toggle('active', c.key === sortKey);
+      });
+      renderGames();
+    }
+
+    function setGenreFilter(genreKey) {
+      playSound('blip');
+      activeGenreFilter = genreKey;
+      const chips = [
+        { key: 'all', id: 'genreChip_all' },
+        { key: 'Azione', id: 'genreChip_azione' },
+        { key: 'Avventura', id: 'genreChip_avventura' },
+        { key: 'GDR', id: 'genreChip_gdr' },
+        { key: 'Horror', id: 'genreChip_horror' },
+        { key: 'Platform', id: 'genreChip_platform' },
+        { key: 'Corse', id: 'genreChip_corse' }
+      ];
+      chips.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (el) el.classList.toggle('active', c.key === genreKey);
+      });
+      renderGames();
+    }
 
     // Live Game Session Timer State
     let activePlayingSession = null; // { gameId, startTime, timerInterval }
@@ -3275,6 +3398,7 @@
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
 
       let filtered = games.filter(game => {
+        // Status filter (from clickable stat cards in top bar)
         if (activeStatusFilter !== 'all') {
           if (activeStatusFilter === 'completati_combo') {
             if (game.status !== 'completato' && game.status !== 'platinato') return false;
@@ -3282,6 +3406,13 @@
             return false;
           }
         }
+        // Genre filter chip
+        if (activeGenreFilter !== 'all') {
+          if (!game.genre || !game.genre.toLowerCase().includes(activeGenreFilter.toLowerCase())) {
+            return false;
+          }
+        }
+        // Text search box
         if (search) {
           const matchTitle = (game.title || '').toLowerCase().includes(search);
           const matchGenre = (game.genre || '').toLowerCase().includes(search);
@@ -3292,7 +3423,19 @@
         return true;
       });
 
-      filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      // Sorting based on active chip
+      filtered.sort((a, b) => {
+        if (activeSortFilter === 'rating_desc') {
+          return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        } else if (activeSortFilter === 'hours_desc') {
+          return (Number(b.hours) || 0) - (Number(a.hours) || 0);
+        } else if (activeSortFilter === 'title_asc') {
+          return (a.title || '').localeCompare(b.title || '');
+        } else {
+          // 'recent' by creation date
+          return (b.createdAt || 0) - (a.createdAt || 0);
+        }
+      });
 
       const container = document.getElementById('gamesContainer');
       document.getElementById('resultsCount').textContent = `Visualizzazione ${filtered.length} di ${games.length} giochi`;
