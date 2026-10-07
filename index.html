@@ -171,16 +171,86 @@
       gap: 14px;
     }
 
-    .dualsense-pill {
+    .user-pill {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       background: rgba(255, 255, 255, 0.07);
-      padding: 4px 12px;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 3px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 240, 255, 0.3);
       color: #fff;
       font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      user-select: none;
+    }
+
+    .user-pill:hover {
+      background: rgba(0, 240, 255, 0.18);
+      border-color: #00f0ff;
+      transform: scale(1.05);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+
+    .user-avatar-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0070d1, #00f0ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      padding: 0.65rem;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ps-text-muted);
+      font-weight: 700;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-tab-btn.active {
+      background: linear-gradient(135deg, rgba(0, 112, 209, 0.35), rgba(0, 240, 255, 0.25));
+      border-color: #00f0ff;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    }
+
+    .btn-biometric {
+      width: 100%;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(0, 240, 255, 0.15));
+      border: 2px solid #10b981;
+      color: #34d399;
+      font-weight: 700;
+      padding: 0.8rem 1rem;
+      border-radius: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-family: var(--font-body);
+      font-size: 0.92rem;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-biometric:hover {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(0, 240, 255, 0.3));
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-biometric:active {
+      transform: scale(0.97);
     }
 
     .battery-dot {
@@ -1563,9 +1633,10 @@
       </div>
     </div>
     <div class="system-right-info">
-      <div class="dualsense-pill" title="Controller DualSense Connesso">
-        <span class="battery-dot"></span>
-        <span>DualSense™</span>
+      <!-- PlayStation User / Login Pill with Touch ID -->
+      <div class="user-pill" id="userPillBtn" onclick="openAuthModal()" title="Profilo Utente & Accesso">
+        <div class="user-avatar-dot" id="userAvatarDot">👤</div>
+        <span id="userPillLabel">Accedi</span>
       </div>
       <span id="systemClock" style="font-weight:700; color:#fff; font-family:var(--font-display);">12:00</span>
     </div>
@@ -1869,6 +1940,86 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
         <button class="btn btn-primary" onclick="saveGame()">Salva Gioco</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PlayStation Network Auth / Login Modal with Touch ID -->
+  <div class="modal-backdrop" id="authModal" onclick="closeAuthModalOnBackdrop(event)">
+    <div class="modal-window" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="authModalTitle">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#00f0ff">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-4-8h-2V7h2v2zm4 0h-2V7h2v2z"/>
+          </svg>
+          <span>PlayStation Network</span>
+        </h3>
+        <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="gap:1.1rem;">
+        <!-- Auth Tabs: Login vs Register (shown when logged out) -->
+        <div id="authTabsRow" style="display:flex; gap:8px;">
+          <button type="button" class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Accedi</button>
+          <button type="button" class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Crea Account</button>
+        </div>
+
+        <!-- Touch ID / Face ID Biometric One-Touch Button -->
+        <div id="biometricSection">
+          <button type="button" class="btn-biometric" id="touchIdAuthBtn" onclick="handleBiometricAuth()">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
+              <path d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 5.92 1.5.24.13.32.43.2.67-.08.19-.24.3-.32.3zm2.46 3.65c-.11 0-.22-.04-.31-.11C18.06 6.55 15.35 5.5 12 5.5c-3.37 0-6.13 1.07-8.03 2.57-.22.17-.53.14-.7-.07-.17-.22-.14-.53.07-.7C5.46 5.61 8.42 4.5 12 4.5c3.55 0 6.44 1.11 8.58 2.76.22.17.26.48.09.7-.1.14-.26.22-.4.22zm1.66 4.29c-.06 0-.13-.01-.19-.04-1.9-.81-4.04-1.23-6.22-1.23s-4.32.42-6.22 1.23c-.25.11-.55-.01-.65-.26-.11-.25.01-.55.26-.65C7.26 10.45 9.58 10 12.01 10s4.75.45 6.94 1.38c.25.1.37.4.26.65-.08.18-.26.29-.44.29zm-4.07 9.52c-.17 0-.33-.09-.41-.26-.7-1.39-1.07-2.73-1.07-4.13 0-2.06.71-3.69 2.11-4.84 1.4-1.15 3.19-1.42 5.34-.81.26.07.41.35.34.61-.07.26-.34.41-.61.34-1.89-.54-3.37-.31-4.51.62-1.14.93-1.67 2.27-1.67 3.88 0 1.25.33 2.44.97 3.7.12.25.02.55-.23.68-.08.05-.17.07-.26.07zM12 22c-.11 0-.21-.03-.3-.1-1.04-.77-2.13-2.18-2.67-4.19-.51-1.9-.3-3.9.59-5.78.69-1.46 1.78-2.58 3.14-3.24 1.37-.66 2.87-.79 4.35-.38.26.07.41.34.34.6-.07.26-.34.41-.6.34-1.25-.35-2.52-.24-3.67.31-1.16.56-2.08 1.51-2.67 2.76-.77 1.62-.95 3.33-.51 4.96.46 1.72 1.39 2.92 2.29 3.59.22.16.27.47.11.69-.1.14-.24.22-.39.22zm-4.32-3.48c-.06 0-.12-.01-.18-.04-1.39-.63-2.45-1.69-3.07-3.08-.62-1.39-.67-2.95-.14-4.52.54-1.61 1.73-2.93 3.35-3.72 1.62-.79 3.42-.92 5.07-.37.26.09.4.37.31.63-.09.26-.37.4-.63.31-1.39-.46-2.91-.35-4.28.32-1.37.67-2.38 1.79-2.84 3.15-.45 1.33-.41 2.65.12 3.83.52 1.18 1.42 2.08 2.6 2.62.25.11.36.41.25.66-.08.14-.23.21-.36.21z"/>
+            </svg>
+            <span id="biometricBtnLabel">Accedi con Touch ID / Face ID</span>
+          </button>
+          
+          <div style="display:flex; align-items:center; gap:10px; margin:0.8rem 0 0.4rem 0;">
+            <div style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></div>
+            <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:700;">OPPURE CON EMAIL</span>
+            <div style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></div>
+          </div>
+        </div>
+
+        <!-- Logged In Profile View -->
+        <div id="loggedInProfileSection" style="display:none; flex-direction:column; gap:1rem; text-align:center;">
+          <div style="width:72px; height:72px; border-radius:50%; background:linear-gradient(135deg, #0070d1, #00f0ff); margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:2.2rem; box-shadow:0 0 25px rgba(0,240,255,0.5); border:3px solid #fff;">
+            👤
+          </div>
+          <div>
+            <div style="font-size:1.15rem; font-weight:800; color:#fff;" id="profileUserEmail">Gamer</div>
+            <div style="font-size:0.78rem; color:#34d399; font-weight:700; margin-top:2px;">🟢 Connesso a PlayStation Network</div>
+          </div>
+
+          <!-- Register Touch ID prompt if not already enabled -->
+          <div id="enableTouchIdBox" style="background:rgba(0,112,209,0.15); border:1px solid rgba(0,240,255,0.3); border-radius:16px; padding:0.9rem; text-align:left;">
+            <div style="font-size:0.82rem; font-weight:800; color:#00f0ff; margin-bottom:4px;">🔐 Attiva Touch ID / Face ID</div>
+            <div style="font-size:0.75rem; color:var(--ps-text-muted); margin-bottom:8px;">Accedi rapidamente con l'impronta digitale o riconoscimento del volto dal tuo dispositivo.</div>
+            <button type="button" class="btn btn-secondary" style="width:100%; justify-content:center; font-size:0.82rem;" onclick="registerBiometricCredential()">
+              👆 Registra questo dispositivo
+            </button>
+          </div>
+
+          <button type="button" class="btn btn-secondary" style="color:#ef4444; border-color:rgba(239,68,68,0.4);" onclick="handleSignOut()">
+            🚪 Esci dall'account
+          </button>
+        </div>
+
+        <!-- Email & Password Form -->
+        <form id="authEmailForm" onsubmit="handleEmailAuth(event)" style="display:flex; flex-direction:column; gap:0.9rem;">
+          <div class="form-group">
+            <label class="form-label">Email PSN</label>
+            <input type="email" id="authEmailInput" class="form-input" placeholder="esempio@playstation.com" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="authPasswordInput" class="form-input" placeholder="Minimo 6 caratteri" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:0.3rem;">
+            Accedi
+          </button>
+        </form>
       </div>
     </div>
   </div>
@@ -2232,6 +2383,294 @@
     // Supabase Configuration
     const SUPABASE_URL = 'https://czbeweslykntgqywplrr.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_NVfiAmHluZNMec_fKHTA-Q_2apTDkRG';
+
+    let supabaseClient = null;
+    if (window.supabase) {
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (e) {
+        console.warn('Supabase client error:', e);
+      }
+    }
+
+    let currentUser = null;
+    let authMode = 'login'; // 'login' | 'register'
+
+    // Check auth status on start
+    async function initAuth() {
+      // Check stored session or biometric token
+      try {
+        const storedUser = localStorage.getItem('ps5_auth_user');
+        if (storedUser) {
+          currentUser = JSON.parse(storedUser);
+          updateUserInterface();
+        }
+
+        if (supabaseClient) {
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          if (session?.user) {
+            currentUser = session.user;
+            localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
+            updateUserInterface();
+          }
+        }
+      } catch (e) {
+        console.warn('Auth init error:', e);
+      }
+      updateUserInterface();
+    }
+
+    function updateUserInterface() {
+      const pillLabel = document.getElementById('userPillLabel');
+      const avatarDot = document.getElementById('userAvatarDot');
+      const loggedSection = document.getElementById('loggedInProfileSection');
+      const emailForm = document.getElementById('authEmailForm');
+      const tabsRow = document.getElementById('authTabsRow');
+      const bioSection = document.getElementById('biometricSection');
+      const profileEmail = document.getElementById('profileUserEmail');
+      const enableTouchIdBox = document.getElementById('enableTouchIdBox');
+
+      // Check if WebAuthn / Touch ID is supported
+      const hasWebAuthn = window.PublicKeyCredential && window.isSecureContext;
+      const bioBtn = document.getElementById('touchIdAuthBtn');
+      if (bioBtn && !hasWebAuthn) {
+        bioBtn.style.display = 'none';
+      }
+
+      const hasRegisteredBio = localStorage.getItem('ps5_biometric_credential_id');
+
+      if (currentUser) {
+        // User logged in
+        const email = currentUser.email || 'Gamer PS5';
+        const initial = email.charAt(0).toUpperCase();
+        if (pillLabel) pillLabel.textContent = email.split('@')[0];
+        if (avatarDot) avatarDot.textContent = initial;
+
+        if (loggedSection) loggedSection.style.display = 'flex';
+        if (emailForm) emailForm.style.display = 'none';
+        if (tabsRow) tabsRow.style.display = 'none';
+        if (bioSection) bioSection.style.display = 'none';
+        if (profileEmail) profileEmail.textContent = email;
+
+        if (enableTouchIdBox) {
+          enableTouchIdBox.style.display = hasRegisteredBio ? 'none' : 'block';
+        }
+      } else {
+        // User logged out
+        if (pillLabel) pillLabel.textContent = 'Accedi';
+        if (avatarDot) avatarDot.textContent = '👤';
+
+        if (loggedSection) loggedSection.style.display = 'none';
+        if (emailForm) emailForm.style.display = 'flex';
+        if (tabsRow) tabsRow.style.display = 'flex';
+        if (bioSection) bioSection.style.display = hasWebAuthn ? 'block' : 'none';
+
+        const bioLabel = document.getElementById('biometricBtnLabel');
+        if (bioLabel) {
+          bioLabel.textContent = hasRegisteredBio ? 'Accedi con Touch ID / Face ID' : 'Touch ID / Face ID (Avvia)';
+        }
+      }
+    }
+
+    function openAuthModal() {
+      playSound('blip');
+      updateUserInterface();
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function closeAuthModalOnBackdrop(e) {
+      if (e.target.id === 'authModal') closeAuthModal();
+    }
+
+    function switchAuthTab(mode) {
+      playSound('blip');
+      authMode = mode;
+      const tabLogin = document.getElementById('tabLoginBtn');
+      const tabReg = document.getElementById('tabRegisterBtn');
+      const submitBtn = document.getElementById('authSubmitBtn');
+
+      if (tabLogin && tabReg) {
+        tabLogin.classList.toggle('active', mode === 'login');
+        tabReg.classList.toggle('active', mode === 'register');
+      }
+
+      if (submitBtn) {
+        submitBtn.textContent = mode === 'login' ? 'Accedi' : 'Crea Account';
+      }
+    }
+
+    // Email + Password Supabase Auth
+    async function handleEmailAuth(event) {
+      event.preventDefault();
+      const email = document.getElementById('authEmailInput').value.trim();
+      const password = document.getElementById('authPasswordInput').value;
+
+      if (!email || !password) {
+        showToast('⚠️ Inserisci email e password');
+        return;
+      }
+
+      const submitBtn = document.getElementById('authSubmitBtn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Attendere...';
+      }
+
+      try {
+        if (!supabaseClient) {
+          throw new Error('Supabase client non inizializzato');
+        }
+
+        if (authMode === 'login') {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          currentUser = data.user;
+          localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
+          playSound('tada');
+          showToast(`🎮 Bentornato, ${email.split('@')[0]}!`);
+        } else {
+          const { data, error } = await supabaseClient.auth.signUp({ email, password });
+          if (error) throw error;
+          currentUser = data.user || { email };
+          localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
+          playSound('tada');
+          showToast(`🎉 Account creato con successo! Benvenuto!`);
+        }
+
+        updateUserInterface();
+        closeAuthModal();
+      } catch (err) {
+        console.error('Auth error:', err);
+        showToast(`⚠️ ${err.message || 'Errore di autenticazione'}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = authMode === 'login' ? 'Accedi' : 'Crea Account';
+        }
+      }
+    }
+
+    // WebAuthn Biometrics: Touch ID / Face ID
+    async function registerBiometricCredential() {
+      if (!window.PublicKeyCredential) {
+        showToast('⚠️ Touch ID non supportato da questo browser');
+        return;
+      }
+
+      try {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const email = currentUser?.email || 'gamer@playstation.local';
+        const userId = new TextEncoder().encode(email);
+
+        const createOptions = {
+          challenge: challenge,
+          rp: {
+            name: "PlayStation 5 Vault",
+            id: window.location.hostname
+          },
+          user: {
+            id: userId,
+            name: email,
+            displayName: email.split('@')[0]
+          },
+          pubKeyCredParams: [
+            { type: "public-key", alg: -7 },  // ES256
+            { type: "public-key", alg: -257 } // RS256
+          ],
+          authenticatorSelection: {
+            authenticatorAttachment: "platform", // Touch ID / Face ID on device
+            userVerification: "required"
+          },
+          timeout: 60000,
+          attestation: "none"
+        };
+
+        const credential = await navigator.credentials.create({ publicKey: createOptions });
+        if (credential) {
+          // Convert rawId to string and store locally
+          const credIdStr = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
+          localStorage.setItem('ps5_biometric_credential_id', credIdStr);
+          localStorage.setItem('ps5_biometric_user', JSON.stringify(currentUser || { email }));
+          playSound('tada');
+          triggerConfetti();
+          showToast('🔐 Touch ID / Face ID registrato con successo!');
+          updateUserInterface();
+        }
+      } catch (err) {
+        console.warn('Biometric registration error:', err);
+        showToast(`⚠️ Registrazione Touch ID annullata o non riuscita`);
+      }
+    }
+
+    async function handleBiometricAuth() {
+      if (!window.PublicKeyCredential) {
+        showToast('⚠️ Touch ID non disponibile');
+        return;
+      }
+
+      const hasRegistered = localStorage.getItem('ps5_biometric_credential_id');
+
+      // If not registered yet, start registration or quick biometric login
+      if (!hasRegistered) {
+        // If not logged in yet, prompt email or register device
+        const defaultEmail = prompt('Inserisci la tua email PSN per abilitare Touch ID su questo dispositivo:');
+        if (!defaultEmail) return;
+        currentUser = { email: defaultEmail.trim() };
+        await registerBiometricCredential();
+        return;
+      }
+
+      try {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const getOptions = {
+          challenge: challenge,
+          timeout: 60000,
+          userVerification: "required",
+          rpId: window.location.hostname
+        };
+
+        const assertion = await navigator.credentials.get({ publicKey: getOptions });
+        if (assertion) {
+          const storedBioUser = localStorage.getItem('ps5_biometric_user');
+          currentUser = storedBioUser ? JSON.parse(storedBioUser) : { email: 'Gamer PS5' };
+          localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
+
+          playSound('tada');
+          triggerConfetti();
+          showToast(`🔓 Accesso Touch ID effettuato! Ciao ${currentUser.email.split('@')[0]}!`);
+          updateUserInterface();
+          closeAuthModal();
+        }
+      } catch (err) {
+        console.warn('Biometric verify error:', err);
+        showToast('⚠️ Autenticazione biometrica annullata');
+      }
+    }
+
+    async function handleSignOut() {
+      playSound('blip');
+      try {
+        if (supabaseClient) {
+          await supabaseClient.auth.signOut();
+        }
+      } catch (e) {}
+
+      currentUser = null;
+      localStorage.removeItem('ps5_auth_user');
+      showToast('🚪 Disconnesso da PlayStation Network');
+      updateUserInterface();
+      closeAuthModal();
+    }
 
     let games = [];
     let activeStatusFilter = 'all';
@@ -3591,6 +4030,7 @@
 
     // Run
     function init() {
+      initAuth();
       renderPresetThumbnails();
       loadFromLocalStorage();
       loadFromSupabase(false);
