@@ -489,6 +489,18 @@
     .mi-install:hover .mi-ico{background:linear-gradient(135deg,#10b981,#34d399);}
     @media (max-width:640px){.menu-dropdown-panel{width:min(300px,calc(100vw - 24px));right:-6px;}}
 
+
+    /* ===== Duplicate game popup ===== */
+    #dupModal{z-index:130;}
+    .dup-card{width:100%;max-width:400px;text-align:center;padding:28px 26px 22px;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(251,191,36,.55);border-radius:26px;box-shadow:0 0 36px rgba(251,191,36,.22),0 28px 70px rgba(0,0,0,.65);transform:scale(.92);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+    #dupModal.open .dup-card{transform:scale(1);}
+    .dup-ico{width:56px;height:56px;margin:0 auto 14px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:rgba(251,191,36,.14);color:#fbbf24;}
+    .dup-title{font-family:var(--font-display);font-size:1.35rem;font-weight:800;color:#fff;margin:0 0 8px;}
+    .dup-text{font-size:.92rem;line-height:1.5;color:#b6c4dc;margin:0 0 20px;}
+    .dup-text b{color:#fff;}
+    .dup-actions{display:flex;gap:10px;justify-content:center;}
+    .dup-actions .btn{flex:1;justify-content:center;}
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -2325,6 +2337,19 @@
       <div class="gm-footer">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
         <button type="button" class="btn btn-primary" onclick="saveGame()">Salva gioco</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duplicate game warning -->
+  <div class="modal-backdrop dup-backdrop" id="dupModal" onclick="if(event.target===this)closeDupModal()">
+    <div class="dup-card" role="alertdialog" aria-labelledby="dupTitle">
+      <div class="dup-ico"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg></div>
+      <h3 class="dup-title" id="dupTitle">Gioco già presente</h3>
+      <p class="dup-text">Hai già <b id="dupGameName"></b> nella tua libreria<span id="dupGameStatus"></span>. Non l'ho aggiunto di nuovo.</p>
+      <div class="dup-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeDupModal()">Chiudi</button>
+        <button type="button" class="btn btn-primary" id="dupOpenBtn" onclick="openExistingFromDup()">Apri scheda</button>
       </div>
     </div>
   </div>
@@ -4672,6 +4697,36 @@
       if (e.target.id === 'gameModal') closeModal();
     }
 
+    // ---- Duplicate detection ----
+    function normalizeTitleForCompare(t) {
+      return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/&/g, ' and ').replace(/\b(the|il|lo|la|playstation 5|ps5|edition|edizione)\b/g, ' ')
+        .replace(/[^a-z0-9]/g, '');
+    }
+    function findDuplicateGame(title, ignoreId) {
+      const key = normalizeTitleForCompare(title);
+      if (!key) return null;
+      return games.find(g => g.id !== ignoreId && normalizeTitleForCompare(g.title) === key) || null;
+    }
+    let dupExistingId = null;
+    function showDuplicateModal(game) {
+      dupExistingId = game.id;
+      document.getElementById('dupGameName').textContent = game.title;
+      const st = document.getElementById('dupGameStatus');
+      st.textContent = game.status ? ' (' + getStatusLabel(game.status).replace(/\s*💎/, '') + ')' : '';
+      document.getElementById('dupModal').classList.add('open');
+      playSound('blip');
+    }
+    function closeDupModal() {
+      document.getElementById('dupModal').classList.remove('open');
+    }
+    function openExistingFromDup() {
+      const id = dupExistingId;
+      closeDupModal();
+      closeModal();
+      if (id) openGameDetail(id);
+    }
+
     function saveGame() {
       if (!requireLogin()) return;
       const title = document.getElementById('gameTitle').value.trim();
@@ -4681,6 +4736,11 @@
       }
 
       const editId = document.getElementById('editGameId').value;
+      const dup = findDuplicateGame(title, editId);
+      if (dup) {
+        showDuplicateModal(dup);
+        return;
+      }
       const isPlat = document.getElementById('gamePlatCheckbox').checked;
       let status = document.getElementById('gameStatus').value;
       if (isPlat && status !== 'platinato') {
