@@ -464,6 +464,31 @@
       margin: 0.2rem 0.4rem;
     }
 
+
+    /* ===== Header menu (dashboard style) ===== */
+    .menu-dropdown-panel{width:300px;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(0,170,255,.55);border-radius:24px;padding:.7rem;gap:.25rem;box-shadow:0 0 36px rgba(0,140,255,.3),0 24px 60px rgba(0,0,0,.65);}
+    .mi-status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:.35rem .5rem .6rem;}
+    .mi-status-label{font-size:.68rem;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#8ea3c2;}
+    .mi-badge{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;padding:.25rem .7rem;border-radius:999px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#34d399;font-weight:800;}
+    .mi-group-label{font-size:.64rem;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#5f7596;padding:.7rem .6rem .25rem;}
+    .menu-item-btn{gap:12px;padding:.55rem .6rem;border-radius:16px;font-size:.9rem;}
+    .menu-item-btn:hover{transform:none;background:rgba(0,170,255,.12);border-color:rgba(0,200,255,.3);color:#fff;}
+    .mi-ico{width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:rgba(0,170,255,.12);color:#00c8ff;flex-shrink:0;transition:all .2s;}
+    .menu-item-btn:hover .mi-ico{background:linear-gradient(135deg,#0a84ff,#00c8ff);color:#fff;}
+    .mi-text{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;line-height:1.2;}
+    .mi-text > span{font-weight:700;color:#fff;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mi-text small{font-size:.7rem;color:#8ea3c2;font-weight:500;}
+    .mi-chev{color:#5f7596;flex-shrink:0;}
+    .mi-profile{background:rgba(8,18,38,.7);border-color:rgba(0,200,255,.25);margin-bottom:.15rem;}
+    .menu-item-btn.astro-pick-item{color:#fff;}
+    .menu-item-btn.astro-pick-item .mi-ico{background:rgba(236,72,153,.15);color:#f472b6;}
+    .menu-item-btn.astro-pick-item:hover{background:rgba(236,72,153,.12);border-color:rgba(236,72,153,.4);color:#fff;}
+    .menu-item-btn.astro-pick-item:hover .mi-ico{background:linear-gradient(135deg,#ec4899,#f472b6);color:#fff;}
+    .mi-install .mi-ico{background:rgba(16,185,129,.15);color:#34d399;}
+    .mi-install:hover{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.4);}
+    .mi-install:hover .mi-ico{background:linear-gradient(135deg,#10b981,#34d399);}
+    @media (max-width:640px){.menu-dropdown-panel{width:min(300px,calc(100vw - 24px));right:-6px;}}
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -2079,31 +2104,42 @@
           </button>
 
           <div class="menu-dropdown-panel" id="menuDropdownPanel" onclick="event.stopPropagation()">
-            <div style="padding:0.4rem 0.6rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:0.2rem;">
-              <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:700; text-transform:uppercase;">Stato Database</span>
-              <span id="cloudStatusBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:12px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-weight:700;">
+            <div class="mi-status">
+              <span class="mi-status-label">Database</span>
+              <span id="cloudStatusBadge" class="mi-badge">
                 <span style="width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
                 Supabase
               </span>
             </div>
-            <button class="menu-item-btn" onclick="closeMenuDropdown(); openAuthModal();" style="background:rgba(0,240,255,0.1); border-color:rgba(0,240,255,0.3); color:#00f0ff; font-weight:700;">
-              <span>👤</span><span id="menuUserLabel">Profilo / Accedi</span>
+
+            <button type="button" class="menu-item-btn mi-profile" onclick="closeMenuDropdown(); openAuthModal();">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span>
+              <span class="mi-text"><span id="menuUserLabel">Profilo / Accedi</span><small>Account e sicurezza</small></span>
+              <svg class="mi-chev" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </button>
-            <button class="menu-item-btn astro-pick-item" onclick="closeMenuDropdown(); pickRandomBacklog();">
-              <span>🤖</span><span>Cosa Gioco? (Astro)</span>
+
+            <div class="mi-group-label">Azioni</div>
+            <button type="button" class="menu-item-btn astro-pick-item" onclick="closeMenuDropdown(); pickRandomBacklog();">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg></span>
+              <span class="mi-text"><span>Cosa gioco?</span><small>Astro sceglie dal backlog</small></span>
             </button>
-            <button class="menu-item-btn" onclick="closeMenuDropdown(); loadFromSupabase(true);">
-              <span>🔄</span><span>Sincronizza Cloud</span>
+            <button type="button" class="menu-item-btn" onclick="closeMenuDropdown(); loadFromSupabase(true);">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14-4L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4l2-2M20 20v-5h-5"/></svg></span>
+              <span class="mi-text"><span>Sincronizza cloud</span><small>Aggiorna la libreria</small></span>
             </button>
-            <div class="menu-divider"></div>
-            <button class="menu-item-btn" id="installPwaBtn" onclick="installPwaApp();" style="display:none; color:#10b981; font-weight:700;">
-              <span>📲</span><span>Installa App</span>
+
+            <div class="mi-group-label">Dati e app</div>
+            <button type="button" class="menu-item-btn mi-install" id="installPwaBtn" onclick="installPwaApp();" style="display:none;">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M12 8v6M9.5 12l2.5 2.5 2.5-2.5"/></svg></span>
+              <span class="mi-text"><span>Installa app</span><small>Aggiungi alla schermata home</small></span>
             </button>
-            <button class="menu-item-btn" onclick="closeMenuDropdown(); exportData();">
-              <span>💾</span><span>Backup JSON</span>
+            <button type="button" class="menu-item-btn" onclick="closeMenuDropdown(); exportData();">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg></span>
+              <span class="mi-text"><span>Backup JSON</span><small>Scarica la libreria</small></span>
             </button>
-            <button class="menu-item-btn" onclick="closeMenuDropdown(); importDataTrigger();">
-              <span>📥</span><span>Ripristina Backup</span>
+            <button type="button" class="menu-item-btn" onclick="closeMenuDropdown(); importDataTrigger();">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19h14"/></svg></span>
+              <span class="mi-text"><span>Ripristina backup</span><small>Importa da file JSON</small></span>
             </button>
           </div>
         </div>
