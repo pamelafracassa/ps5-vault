@@ -631,12 +631,12 @@
       background: var(--ps-card-bg);
       border: 2px solid var(--ps-card-border);
       border-radius: 24px;
-      padding: 1.3rem 1.6rem;
+      padding: 1.1rem 1.4rem;
       margin-bottom: 2rem;
       backdrop-filter: blur(20px);
       display: flex;
       flex-direction: column;
-      gap: 1.2rem;
+      gap: 1rem;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
 
@@ -645,12 +645,11 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      flex-wrap: wrap;
     }
 
     .search-box {
       flex: 1;
-      min-width: 280px;
+      width: 100%;
       position: relative;
     }
 
@@ -683,81 +682,11 @@
       pointer-events: none;
     }
 
-    .filter-tabs {
-      display: flex;
-      background: rgba(8, 14, 30, 0.85);
-      border: 2px solid rgba(255, 255, 255, 0.1);
-      border-radius: 18px;
-      padding: 5px;
-      overflow-x: auto;
-      max-width: 100%;
-      gap: 4px;
-    }
-
-    .filter-tab {
-      padding: 0.55rem 1.1rem;
-      border-radius: 12px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      color: var(--ps-text-muted);
-      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      white-space: nowrap;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      user-select: none;
-    }
-
-    .filter-tab.active {
-      background: linear-gradient(135deg, #0070d1, #00f0ff);
-      color: #030712;
-      font-weight: 700;
-      box-shadow: 0 4px 14px rgba(0, 240, 255, 0.45);
-      transform: scale(1.04);
-    }
-
-    .controls-row-bottom {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      flex-wrap: wrap;
-      padding-top: 0.8rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .secondary-filters {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    .custom-select {
-      background: rgba(8, 14, 30, 0.85);
-      border: 2px solid rgba(255, 255, 255, 0.15);
-      border-radius: 14px;
-      padding: 0.6rem 1rem;
-      color: var(--ps-text-main);
-      font-family: var(--font-body);
-      font-size: 0.88rem;
-      font-weight: 600;
-      outline: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .custom-select:focus {
-      border-color: var(--ps-neon-cyan);
-    }
-
     .results-count {
       font-size: 0.88rem;
       color: #38bdf8;
       font-weight: 600;
+      padding-left: 0.2rem;
     }
 
     /* Games Grid with Playful Cards */
@@ -1692,30 +1621,6 @@
       .search-box {
         min-width: 100%;
       }
-      .filter-tabs {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 2px;
-      }
-      .filter-tab {
-        padding: 0.45rem 0.8rem;
-        font-size: 0.78rem;
-      }
-      .controls-row-bottom {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-      }
-      .secondary-filters {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-        width: 100%;
-      }
-      .secondary-filters select:last-child {
-        grid-column: span 2;
-      }
       .games-grid {
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
         gap: 1.1rem;
@@ -1802,12 +1707,6 @@
       }
       .game-cover-wrap {
         height: 340px;
-      }
-      .secondary-filters {
-        grid-template-columns: 1fr;
-      }
-      .secondary-filters select:last-child {
-        grid-column: span 1;
       }
       .toast {
         left: 1rem;
@@ -1953,55 +1852,15 @@
       </div>
     </section>
 
-    <!-- Controls Panel -->
+    <!-- Controls Panel: Clean Instant Search -->
     <section class="controls-panel">
       <div class="controls-row-top">
         <div class="search-box">
           <span class="search-icon">🔍</span>
           <input type="text" id="searchInput" placeholder="Cerca titolo, genere, sviluppatore..." oninput="renderGames()">
         </div>
-        <div class="filter-tabs" id="statusFilterTabs">
-          <button class="filter-tab active" data-status="all" onclick="setStatusFilter('all')">Tutti</button>
-          <button class="filter-tab" data-status="in_corso" onclick="setStatusFilter('in_corso')">In Corso</button>
-          <button class="filter-tab" data-status="da_iniziare" onclick="setStatusFilter('da_iniziare')">Backlog</button>
-          <button class="filter-tab" data-status="completato" onclick="setStatusFilter('completato')">Completati</button>
-          <button class="filter-tab" data-status="platinato" onclick="setStatusFilter('platinato')">Platinati 💎</button>
-          <button class="filter-tab" data-status="wishlist" onclick="setStatusFilter('wishlist')">Wishlist</button>
-        </div>
       </div>
-
-      <div class="controls-row-bottom">
-        <div class="secondary-filters">
-          <select class="custom-select" id="formatFilter" onchange="renderGames()">
-            <option value="all">Tutti i formati</option>
-            <option value="Digitale">💾 Digitale</option>
-            <option value="Disco">💿 Disco Fisico</option>
-            <option value="PS Plus Extra/Deluxe">⭐ PS Plus</option>
-          </select>
-
-          <select class="custom-select" id="genreFilter" onchange="renderGames()">
-            <option value="all">Tutti i generi</option>
-            <option value="Azione">Azione</option>
-            <option value="Avventura">Avventura</option>
-            <option value="GDR">GDR / RPG</option>
-            <option value="Open World">Open World</option>
-            <option value="Sparatutto">Sparatutto</option>
-            <option value="Corse">Corse</option>
-            <option value="Horror">Horror</option>
-            <option value="Platform">Platform</option>
-          </select>
-
-          <select class="custom-select" id="sortFilter" onchange="renderGames()">
-            <option value="recent">Aggiunti di recente</option>
-            <option value="title_asc">Titolo (A - Z)</option>
-            <option value="title_desc">Titolo (Z - A)</option>
-            <option value="rating_desc">Voto più alto</option>
-            <option value="hours_desc">Più ore giocate</option>
-          </select>
-        </div>
-
-        <div class="results-count" id="resultsCount">Visualizzazione 0 giochi</div>
-      </div>
+      <div class="results-count" id="resultsCount">Visualizzazione 0 giochi</div>
     </section>
 
     <!-- Games Grid -->
@@ -3362,9 +3221,6 @@
 
     function renderGames() {
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
-      const format = document.getElementById('formatFilter').value;
-      const genre = document.getElementById('genreFilter').value;
-      const sortBy = document.getElementById('sortFilter').value;
 
       let filtered = games.filter(game => {
         if (activeStatusFilter !== 'all') {
@@ -3374,8 +3230,6 @@
             return false;
           }
         }
-        if (format !== 'all' && game.format !== format) return false;
-        if (genre !== 'all' && (!game.genre || !game.genre.toLowerCase().includes(genre.toLowerCase()))) return false;
         if (search) {
           const matchTitle = (game.title || '').toLowerCase().includes(search);
           const matchGenre = (game.genre || '').toLowerCase().includes(search);
@@ -3386,13 +3240,7 @@
         return true;
       });
 
-      filtered.sort((a, b) => {
-        if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
-        if (sortBy === 'title_desc') return b.title.localeCompare(a.title);
-        if (sortBy === 'rating_desc') return (b.rating || 0) - (a.rating || 0);
-        if (sortBy === 'hours_desc') return (b.hours || 0) - (a.hours || 0);
-        return (b.createdAt || 0) - (a.createdAt || 0);
-      });
+      filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
 
       const container = document.getElementById('gamesContainer');
       document.getElementById('resultsCount').textContent = `Visualizzazione ${filtered.length} di ${games.length} giochi`;
