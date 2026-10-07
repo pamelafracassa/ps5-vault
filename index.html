@@ -2677,7 +2677,178 @@
       return div.innerHTML;
     }
 
-    // Online Game Metadata Auto-Fetch via Wikipedia & Curated Database
+    // Curated catalog of well-known PlayStation 5 games for flawless instant metadata
+    const PS5_CURATED_METADATA = {
+      "astro bot": {
+        developer: "Team ASOBI",
+        genre: "Platform, Avventura",
+        review: "Puro divertimento videoludico! Una celebrazione creativa dell'universo PlayStation con un gameplay brillante e un utilizzo geniale del controller DualSense."
+      },
+      "spider-man 2": {
+        developer: "Insomniac Games",
+        genre: "Azione, Open World",
+        review: "Avventura mozzafiato che unisce Peter Parker e Miles Morales. Viaggi rapidi istantanei, oscillazioni spettacolari a New York e feedback aptico da riferimento."
+      },
+      "last of us": {
+        developer: "Naughty Dog",
+        genre: "Azione, Avventura",
+        review: "Capolavoro narrativo ed emotivo ricostruito da zero per PS5: animazioni facciali allo stato dell'arte, audio 3D immersivo e combattimenti ad altissima tensione."
+      },
+      "god of war": {
+        developer: "Santa Monica Studio",
+        genre: "Azione, Avventura",
+        review: "Epica conclusione della saga norrena di Kratos e Atreus. Combattimenti viscerali, scenografie maestose e una narrazione profonda e commovente."
+      },
+      "ragnarok": {
+        developer: "Santa Monica Studio",
+        genre: "Azione, Avventura",
+        review: "Epica conclusione della saga norrena di Kratos e Atreus. Combattimenti viscerali, scenografie maestose e una narrazione profonda e commovente."
+      },
+      "elden ring": {
+        developer: "FromSoftware",
+        genre: "GDR, Soulslike",
+        review: "Un trionfo del design open world: un intero continente oscuro ricco di misteri, boss leggendari, libertà di approccio totale e direzione artistica impareggiabile."
+      },
+      "gran turismo": {
+        developer: "Polyphony Digital",
+        genre: "Corse, Simulazione",
+        review: "La celebrazione definitiva del motorsport. Fisica di guida impeccabile, grafica fotorealistica con ray tracing e simulazione tattile dei freni sul DualSense."
+      },
+      "rebirth": {
+        developer: "Square Enix",
+        genre: "GDR, Avventura",
+        review: "La rinascita del leggendario viaggio fuori da Midgar. Vaste regioni da esplorare, una miriade di minigiochi, combat system sinergico profondo e colonna sonora monumentale."
+      },
+      "yotei": {
+        developer: "Sucker Punch",
+        genre: "Azione, Open World",
+        review: "Seguito spirituale di Tsushima ambientato attorno al monte Yōtei nel 1603. Nuove armi, paesaggi innevati del Giappone feudale e una storia di riscatto e vendetta."
+      },
+      "yōtei": {
+        developer: "Sucker Punch",
+        genre: "Azione, Open World",
+        review: "Seguito spirituale di Tsushima ambientato attorno al monte Yōtei nel 1603. Nuove armi, paesaggi innevati del Giappone feudale e una storia di riscatto e vendetta."
+      },
+      "horizon": {
+        developer: "Guerrilla Games",
+        genre: "Azione, Open World",
+        review: "Un'avventura visivamente sbalorditiva nell'Ovest Proibito. Combattimenti tattici contro macchine colossali, biomi rigogliosi e un comparto tecnico di riferimento."
+      },
+      "returnal": {
+        developer: "Housemarque",
+        genre: "Roguelike, Sparatutto",
+        review: "Uno sparatutto sci-fi ipnotico e implacabile. Loop temporale frenetico, atmosfera aliena oppressiva e uno dei migliori utilizzi in assoluto dei grilletti aptici."
+      },
+      "demon's souls": {
+        developer: "Bluepoint Games",
+        genre: "GDR, Soulslike",
+        review: "Il remake che ha ridefinito la nuova generazione: ambientazione gotica cupa, illuminazione next-gen spettacolare e la leggendaria sfida del capostipite dei Souls."
+      },
+      "stellar blade": {
+        developer: "Shift Up",
+        genre: "Azione, Hack and Slash",
+        review: "Azione ad alta velocità con parry e schivate al millisecondo, ambientazione post-apocalittica curata, boss fight spettacolari e una colonna sonora magnetica."
+      },
+      "resident evil 4": {
+        developer: "Capcom",
+        genre: "Survival Horror, Azione",
+        review: "Rivisitazione esemplare di un mito dei videogiochi. Tensione costante, gestione delle risorse strategica, sparatorie galvanizzanti e grafica fotorealistica."
+      },
+      "wukong": {
+        developer: "Game Science",
+        genre: "GDR d'Azione",
+        review: "Ispirato al classico Il Viaggio in Occidente: combattimenti frenetici con bastone e magie divine, grafica spettacolare in Unreal Engine 5 e boss memorabili."
+      },
+      "alan wake": {
+        developer: "Remedy Entertainment",
+        genre: "Survival Horror, Investigativo",
+        review: "Capolavoro psicologico e horror d'autore. Due realtà parallele intrecciate, atmosfera da incubo a Bright Falls e una direzione artistica d'altissimo livello."
+      },
+      "death stranding": {
+        developer: "Kojima Productions",
+        genre: "Avventura, Open World",
+        review: "Un'esperienza autoriale unica firmata Hideo Kojima: riconnettere un mondo frammentato attraverso viaggi epici, colonna sonora poetica e gameplay di pianificazione."
+      },
+      "silent hill 2": {
+        developer: "Bloober Team",
+        genre: "Survival Horror, Psicologico",
+        review: "La nebbia di Silent Hill ritorna più angosciante che mai. Remake fedele del capolavoro psicologico con audio 3D da brividi e cura maniacale per l'atmosfera."
+      },
+      "cyberpunk": {
+        developer: "CD Projekt RED",
+        genre: "GDR, Open World",
+        review: "Night City rifulge su PS5: una metropoli futuristica ricca di storie crude, bivi narrativi profondi, sparatorie cinetiche e un impatto visivo travolgente."
+      },
+      "ratchet": {
+        developer: "Insomniac Games",
+        genre: "Platform, Azione",
+        review: "Un vero cartone animato interattivo! Salti dimensionali istantanei senza caricamenti, arsenale stravagante e divertimento puro per tutte le età."
+      }
+    };
+
+    function parseCleanReviewAndGenre(extract) {
+      if (!extract) return { genre: '', developer: '', review: '' };
+
+      // Standard Italian Genre mapping based on video game descriptors
+      const genreRules = [
+        { regex: /survival horror|horror/i, label: 'Survival Horror' },
+        { regex: /soulslike|souls-like/i, label: 'GDR, Soulslike' },
+        { regex: /action role-playing|action rpg|gdr d'azione|ruolo d'azione/i, label: "GDR d'Azione" },
+        { regex: /role-playing|rpg|gdr/i, label: 'GDR' },
+        { regex: /roguelike|roguelite/i, label: 'Roguelike, Sparatutto' },
+        { regex: /third-person shooter|sparatutto in terza persona|sparatutto/i, label: 'Sparatutto' },
+        { regex: /hack and slash|hack-and-slash/i, label: 'Azione, Hack and Slash' },
+        { regex: /action-adventure|avventura dinamica/i, label: 'Azione, Avventura' },
+        { regex: /open world|open-world/i, label: 'Azione, Open World' },
+        { regex: /platform|platformer/i, label: 'Platform, Avventura' },
+        { regex: /racing|guida|simulatore di guida|corse/i, label: 'Corse, Simulazione' },
+        { regex: /fighting|picchiaduro/i, label: 'Picchiaduro' },
+        { regex: /action|azione/i, label: 'Azione' },
+        { regex: /adventure|avventura/i, label: 'Avventura' }
+      ];
+
+      let detectedGenre = '';
+      for (const rule of genreRules) {
+        if (rule.regex.test(extract)) {
+          detectedGenre = rule.label;
+          break;
+        }
+      }
+
+      // Developer extraction: look for "developed by [Studio]"
+      let developer = '';
+      const devMatch = extract.match(/(?:developed by|sviluppato da) (?:the )?(?:Chinese |Japanese |American |French |British )?(?:studio |company )?([A-Z0-9][A-Za-z0-9\s&'.-]+?)(?: and published| e pubblicato| for | per |,\s*and published|\.|\()/i);
+      if (devMatch && devMatch[1]) {
+        let cand = devMatch[1].replace(/\[.*?\]/g, '').trim();
+        cand = cand.replace(/^(his company|the studio|video game developer)\s+/i, '');
+        if (cand.length > 2 && cand.length < 35) {
+          developer = cand;
+        }
+      }
+
+      // Create a clean, elegant mini-review/synopsis:
+      // Strip out boring technical release dates, platforms and ports list
+      const sentences = extract.split(/(?<=[.?!])\s+/);
+      const filteredSentences = [];
+      for (let i = 0; i < sentences.length; i++) {
+        const s = sentences[i].trim();
+        if (s.match(/A port to|It was released in|was released on|The game was released|È stato pubblicato|È uscito per|porting per/i)) {
+          continue;
+        }
+        if (i > 0 || s.match(/follows|takes control|players|gameplay|set in|combines|features|story|embarks|mission|protagonist|assume il ruolo|storia segue|ambientato|giocatore controlla/i)) {
+          filteredSentences.push(s);
+        }
+      }
+
+      let review = filteredSentences.join(' ').trim();
+      if (!review || review.length < 30) {
+        review = extract;
+      }
+
+      return { genre: detectedGenre, developer, review };
+    }
+
+    // Online Game Metadata Auto-Fetch via Curated Dictionary + Wikipedia API
     let coverSearchTimer = null;
     function debounceOnlineCoverSearch(val) {
       if (coverSearchTimer) clearTimeout(coverSearchTimer);
@@ -2687,7 +2858,7 @@
       }
       coverSearchTimer = setTimeout(() => {
         searchGameMetadataOnline(val.trim());
-      }, 500);
+      }, 450);
     }
 
     async function searchGameMetadataOnline(query) {
@@ -2695,58 +2866,64 @@
       if (indicator) indicator.style.display = 'inline-flex';
 
       try {
-        const cleanQuery = query.replace(/[^\w\s:’'-]/gi, ' ').trim();
-        const searchApi = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery + ' video game')}&format=json&origin=*`;
-        const sRes = await fetch(searchApi);
-        if (!sRes.ok) throw new Error('Search failed');
-        const sData = await sRes.json();
-
-        const firstHit = sData?.query?.search?.[0];
+        const lowerQ = query.toLowerCase().trim();
         let foundTitle = query;
         let foundImg = getOfficialCoverForTitle(query);
         let foundDev = '';
         let foundGenre = '';
         let foundReview = '';
 
-        if (firstHit && firstHit.title) {
-          foundTitle = firstHit.title;
-          const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(foundTitle.replace(/ /g, '_'))}`;
-          const sumRes = await fetch(summaryApi);
-          if (sumRes.ok) {
-            const sumData = await sumRes.json();
-            
-            // Cover image
-            if (!foundImg) {
-              foundImg = sumData?.thumbnail?.source || sumData?.originalimage?.source;
-            }
+        // Step 1: Check in our curated PS5 knowledge base for immediate high quality info
+        for (const [key, meta] of Object.entries(PS5_CURATED_METADATA)) {
+          if (lowerQ.includes(key)) {
+            foundDev = meta.developer;
+            foundGenre = meta.genre;
+            foundReview = meta.review;
+            break;
+          }
+        }
 
-            // Extract developer and genre from Wikipedia summary extract
-            const extract = sumData.extract || '';
-            const devMatch = extract.match(/developed by ([^,;\.\n]+?)(?: and published by| for|,|\.|\()/i);
-            if (devMatch) {
-              foundDev = devMatch[1].replace(/\[.*?\]/g, '').replace(/^his company\s+/i, '').trim();
-            }
+        // Step 2: Fetch from online Wikipedia API for cover and additional information
+        const cleanQuery = query.replace(/[^\w\s:’'-]/gi, ' ').trim();
+        const searchApi = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery + ' video game')}&format=json&origin=*`;
+        const sRes = await fetch(searchApi);
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          const firstHit = sData?.query?.search?.[0];
 
-            const genreMatch = extract.match(/is an? (?:[0-9]{4} )?(.*?) (?:video )?game/i);
-            if (genreMatch) {
-              foundGenre = genreMatch[1].replace(/\[.*?\]/g, '').trim();
-            } else if (sumData.description) {
-              foundGenre = sumData.description.replace(/video game/gi, '').replace(/playstation/gi, '').trim();
-            }
-
-            foundReview = extract;
-
-            // Try fetching Italian summary for Italian review
-            try {
-              const itUrl = `https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQuery.replace(/ /g, '_'))}`;
-              const itRes = await fetch(itUrl);
-              if (itRes.ok) {
-                const itData = await itRes.json();
-                if (itData?.extract && itData?.type === 'standard' && itData.extract.length > 40) {
-                  foundReview = itData.extract;
-                }
+          if (firstHit && firstHit.title) {
+            foundTitle = firstHit.title;
+            const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(foundTitle.replace(/ /g, '_'))}`;
+            const sumRes = await fetch(summaryApi);
+            if (sumRes.ok) {
+              const sumData = await sumRes.json();
+              if (!foundImg) {
+                foundImg = sumData?.thumbnail?.source || sumData?.originalimage?.source;
               }
-            } catch (e) {}
+
+              // If developer, genre or review were not in curated map, extract clean data
+              const parsed = parseCleanReviewAndGenre(sumData.extract || '');
+              if (!foundDev && parsed.developer) foundDev = parsed.developer;
+              if (!foundGenre && parsed.genre) foundGenre = parsed.genre;
+              if (!foundReview && parsed.review) foundReview = parsed.review;
+
+              // Check Italian Wikipedia summary if review is still missing or in English
+              if (!foundReview || !foundReview.match(/[àèéìòù]/i)) {
+                try {
+                  const itUrl = `https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQuery.replace(/ /g, '_'))}`;
+                  const itRes = await fetch(itUrl);
+                  if (itRes.ok) {
+                    const itData = await itRes.json();
+                    if (itData?.extract && itData?.type === 'standard' && itData.extract.length > 50) {
+                      const itParsed = parseCleanReviewAndGenre(itData.extract);
+                      if (itParsed.review) foundReview = itParsed.review;
+                      if (!foundGenre && itParsed.genre) foundGenre = itParsed.genre;
+                      if (!foundDev && itParsed.developer) foundDev = itParsed.developer;
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
           }
         }
 
@@ -2755,24 +2932,21 @@
           applyDetectedCover(foundImg, foundTitle);
         }
 
-        // Populate Developer field if empty
+        // Populate Developer field
         const devInput = document.getElementById('gameDeveloper');
-        if (devInput && !devInput.value && foundDev) {
+        if (devInput && foundDev) {
           devInput.value = foundDev;
         }
 
-        // Populate Genre field if empty
+        // Populate Genre field with proper Italian genre
         const genreInput = document.getElementById('gameGenre');
-        if (genreInput && !genreInput.value && foundGenre) {
-          // Capitalize genre words nicely
-          const formattedGenre = foundGenre.split(/[,/-]/).map(g => g.trim()).filter(Boolean)
-            .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(', ');
-          genreInput.value = formattedGenre || foundGenre;
+        if (genreInput && foundGenre) {
+          genreInput.value = foundGenre;
         }
 
-        // Populate Notes/Review field if empty
+        // Populate Notes/Review field with clean synopsis/mini-review
         const notesInput = document.getElementById('gameNotes');
-        if (notesInput && !notesInput.value && foundReview) {
+        if (notesInput && foundReview) {
           notesInput.value = foundReview;
         }
 
