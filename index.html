@@ -3,9 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#050814">
+  <meta name="theme-color" content="#070c1e">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PS5 Vault">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- PWA Manifest & App Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
   <title>PlayStation 5 Game Vault • Astro Bot Edition</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1819,6 +1826,12 @@
             </button>
 
             <div class="menu-divider"></div>
+
+            <!-- Install PWA App Button -->
+            <button class="menu-item-btn" id="installPwaBtn" onclick="installPwaApp();" style="display:none; color:#10b981; font-weight:700;">
+              <span>📲</span>
+              <span>Installa App</span>
+            </button>
 
             <button class="menu-item-btn" onclick="closeMenuDropdown(); exportData();">
               <span>💾</span>
@@ -4406,8 +4419,55 @@
       widget.addEventListener('pointerdown', onPointerDown);
     }
 
+    // Progressive Web App (PWA) Service Worker Registration & Install Prompt
+    let deferredPwaPrompt = null;
+    function initPwa() {
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').then((reg) => {
+            console.log('PWA ServiceWorker registered with scope:', reg.scope);
+          }).catch((err) => {
+            console.warn('PWA ServiceWorker registration failed:', err);
+          });
+        });
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const installBtn = document.getElementById('installPwaBtn');
+        if (installBtn) {
+          installBtn.style.display = 'flex';
+        }
+      });
+
+      window.addEventListener('appinstalled', () => {
+        deferredPwaPrompt = null;
+        const installBtn = document.getElementById('installPwaBtn');
+        if (installBtn) installBtn.style.display = 'none';
+        showToast('📲 PS5 Vault installata con successo sulla schermata home!');
+      });
+    }
+
+    function installPwaApp() {
+      closeMenuDropdown();
+      if (deferredPwaPrompt) {
+        deferredPwaPrompt.prompt();
+        deferredPwaPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted the PWA install prompt');
+          }
+          deferredPwaPrompt = null;
+        });
+      } else {
+        // iOS or fallback instructions
+        showToast('📲 Per installare su iPhone/iPad: tocca "Condividi" e scegli "Aggiungi a schermata Home"');
+      }
+    }
+
     // Run
     function init() {
+      initPwa();
       initAuth();
       renderPresetThumbnails();
       loadFromLocalStorage();
