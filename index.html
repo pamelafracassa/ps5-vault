@@ -2975,39 +2975,126 @@
       if (box) box.style.display = 'none';
     }
 
-    // Preprocess uploaded image on canvas to dramatically improve OCR accuracy on game covers
+    // Extended list of popular PlayStation 5 titles for fuzzy matching in photo OCR
+    const KNOWN_POPULAR_PS5_GAMES = [
+      "Astro Bot", "Marvel's Spider-Man 2", "Spider-Man 2", "Spider-Man: Miles Morales", "Marvel's Spider-Man",
+      "The Last of Us Part I", "The Last of Us Part II Remastered", "The Last of Us",
+      "God of War Ragnarök", "God of War Ragnarok", "God of War",
+      "Elden Ring", "Elden Ring: Shadow of the Erdtree",
+      "Horizon Forbidden West", "Horizon Zero Dawn",
+      "Gran Turismo 7", "Final Fantasy VII Rebirth", "Final Fantasy VII Remake", "Final Fantasy XVI",
+      "Ghost of Yōtei", "Ghost of Tsushima", "Returnal", "Demon's Souls", "Stellar Blade",
+      "Resident Evil 4", "Resident Evil Village", "Resident Evil 2", "Resident Evil 3", "Resident Evil 7",
+      "Black Myth: Wukong", "Alan Wake 2", "Death Stranding Director's Cut", "Death Stranding",
+      "Silent Hill 2", "Cyberpunk 2077", "Ratchet & Clank: Rift Apart", "Hogwarts Legacy",
+      "Tekken 8", "Street Fighter 6", "Mortal Kombat 1", "Dragon's Dogma 2", "Helldivers 2",
+      "Baldur's Gate 3", "Dead Space", "Star Wars Jedi: Survivor", "Star Wars Jedi: Fallen Order",
+      "Assassin's Creed Mirage", "Assassin's Creed Valhalla", "Armored Core VI", "Lies of P",
+      "Lords of the Fallen", "Persona 3 Reload", "Persona 5 Royal", "Like a Dragon: Infinite Wealth",
+      "Monster Hunter Wilds", "GTA V", "Grand Theft Auto V", "Red Dead Redemption 2",
+      "Deathloop", "Ghostwire: Tokyo", "Sekiro: Shadows Die Twice", "Bloodborne", "Until Dawn"
+    ];
+
+    function calculateLevenshteinDistance(a, b) {
+      const an = a ? a.length : 0;
+      const bn = b ? b.length : 0;
+      if (an === 0) return bn;
+      if (bn === 0) return an;
+      const matrix = Array.from({ length: bn + 1 }, () => Array(an + 1).fill(0));
+      for (let i = 0; i <= an; i++) matrix[0][i] = i;
+      for (let j = 0; j <= bn; j++) matrix[j][0] = j;
+      for (let j = 1; j <= bn; j++) {
+        for (let i = 1; i <= an; i++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          matrix[j][i] = Math.min(
+            matrix[j - 1][i] + 1,
+            matrix[j][i - 1] + 1,
+            matrix[j - 1][i - 1] + cost
+          );
+        }
+      }
+      return matrix[bn][an];
+    }
+
+    // Fuzzy matching against known PS5 game library
+    function matchKnownPs5Game(ocrRawText) {
+      if (!ocrRawText) return null;
+      const cleanOcr = ocrRawText.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ');
+      let bestMatch = null;
+      let highestSimilarity = 0;
+
+      for (const gameTitle of KNOWN_POPULAR_PS5_GAMES) {
+        const cleanTitle = gameTitle.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+        
+        // Exact substring
+        if (cleanOcr.includes(cleanTitle)) {
+          return { title: gameTitle, score: 1.0 };
+        }
+
+        // Word overlap
+        const titleWords = cleanTitle.split(' ').filter(w => w.length >= 2);
+        const matchCount = titleWords.filter(w => cleanOcr.includes(w)).length;
+        const overlapRatio = matchCount / titleWords.length;
+
+        if (overlapRatio >= 0.75 && overlapRatio > highestSimilarity) {
+          highestSimilarity = overlapRatio;
+          bestMatch = gameTitle;
+        }
+
+        // Substring window typo matching (for OCR mistakes like ELoEN RING)
+        const ocrWords = cleanOcr.split(' ').filter(w => w.length >= 2);
+        for (let i = 0; i <= ocrWords.length - titleWords.length; i++) {
+          const windowStr = ocrWords.slice(i, i + titleWords.length).join(' ');
+          const dist = calculateLevenshteinDistance(windowStr, cleanTitle);
+          const sim = 1 - (dist / Math.max(windowStr.length, cleanTitle.length));
+          if (sim >= 0.72 && sim > highestSimilarity) {
+            highestSimilarity = sim;
+            bestMatch = gameTitle;
+          }
+        }
+      }
+
+      return bestMatch ? { title: bestMatch, score: highestSimilarity } : null;
+    }
+
+    // Preprocess uploaded image on canvas: crop central 70% and optimize contrast & sharpness
     async function preprocessImageForOcr(file) {
       return new Promise((resolve) => {
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement('canvas');
-          const maxDim = 1200;
-          let width = img.width;
-          let height = img.height;
+          // Game titles are almost always in the center-top 75% of the cover box
+          const cropX = Math.round(img.width * 0.05);
+          const cropY = Math.round(img.height * 0.08); // skip top PS5 blue plastic banner
+          const cropW = Math.round(img.width * 0.90);
+          const cropH = Math.round(img.height * 0.75); // skip bottom PEGI/copyright bar
 
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
+          const maxDim = 1200;
+          let targetW = cropW;
+          let targetH = cropH;
+
+          if (targetW > maxDim || targetH > maxDim) {
+            if (targetW > targetH) {
+              targetH = Math.round((targetH * maxDim) / targetW);
+              targetW = maxDim;
             } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
+              targetW = Math.round((targetW * maxDim) / targetH);
+              targetH = maxDim;
             }
           }
 
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = targetW;
+          canvas.height = targetH;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+          ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, targetW, targetH);
 
           // Contrast & Grayscale Enhancement for Crisp Text Recognition
-          const imgData = ctx.getImageData(0, 0, width, height);
+          const imgData = ctx.getImageData(0, 0, targetW, targetH);
           const data = imgData.data;
-          const contrast = 1.35; // boost text edges
+          const contrast = 1.45; // boost text edges
           const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
 
           for (let i = 0; i < data.length; i += 4) {
-            // Luminance
             const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
             const contrasted = factor * (gray - 128) + 128;
             const finalVal = Math.min(255, Math.max(0, contrasted));
@@ -3042,13 +3129,13 @@
           throw new Error('Libreria Tesseract non caricata');
         }
 
-        // Step 1: Preprocess image on canvas
+        // Step 1: Preprocess and crop cover image on canvas
         const enhancedCanvas = await preprocessImageForOcr(file);
 
         if (statusMsg) statusMsg.textContent = 'Lettura del testo sulla copertina in corso...';
 
         // Step 2: Run OCR with Tesseract
-        const { data: { text, words } } = await Tesseract.recognize(enhancedCanvas, 'eng+ita', {
+        const { data: { text } } = await Tesseract.recognize(enhancedCanvas, 'eng+ita', {
           logger: m => {
             if (statusMsg && m.status === 'recognizing text') {
               statusMsg.textContent = `Scansione testo copertina (${Math.round((m.progress || 0) * 100)}%)...`;
@@ -3056,52 +3143,35 @@
           }
         });
 
-        if (statusMsg) statusMsg.textContent = 'Analisi e identificazione del titolo...';
+        if (statusMsg) statusMsg.textContent = 'Identificazione intelligente del titolo...';
+
+        // Step 3: Check fuzzy match against known PlayStation 5 library first!
+        const matchResult = matchKnownPs5Game(text);
+        let bestCandidate = matchResult ? matchResult.title : '';
 
         // Filter blacklisted words (PS5 branding, publisher boilerplate, PEGI ratings, etc.)
-        const blacklistRegex = /^(playstation|ps5|ps4|sony|interactive|entertainment|blu-ray|disc|pegi|cero|esrb|usk|konami|capcom|square|enix|ubisoft|ea|electronic|arts|edition|standard|deluxe|collector|remastered|remake|pro|video|game|games|console|network|plus|all|rights|reserved|trademark|licensed|for|distribution|in|only)$/i;
+        const blacklistRegex = /^(playstation|ps5|ps4|sony|interactive|entertainment|blu-ray|disc|pegi|cero|esrb|usk|konami|capcom|square|enix|ubisoft|ea|electronic|arts|bandai|namco|naughty|dog|insomniac|fromsoftware|santa|monica|guerrilla|atlus|edition|standard|deluxe|collector|remastered|remake|pro|video|game|games|console|network|plus|all|rights|reserved|trademark|licensed|for|distribution|in|only)$/i;
 
-        // Clean lines
-        const candidateLines = text.split('\n')
+        // Extract lines and clean candidates
+        const rawLines = text.split('\n')
           .map(l => l.replace(/[^a-zA-Z0-9\s:’'-]/g, ' ').replace(/\s+/g, ' ').trim())
-          .filter(l => {
-            if (l.length < 3 || l.length > 45) return false;
-            const words = l.split(' ');
-            const nonBlacklisted = words.filter(w => !w.match(blacklistRegex) && isNaN(w));
-            return nonBlacklisted.length >= 1;
-          });
+          .filter(l => l.length >= 3 && l.length <= 45);
 
-        // Also extract high-confidence word combinations
         const uniqueCandidates = [];
-        for (const line of candidateLines) {
-          // Clean line from trailing boilerplate
+        if (bestCandidate) {
+          uniqueCandidates.push(bestCandidate);
+        }
+
+        for (const line of rawLines) {
           const sanitized = line.split(' ')
-            .filter(w => !w.match(blacklistRegex))
+            .filter(w => !w.match(blacklistRegex) && isNaN(w))
             .join(' ').trim();
           if (sanitized.length >= 3 && !uniqueCandidates.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
             uniqueCandidates.push(sanitized);
           }
         }
 
-        // Check if any candidate directly matches our official PlayStation game database
-        let bestCandidate = '';
-        for (const cand of uniqueCandidates) {
-          const directMatch = getOfficialCoverForTitle(cand);
-          if (directMatch) {
-            bestCandidate = cand;
-            break;
-          }
-        }
-
         if (!bestCandidate && uniqueCandidates.length > 0) {
-          // Sort by likelihood: 2-4 words is typical for game titles (e.g., "The Last of Us", "God of War", "Elden Ring")
-          uniqueCandidates.sort((a, b) => {
-            const aWords = a.split(' ').length;
-            const bWords = b.split(' ').length;
-            const aScore = (aWords >= 2 && aWords <= 5) ? 2 : 1;
-            const bScore = (bWords >= 2 && bWords <= 5) ? 2 : 1;
-            return bScore - aScore;
-          });
           bestCandidate = uniqueCandidates[0];
         }
 
@@ -3118,14 +3188,14 @@
           // Show interactive chips if multiple candidates were spotted
           if (candidatesBox && candidatesList && uniqueCandidates.length > 1) {
             candidatesList.innerHTML = uniqueCandidates.slice(0, 5).map(c => `
-              <button type="button" style="background:rgba(0,240,255,0.18); border:1px solid #00f0ff; color:#fff; border-radius:12px; padding:4px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;" onclick="selectCandidateTitle('${c.replace(/'/g, "\\'")}')">
+              <button type="button" style="background:rgba(0,240,255,0.18); border:1px solid #00f0ff; color:#fff; border-radius:12px; padding:5px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="selectCandidateTitle('${c.replace(/'/g, "\\'")}')">
                 🎯 ${escapeHtml(c)}
               </button>
             `).join('');
             candidatesBox.style.display = 'flex';
           }
 
-          showToast(`📸 Testo riconosciuto: "${bestCandidate}"!`);
+          showToast(`📸 Gioco riconosciuto: "${bestCandidate}"!`);
           playSound('jump');
           searchGameMetadataOnline(bestCandidate);
         } else {
