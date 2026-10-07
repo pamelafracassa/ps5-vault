@@ -1325,6 +1325,15 @@
     .gm-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.3);border-radius:8px;}
     #gameModal .gm-row3 .form-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .gm-hint{font-size:.74rem;color:#8ea3c2;margin-top:4px;}
+    .title-suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;background:#0a1530;border:1px solid rgba(0,200,255,.4);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.6);overflow:hidden;display:none;max-height:300px;overflow-y:auto;}
+    .title-suggest.show{display:block;}
+    .ts-item{display:flex;align-items:center;gap:12px;padding:8px 12px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.06);}
+    .ts-item:last-child{border-bottom:0;}
+    .ts-item:hover,.ts-item.active{background:rgba(0,200,255,.14);}
+    .ts-item img{width:38px;height:38px;border-radius:8px;object-fit:cover;flex:none;background:#101c3a;}
+    .ts-name{font-weight:700;font-size:.9rem;color:#fff;line-height:1.2;}
+    .ts-meta{font-size:.72rem;color:#8ea3c2;margin-top:2px;}
+    .ts-name mark{background:none;color:#00c8ff;}
     .gm-found{font-size:.68rem;color:#00c8ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
     #gameModal .cover-preview-card{border:1px solid rgba(0,200,255,.3);background:rgba(5,11,24,.85);border-radius:16px;margin-top:0;}
     .gm-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.9rem;color:#e6edf8;font-weight:600;user-select:none;}
@@ -2296,20 +2305,21 @@
           <div class="form-group">
             <label class="form-label" for="gameTitle">Titolo *</label>
             <div style="position:relative;">
-              <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot" required oninput="debounceOnlineCoverSearch(this.value)">
+              <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot" required autocomplete="off" oninput="onTitleTyping(this.value)" onkeydown="titleSuggestKey(event)" onblur="setTimeout(hideTitleSuggest,180)">
               <div id="coverSearchIndicator" style="display:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:0.75rem; color:#00c8ff; align-items:center; gap:6px;">
                 <span class="spinner-disc"></span> <span>Ricerca cover...</span>
               </div>
+              <div id="titleSuggest" class="title-suggest" role="listbox"></div>
             </div>
           </div>
 
-          <div id="detectedCoverPreviewBox" class="cover-preview-card" style="display:none;">
+          <div id="detectedCoverPreviewBox" class="cover-preview-card" style="display:none;cursor:pointer;" onclick="useDetectedTitle()" title="Tocca per usare questo titolo">
             <img id="detectedCoverImg" src="" alt="Copertina online">
             <div style="flex:1;">
               <div class="gm-found">Copertina trovata</div>
               <div id="detectedCoverTitle" style="font-size:0.9rem; font-weight:700; color:#fff;"></div>
               <div id="detectedCoverMeta" class="gm-found" style="color:#8ea3c2;"></div>
-              <div style="font-size:0.7rem; color:var(--ps-text-muted);">Aggiornata automaticamente da PlayStation e Wikipedia</div>
+              <div style="font-size:0.7rem; color:var(--ps-text-muted);">Tocca per usare questo titolo completo</div>
             </div>
           </div>
 
@@ -4216,6 +4226,79 @@
       coverSearchTimer = setTimeout(() => {
         searchGameMetadataOnline(val.trim());
       }, 450);
+    }
+
+    // ---- Title autocomplete (RAWG, PS5 only) ----
+    let tsTimer = null, tsList = [], tsIdx = -1, tsSeq = 0, tsPicked = '';
+    function onTitleTyping(val) {
+      debounceOnlineCoverSearch(val);
+      clearTimeout(tsTimer);
+      const v = (val || '').trim();
+      if (v.length < 3 || v === tsPicked) { hideTitleSuggest(); return; }
+      tsTimer = setTimeout(() => fetchTitleSuggestions(v), 280);
+    }
+    async function fetchTitleSuggestions(v) {
+      const seq = ++tsSeq;
+      try {
+        const r = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&platforms=${RAWG_PS5}&search_precise=true&page_size=6&search=${encodeURIComponent(v)}`);
+        if (!r.ok || seq !== tsSeq) return;
+        const list = ((await r.json()).results || []).filter(g => g.name && !/\bdlc\b|season pass|expansion pass/i.test(g.name));
+        if (seq !== tsSeq) return;
+        tsList = list.slice(0, 6);
+        tsIdx = -1;
+        renderTitleSuggest(v);
+      } catch (e) {}
+    }
+    function renderTitleSuggest(v) {
+      const box = document.getElementById('titleSuggest');
+      if (!box) return;
+      if (!tsList.length) { hideTitleSuggest(); return; }
+      const toks = rawgNorm(v).split(' ').filter(Boolean);
+      const hl = name => escapeHtml(name).replace(new RegExp('(' + toks.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi'), '<mark>$1</mark>');
+      box.innerHTML = tsList.map((g, i) => `
+        <div class="ts-item${i === tsIdx ? ' active' : ''}" role="option" data-i="${i}" onmousedown="event.preventDefault();pickTitleSuggestion(${i})">
+          ${g.background_image ? `<img src="${escapeHtml(g.background_image)}" alt="" loading="lazy">` : '<img alt="">'}
+          <div><div class="ts-name">${hl(g.name)}</div><div class="ts-meta">${(g.released || '').slice(0, 4) || 'n/d'}${g.metacritic ? ' · Metacritic ' + g.metacritic : ''}</div></div>
+        </div>`).join('');
+      box.classList.add('show');
+    }
+    function hideTitleSuggest() {
+      const box = document.getElementById('titleSuggest');
+      if (box) box.classList.remove('show');
+      tsSeq++;
+    }
+    function pickTitleSuggestion(i) {
+      const g = tsList[i];
+      if (!g) return;
+      const ti = document.getElementById('gameTitle');
+      ti.value = g.name;
+      tsPicked = g.name;
+      hideTitleSuggest();
+      clearTimeout(coverSearchTimer);
+      searchGameMetadataOnline(g.name);
+      if (typeof astroAct === 'function') astroAct('hop');
+    }
+    function titleSuggestKey(e) {
+      const box = document.getElementById('titleSuggest');
+      if (!box || !box.classList.contains('show')) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        tsIdx = (tsIdx + (e.key === 'ArrowDown' ? 1 : -1) + tsList.length) % tsList.length;
+        renderTitleSuggest(document.getElementById('gameTitle').value);
+      } else if (e.key === 'Enter' && tsIdx >= 0) {
+        e.preventDefault();
+        pickTitleSuggestion(tsIdx);
+      } else if (e.key === 'Escape') {
+        e.stopPropagation();
+        hideTitleSuggest();
+      }
+    }
+    function useDetectedTitle() {
+      const lbl = document.getElementById('detectedCoverTitle');
+      const ti = document.getElementById('gameTitle');
+      if (!lbl || !ti) return;
+      const t = (lbl.textContent || '').trim();
+      if (t && t !== 'Copertina trovata') { ti.value = t; tsPicked = t; hideTitleSuggest(); if (typeof astroAct === 'function') astroAct('hop'); }
     }
 
     // Find the Wikipedia page that is really the VIDEO GAME (not a comic, film, person...)
