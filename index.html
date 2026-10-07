@@ -1897,6 +1897,13 @@
       .games-grid { grid-template-columns: 1fr !important; }
       .game-cover-wrap { aspect-ratio: 1 / 0.85; height: auto !important; }
     }
+
+    /* Cover framing: show the whole artwork, blurred copy fills the gaps */
+    .game-cover-wrap { aspect-ratio: 4 / 3 !important; isolation: isolate; }
+    .game-cover-wrap::before { content: ''; position: absolute; inset: -20px; background: var(--cover) center / cover no-repeat; filter: blur(22px) brightness(0.55) saturate(1.2); z-index: -1; }
+    .game-cover { object-fit: contain !important; object-position: center center !important; }
+    .game-card:hover .game-cover { transform: scale(1.04) !important; }
+    @media (max-width: 900px) { .game-cover-wrap { aspect-ratio: 4 / 3 !important; } }
   </style>
 </head>
 <body>
@@ -3577,7 +3584,7 @@
 
         return `
           <div class="game-card ${isCurrentlyPlaying ? 'playing-active' : ''}" onmouseenter="setHeroBackdrop('${cover}')" onclick="openGameDetail('${game.id}', event)">
-            <div class="game-cover-wrap">
+            <div class="game-cover-wrap" style="--cover:url('${cover}')">
               <img src="${cover}" alt="${escapeHtml(game.title)}" class="game-cover" loading="lazy">
               <div class="game-status-badge status-${game.status}"><span>${statusIcon}</span> ${getStatusLabel(game.status)}</div>
               ${isPlat ? `<div class="vip-astro-stamp" title="Trofeo Platino"><img src="platinum-trophy.png" alt="Trofeo Platino"></div>` : ''}
