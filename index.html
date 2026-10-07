@@ -2060,7 +2060,7 @@
           <button type="button" class="filter-tab status-pill active" data-status="all" onclick="setStatusFilter('all')"><span class="pi">▦</span> Tutti</button>
           <button type="button" class="filter-tab status-pill" data-status="in_corso" onclick="setStatusFilter('in_corso')"><span class="pi">▶</span> In corso</button>
           <button type="button" class="filter-tab status-pill" data-status="wishlist" onclick="setStatusFilter('wishlist')"><span class="pi">♥</span> Wishlist</button>
-          <button type="button" class="filter-tab status-pill" data-status="da_iniziare" onclick="setStatusFilter('da_iniziare')"><span class="pi">📚</span> Backlog</button>
+          <button type="button" class="filter-tab status-pill" data-status="da_iniziare" onclick="setStatusFilter('da_iniziare')"><span class="pi"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style="vertical-align:-0.12em"><path d="M4 5h16v3H4zM4 10.5h16v3H4zM4 16h16v3H4z"/></svg></span> Backlog</button>
           <button type="button" class="filter-tab status-pill" data-status="completati_combo" onclick="setStatusFilter('completati_combo')"><span class="pi">✔</span> Completati</button>
         </div>
       </div>
@@ -3625,7 +3625,7 @@
         const isPlat = game.platinum || game.status === 'platinato';
         const isCurrentlyPlaying = activePlayingSession && activePlayingSession.gameId === game.id;
 
-        const statusIcon = { in_corso:'▶', wishlist:'♥', da_iniziare:'📚', completato:'✔', platinato:'💎', abbandonato:'■' }[game.status] || '';
+        const statusIcon = { in_corso:'▶', wishlist:'♥', da_iniziare:'<svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style="vertical-align:-0.12em"><path d="M4 5h16v3H4zM4 10.5h16v3H4zM4 16h16v3H4z"/></svg>', completato:'✔', platinato:'💎', abbandonato:'■' }[game.status] || '';
         const ratingTxt = game.rating ? `${game.rating}<small>/10</small>` : 'N/A';
 
         return `
