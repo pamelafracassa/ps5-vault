@@ -1234,6 +1234,12 @@
     @keyframes astroShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
     .astro-fx.a-talk{animation:astroTalk .5s ease-in-out;}
     @keyframes astroTalk{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    .astro-fx.a-hop{animation:astroHop .9s ease-in-out;}
+    @keyframes astroHop{0%,100%{transform:translateY(0)}15%{transform:translateY(-16px)}30%{transform:translateY(0)}45%{transform:translateY(-16px)}60%{transform:translateY(0)}75%{transform:translateY(-10px)}90%{transform:translateY(0)}}
+    .astro-fx.a-flip{animation:astroFlip .9s cubic-bezier(.45,.05,.3,1);}
+    @keyframes astroFlip{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-40px) rotate(-180deg)}100%{transform:translateY(0) rotate(-360deg)}}
+    .astro-fx.a-sway{animation:astroSway 1.6s ease-in-out;}
+    @keyframes astroSway{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-9px) rotate(-6deg)}75%{transform:translateX(9px) rotate(6deg)}}
     .astro-fx.a-peek{animation:astroPeek .9s ease-in-out;}
     @keyframes astroPeek{0%,100%{transform:rotate(0)}35%{transform:rotate(-8deg)}70%{transform:rotate(7deg)}}
     .astro-floating-companion:not(.dragging):not(.asleep):hover .astro-fx{transform:scale(1.06);transition:transform .25s ease;}
@@ -1980,6 +1986,10 @@
     .controls-panel { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; padding: 0 !important; gap: 0.9rem !important; margin-bottom: 1.4rem !important; }
     .controls-row-top { display: grid !important; grid-template-columns: minmax(260px, 1fr) auto; gap: 1rem !important; }
     .search-box { position: relative; }
+    .search-clear{position:absolute;right:16px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#cfe6ff;font-size:1.3rem;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;}
+    .search-clear.show{display:flex;}
+    .search-clear:hover{background:rgba(255,255,255,.22);}
+    .search-box input{padding-right:3rem !important;}
     .search-svg { position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: #cbd5e1; pointer-events: none; }
     .search-box input { height: 58px; border-radius: 999px !important; padding-left: 3.4rem !important; font-size: 1.05rem !important; background: rgba(8,18,42,0.9) !important; border: 2px solid rgba(60,120,210,0.45) !important; }
     .search-box input:focus { transform: none !important; border-color: #19b4ff !important; box-shadow: 0 0 0 4px rgba(25,180,255,0.15) !important; }
@@ -2200,7 +2210,8 @@
       <div class="controls-row-top">
         <div class="search-box">
           <svg class="search-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.500" y1="16.500" x2="21" y2="21"/></svg>
-          <input type="text" id="searchInput" placeholder="Cerca nella tua libreria..." oninput="renderGames()">
+          <input type="text" id="searchInput" placeholder="Cerca nella tua libreria..." autocomplete="off" autocapitalize="off" spellcheck="false" oninput="onSearchInput()">
+          <button type="button" class="search-clear" id="searchClear" aria-label="Cancella ricerca" onclick="clearSearch()">&times;</button>
         </div>
         <div class="status-pills" id="statusFilterTabs">
           <button type="button" class="filter-tab status-pill active" data-status="all" onclick="setStatusFilter('all')"><span class="pi">▦</span> Tutti</button>
@@ -2871,7 +2882,7 @@
     }
 
     // ---- Astro Bot widget animations ----
-    const ASTRO_ACTS = ['jump', 'spin', 'wave', 'dance', 'shake', 'peek'];
+    const ASTRO_ACTS = ['jump', 'spin', 'wave', 'dance', 'peek', 'hop', 'flip', 'sway'];
     const ASTRO_REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let astroLastActivity = Date.now();
     let astroActBusy = false;
@@ -2915,7 +2926,7 @@
       void fx.offsetWidth; // restart the animation
       fx.classList.add('a-' + name);
       astroActBusy = true;
-      const dur = { enter: 1100, jump: 800, spin: 1000, wave: 1200, dance: 1800, shake: 500, talk: 1000, peek: 900 }[name] || 900;
+      const dur = { enter: 1100, jump: 800, spin: 1000, wave: 1200, dance: 1800, shake: 500, talk: 1000, peek: 900, hop: 900, flip: 900, sway: 1600 }[name] || 900;
       clearTimeout(fx._t);
       fx._t = setTimeout(() => { fx.className = 'astro-fx'; astroActBusy = false; }, dur + 30);
       if (opts.sparkles) astroSparkles(opts.sparkles, opts.colors);
@@ -2944,8 +2955,20 @@
         if (document.hidden || astroActBusy || w.classList.contains('dragging')) return;
         if (Date.now() - astroLastActivity > 75000) { w.classList.add('asleep'); return; }
         if (w.classList.contains('asleep')) return;
-        if (Math.random() < 0.7) astroAct(ASTRO_ACTS[Math.floor(Math.random() * ASTRO_ACTS.length)], { sparkles: Math.random() < 0.4 ? 6 : 0 });
-      }, 9000);
+        if (Math.random() < 0.9) astroAct(ASTRO_ACTS[Math.floor(Math.random() * ASTRO_ACTS.length)], { sparkles: Math.random() < 0.4 ? 6 : 0 });
+      }, 4500);
+
+      // react to scrolling with a little sway (throttled)
+      let lastScrollFx = 0;
+      window.addEventListener('scroll', () => {
+        const n = Date.now();
+        if (n - lastScrollFx > 6000 && !astroActBusy && !w.classList.contains('asleep')) { lastScrollFx = n; astroAct('sway'); }
+      }, { passive: true });
+
+      // occasional chatter
+      setInterval(() => {
+        if (!document.hidden && !w.classList.contains('asleep') && !w.classList.contains('dragging') && Math.random() < 0.35) astroRandomQuote();
+      }, 22000);
     }
 
     function astroRandomQuote() {
@@ -3808,8 +3831,52 @@
       }
     }
 
+    function searchNorm(t) {
+      return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    let searchTimer = null;
+    function onSearchInput() {
+      const box = document.getElementById('searchInput');
+      const clr = document.getElementById('searchClear');
+      if (clr) clr.classList.toggle('show', !!box.value);
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        renderGames();
+        if (typeof astroAct === 'function' && box.value.trim()) astroAct('peek');
+      }, 120);
+    }
+    function clearSearch() {
+      const box = document.getElementById('searchInput');
+      box.value = '';
+      const clr = document.getElementById('searchClear');
+      if (clr) clr.classList.remove('show');
+      renderGames();
+      box.focus();
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.activeElement && document.activeElement.id === 'searchInput') clearSearch();
+    });
+
     function renderGames() {
-      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      const rawSearch = document.getElementById('searchInput').value;
+      const clrBtn = document.getElementById('searchClear');
+      if (clrBtn) clrBtn.classList.toggle('show', !!rawSearch);
+      const search = searchNorm(rawSearch);
+      const tokens = search ? search.split(' ') : [];
+      const scoreOf = (game) => {
+        if (!tokens.length) return 0;
+        const title = searchNorm(game.title);
+        const rest = searchNorm((game.developer || '') + ' ' + (game.genre || ''));
+        let score = 0;
+        for (const t of tokens) {
+          if (title.split(' ').some(w => w.startsWith(t))) score += 3;
+          else if (title.includes(t)) score += 2;
+          else if (rest.includes(t)) score += 1;
+          else return -1;
+        }
+        if (title.startsWith(search)) score += 4;
+        return score;
+      };
 
       let filtered = games.filter(game => {
         // Status filter (from clickable stat cards in top bar)
@@ -3827,18 +3894,13 @@
           }
         }
         // Text search box
-        if (search) {
-          const matchTitle = (game.title || '').toLowerCase().includes(search);
-          const matchGenre = (game.genre || '').toLowerCase().includes(search);
-          const matchDev = (game.developer || '').toLowerCase().includes(search);
-          const matchNotes = (game.notes || '').toLowerCase().includes(search);
-          if (!matchTitle && !matchGenre && !matchDev && !matchNotes) return false;
-        }
+        if (tokens.length && scoreOf(game) < 0) return false;
         return true;
       });
 
       // Sorting based on active chip
       filtered.sort((a, b) => {
+        if (tokens.length) { const d = scoreOf(b) - scoreOf(a); if (d) return d; }
         if (activeSortFilter === 'rating_desc') {
           return (Number(b.rating) || 0) - (Number(a.rating) || 0);
         } else if (activeSortFilter === 'hours_desc') {
@@ -3855,11 +3917,12 @@
       document.getElementById('resultsCount').textContent = `Visualizzazione ${filtered.length} di ${games.length} giochi`;
 
       if (filtered.length === 0) {
+        if (typeof astroAct === 'function' && tokens.length) { astroAct('shake'); astroSay('Non trovo nulla...', 2200); }
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">🎮</div>
             <div class="empty-title">Nessun gioco trovato</div>
-            <div class="empty-desc">Non ci sono titoli corrispondenti ai filtri attuali.</div>
+            <div class="empty-desc">${rawSearch.trim() ? 'Nessun risultato per &laquo;' + escapeHtml(rawSearch.trim()) + '&raquo;. Controlla i filtri attivi o prova un altro nome.' : 'Non ci sono titoli corrispondenti ai filtri attuali.'}</div>
             <button class="btn btn-primary" onclick="openAddGameModal()">Aggiungi un Gioco Ora</button>
           </div>
         `;
