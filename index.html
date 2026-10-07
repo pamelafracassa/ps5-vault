@@ -4248,6 +4248,8 @@
             genre: (best.genres || d.genres || []).map(x => RAWG_GENRES_IT[x.name] || x.name).slice(0, 3).join(', '),
             image: d.background_image || best.background_image || '',
             slug: d.slug || best.slug || '',
+            userRating: Number(d.rating || best.rating) || 0,
+            ratingsCount: Number(d.ratings_count || best.ratings_count) || 0,
             description: (d.description_raw || '').trim()
           };
         }
@@ -4365,9 +4367,18 @@
           if (rawgInfo) {
             if (rawgInfo.released) bits.push(rawgInfo.released.slice(0, 4));
             if (rawgInfo.metacritic) bits.push('Metacritic ' + rawgInfo.metacritic);
+            else if (rawgInfo.userRating && rawgInfo.ratingsCount >= 20) bits.push('Utenti ' + rawgInfo.userRating.toFixed(1) + '/5');
             bits.push('dati da RAWG');
           }
           metaEl.textContent = bits.join(' · ');
+        }
+        // Suggested rating (1-10) from RAWG, only if the field is empty
+        if (rawgInfo) {
+          const ri = document.getElementById('gameRating');
+          let sug = null;
+          if (rawgInfo.metacritic) sug = rawgInfo.metacritic / 10;
+          else if (rawgInfo.userRating && rawgInfo.ratingsCount >= 20) sug = rawgInfo.userRating * 2;
+          if (ri && !ri.value && sug) ri.value = (Math.round(sug * 2) / 2).toString();
         }
         // If RAWG knows the official title, offer it in the title field only when it is a clean superset of what was typed
         if (rawgInfo) {
