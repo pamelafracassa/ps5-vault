@@ -2671,7 +2671,7 @@
       return div.innerHTML;
     }
 
-    // Online Cover Auto-Fetch via Wikipedia & PlayStation Concept API
+    // Online Game Metadata Auto-Fetch via Wikipedia & Curated Database
     let coverSearchTimer = null;
     function debounceOnlineCoverSearch(val) {
       if (coverSearchTimer) clearTimeout(coverSearchTimer);
@@ -2680,24 +2680,15 @@
         return;
       }
       coverSearchTimer = setTimeout(() => {
-        searchCoverOnline(val.trim());
-      }, 550);
+        searchGameMetadataOnline(val.trim());
+      }, 500);
     }
 
-    async function searchCoverOnline(query) {
+    async function searchGameMetadataOnline(query) {
       const indicator = document.getElementById('coverSearchIndicator');
       if (indicator) indicator.style.display = 'inline-flex';
 
       try {
-        // 1. Check direct curated PlayStation CDN map first
-        const directCover = getOfficialCoverForTitle(query);
-        if (directCover) {
-          applyDetectedCover(directCover, query);
-          if (indicator) indicator.style.display = 'none';
-          return;
-        }
-
-        // 2. Fetch from Wikipedia REST Summary API
         const cleanQuery = query.replace(/[^\w\s:’'-]/gi, ' ').trim();
         const searchApi = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery + ' video game')}&format=json&origin=*`;
         const sRes = await fetch(searchApi);
@@ -2705,28 +2696,82 @@
         const sData = await sRes.json();
 
         const firstHit = sData?.query?.search?.[0];
+        let foundTitle = query;
+        let foundImg = getOfficialCoverForTitle(query);
+        let foundDev = '';
+        let foundGenre = '';
+        let foundReview = '';
+
         if (firstHit && firstHit.title) {
-          const pageTitle = firstHit.title;
-          const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(pageTitle.replace(/ /g, '_'))}`;
+          foundTitle = firstHit.title;
+          const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(foundTitle.replace(/ /g, '_'))}`;
           const sumRes = await fetch(summaryApi);
           if (sumRes.ok) {
             const sumData = await sumRes.json();
-            const foundImg = sumData?.thumbnail?.source || sumData?.originalimage?.source;
-            if (foundImg) {
-              applyDetectedCover(foundImg, pageTitle);
-              
-              // Also auto-fill genre or description if empty
-              const genreInput = document.getElementById('gameGenre');
-              if (genreInput && !genreInput.value && sumData.description) {
-                genreInput.value = sumData.description.replace(/video game/gi, '').replace(/playstation/gi, '').replace(/,/g, '').trim() || 'Azione';
-              }
-              if (indicator) indicator.style.display = 'none';
-              return;
+            
+            // Cover image
+            if (!foundImg) {
+              foundImg = sumData?.thumbnail?.source || sumData?.originalimage?.source;
             }
+
+            // Extract developer and genre from Wikipedia summary extract
+            const extract = sumData.extract || '';
+            const devMatch = extract.match(/developed by ([^,;\.\n]+?)(?: and published by| for|,|\.|\()/i);
+            if (devMatch) {
+              foundDev = devMatch[1].replace(/\[.*?\]/g, '').replace(/^his company\s+/i, '').trim();
+            }
+
+            const genreMatch = extract.match(/is an? (?:[0-9]{4} )?(.*?) (?:video )?game/i);
+            if (genreMatch) {
+              foundGenre = genreMatch[1].replace(/\[.*?\]/g, '').trim();
+            } else if (sumData.description) {
+              foundGenre = sumData.description.replace(/video game/gi, '').replace(/playstation/gi, '').trim();
+            }
+
+            foundReview = extract;
+
+            // Try fetching Italian summary for Italian review
+            try {
+              const itUrl = `https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQuery.replace(/ /g, '_'))}`;
+              const itRes = await fetch(itUrl);
+              if (itRes.ok) {
+                const itData = await itRes.json();
+                if (itData?.extract && itData?.type === 'standard' && itData.extract.length > 40) {
+                  foundReview = itData.extract;
+                }
+              }
+            } catch (e) {}
           }
         }
+
+        // Apply detected cover
+        if (foundImg) {
+          applyDetectedCover(foundImg, foundTitle);
+        }
+
+        // Populate Developer field if empty
+        const devInput = document.getElementById('gameDeveloper');
+        if (devInput && !devInput.value && foundDev) {
+          devInput.value = foundDev;
+        }
+
+        // Populate Genre field if empty
+        const genreInput = document.getElementById('gameGenre');
+        if (genreInput && !genreInput.value && foundGenre) {
+          // Capitalize genre words nicely
+          const formattedGenre = foundGenre.split(/[,/-]/).map(g => g.trim()).filter(Boolean)
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(', ');
+          genreInput.value = formattedGenre || foundGenre;
+        }
+
+        // Populate Notes/Review field if empty
+        const notesInput = document.getElementById('gameNotes');
+        if (notesInput && !notesInput.value && foundReview) {
+          notesInput.value = foundReview;
+        }
+
       } catch (err) {
-        console.warn('Cover search error:', err);
+        console.warn('Game metadata search error:', err);
       }
 
       if (indicator) indicator.style.display = 'none';
@@ -2775,7 +2820,7 @@
           }
         });
 
-        if (statusMsg) statusMsg.textContent = 'Analisi titolo gioco completata!';
+        if (statusMsg) statusMsg.textContent = 'Analisi e recupero metadati del gioco...';
 
         // Filter and clean extracted lines
         const rawLines = text.split('\n')
@@ -2785,7 +2830,6 @@
         // Find the most likely game title line
         let bestCandidate = '';
         for (const line of rawLines) {
-          // Remove noise symbols
           const clean = line.replace(/[^a-zA-Z0-9\s:’'-]/g, ' ').replace(/\s+/g, ' ').trim();
           if (clean.length >= 3 && clean.length <= 40) {
             bestCandidate = clean;
@@ -2804,9 +2848,9 @@
             formatSelect.value = 'Disco';
           }
 
-          showToast(`📸 Testo riconosciuto: "${bestCandidate}"! Ricerca cover...`);
+          showToast(`📸 Testo riconosciuto: "${bestCandidate}"! Recupero dati online...`);
           playSound('jump');
-          searchCoverOnline(bestCandidate);
+          searchGameMetadataOnline(bestCandidate);
         } else {
           showToast('📸 Foto acquisita: inserisci o correggi il titolo per trovare la cover!');
         }
@@ -2815,7 +2859,6 @@
         showToast('⚠️ Errore nella scansione della foto. Inserisci il titolo manualmente.');
       } finally {
         if (indicator) indicator.classList.remove('active');
-        // Reset file input so same file can be captured again if needed
         event.target.value = '';
       }
     }
