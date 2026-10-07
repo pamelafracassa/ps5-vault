@@ -2991,6 +2991,70 @@
       } catch (e) {}
     }
 
+    // ---- Cross-device live session sync (stored as a marker row in Supabase) ----
+    const SESSION_ROW_ID = '__active_session__';
+    const SB_HEADERS = { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` };
+
+    async function pushActiveSessionToCloud(gameId, startTime) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/games`, {
+          method: 'POST',
+          headers: { ...SB_HEADERS, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify({
+            id: SESSION_ROW_ID, title: '__session__', status: 'da_iniziare', format: 'Digitale',
+            genre: '', developer: '', hours: 0, rating: null, trophies: 0, platinum: false,
+            cover_url: '', notes: JSON.stringify({ gameId, startTime }), created_at: 0
+          })
+        });
+        if (res.ok && activePlayingSession && activePlayingSession.gameId === gameId) {
+          activePlayingSession.pushed = true;
+        }
+      } catch (e) { console.warn('Session push failed', e); }
+    }
+
+    async function clearActiveSessionInCloud() {
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/games?id=eq.${SESSION_ROW_ID}`, { method: 'DELETE', headers: SB_HEADERS });
+      } catch (e) { console.warn('Session clear failed', e); }
+    }
+
+    async function pollRemoteSession() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/games?id=eq.${SESSION_ROW_ID}&select=notes`, { headers: SB_HEADERS });
+        if (!res.ok) return;
+        const rows = await res.json();
+        const remote = rows.length ? JSON.parse(rows[0].notes || 'null') : null;
+
+        if (remote && remote.gameId) {
+          const local = activePlayingSession;
+          if (!local || local.gameId !== remote.gameId || local.startTime !== remote.startTime) {
+            if (local?.timerInterval) clearInterval(local.timerInterval);
+            startSessionTimer(remote.gameId, remote.startTime);
+            activePlayingSession.pushed = true;
+            localStorage.setItem('ps5_active_session', JSON.stringify(remote));
+            renderGames();
+            const g = games.find(x => x.id === remote.gameId);
+            if (g) showToast(`🎮 Sessione in corso su "${g.title}" (altro dispositivo)`);
+          }
+        } else if (activePlayingSession) {
+          if (activePlayingSession.pushed) {
+            // Session was stopped from another device: drop it locally and reload hours
+            clearInterval(activePlayingSession.timerInterval);
+            activePlayingSession = null;
+            localStorage.removeItem('ps5_active_session');
+            await loadFromSupabase(false);
+            renderGames();
+            showToast('⏹️ Sessione terminata da un altro dispositivo');
+          } else {
+            pushActiveSessionToCloud(activePlayingSession.gameId, activePlayingSession.startTime);
+          }
+        }
+      } catch (e) { /* offline: ignore */ }
+    }
+
+    setInterval(pollRemoteSession, 5000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) pollRemoteSession(); });
+
     function toggleGamePlayTimer(gameId, event) {
       if (event) event.stopPropagation();
       const game = games.find(g => g.id === gameId);
@@ -3008,6 +3072,7 @@
         const now = Date.now();
         startSessionTimer(gameId, now);
         localStorage.setItem('ps5_active_session', JSON.stringify({ gameId, startTime: now }));
+        pushActiveSessionToCloud(gameId, now);
         
         playSound('jump');
         showToast(`🎮 Sessione avviata per "${game.title}"! Buon divertimento!`);
@@ -3082,6 +3147,7 @@
 
       activePlayingSession = null;
       localStorage.removeItem('ps5_active_session');
+      if (manualStop) clearActiveSessionInCloud();
 
       const game = games.find(g => g.id === gameId);
       if (game) {
@@ -3152,7 +3218,8 @@
 
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-        const data = await response.json();
+        const rawData = await response.json();
+        const data = Array.isArray(rawData) ? rawData.filter(d => d.id !== SESSION_ROW_ID) : rawData;
         if (Array.isArray(data) && data.length > 0) {
           games = data.map(dbItem => ({
             id: dbItem.id,
