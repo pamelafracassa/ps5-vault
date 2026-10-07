@@ -856,84 +856,86 @@
       border-color: rgba(239, 68, 68, 0.5);
     }
 
-    /* Floating Astro Bot Interactive Assistant Widget - Super Simpatico! */
+    /* Standalone Floating Astro Bot Figurine Widget */
     .astro-floating-companion {
       position: fixed;
       bottom: 2rem;
       left: 2rem;
       z-index: 45;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 12px;
-      background: rgba(10, 16, 36, 0.92);
-      backdrop-filter: blur(25px);
-      border: 2px solid #00f0ff;
-      padding: 10px 18px 10px 12px;
-      border-radius: 40px;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 240, 255, 0.5);
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       user-select: none;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 20px rgba(0, 240, 255, 0.45));
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .astro-floating-companion:hover {
-      transform: translateY(-6px) scale(1.06);
-      border-color: #ec4899;
-      box-shadow: 0 18px 45px rgba(236, 72, 153, 0.45);
+      transform: translateY(-8px) scale(1.12);
+      filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 28px rgba(0, 240, 255, 0.8));
     }
 
     .astro-floating-companion:active {
-      transform: scale(0.95);
+      transform: scale(0.92);
     }
 
-    .astro-avatar-wrap {
-      width: 52px;
-      height: 52px;
-      background: linear-gradient(135deg, #0070d1, #00f0ff);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 18px rgba(0, 240, 255, 0.7);
-      border: 2px solid #ffffff;
-      position: relative;
-    }
-
-    .astro-avatar-wrap img {
-      width: 44px;
-      height: 44px;
+    .astro-figurine-img {
+      width: 78px;
+      height: 98px;
       object-fit: contain;
-      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
-      animation: astroWiggle 3.5s infinite ease-in-out;
+      animation: astroHoverFloat 3.8s ease-in-out infinite;
     }
 
-    @keyframes astroWiggle {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      20% { transform: rotate(-10deg) scale(1.05); }
-      40% { transform: rotate(10deg) scale(1.05); }
-      60% { transform: rotate(-5deg); }
-      80% { transform: rotate(5deg); }
+    @keyframes astroHoverFloat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      25% {
+        transform: translateY(-6px) rotate(-3deg);
+      }
+      50% {
+        transform: translateY(-11px) rotate(2deg);
+      }
+      75% {
+        transform: translateY(-5px) rotate(4deg);
+      }
     }
 
-    .astro-bubble-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .astro-bubble-text .astro-name {
-      font-size: 0.78rem;
-      color: #00f0ff;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .astro-bubble-text .astro-msg {
-      font-size: 0.88rem;
+    /* Comic Speech Bubble that pops out on hover or click */
+    .astro-speech-pop {
+      position: absolute;
+      bottom: 96px;
+      left: 10px;
+      background: #0f172a;
+      border: 2px solid #00f0ff;
+      border-radius: 18px;
+      padding: 8px 14px;
+      font-size: 0.82rem;
+      font-weight: 700;
       color: #ffffff;
-      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 240, 255, 0.4);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(10px) scale(0.85);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .astro-speech-pop::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 28px;
+      border-width: 8px 8px 0 8px;
+      border-style: solid;
+      border-color: #00f0ff transparent transparent transparent;
+    }
+
+    .astro-floating-companion:hover .astro-speech-pop,
+    .astro-speech-pop.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
 
     /* Modal Styling */
@@ -1255,11 +1257,13 @@
         padding: 0.9rem 1.2rem;
       }
       .astro-floating-companion {
-        bottom: 1rem;
-        left: 1rem;
-        right: 1rem;
-        justify-content: center;
-        padding: 8px 14px;
+        bottom: 1.2rem;
+        left: 1.2rem;
+        right: auto;
+      }
+      .astro-figurine-img {
+        width: 64px;
+        height: 82px;
       }
     }
 
@@ -1485,15 +1489,10 @@
     <section class="games-grid" id="gamesContainer"></section>
   </main>
 
-  <!-- Astro Bot Floating Companion -->
-  <div class="astro-floating-companion" onclick="astroRandomQuote()" title="Clicca su Astro Bot per un saluto o consiglio!">
-    <div class="astro-avatar-wrap">
-      <img src="astro-bot.png" alt="Astro Bot">
-    </div>
-    <div class="astro-bubble-text">
-      <span class="astro-name">🤖 Astro Bot • Tocca qui!</span>
-      <span class="astro-msg" id="astroSpeech">Tocca qui o premi "Cosa Gioco?" per estrarre!</span>
-    </div>
+  <!-- Astro Bot Standalone Floating Figurine Widget -->
+  <div class="astro-floating-companion" onclick="astroRandomQuote()" title="Tocca Astro Bot per farlo parlare!">
+    <div class="astro-speech-pop" id="astroSpeech">Tocca qui o premi "Cosa Gioco?" per estrarre!</div>
+    <img src="astro-bot.png" alt="Astro Bot Figurine" class="astro-figurine-img">
   </div>
 
   <!-- Add/Edit Game Modal -->
@@ -1920,12 +1919,18 @@
       "Tocca qui e scelgo io per te!"
     ];
 
+    let astroPopTimeout = null;
     function astroRandomQuote() {
       const speech = document.getElementById('astroSpeech');
       if (speech) {
         const quote = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
         speech.textContent = quote;
+        speech.classList.add('visible');
         playSound('blip');
+        if (astroPopTimeout) clearTimeout(astroPopTimeout);
+        astroPopTimeout = setTimeout(() => {
+          speech.classList.remove('visible');
+        }, 4000);
       }
     }
 
@@ -2179,6 +2184,11 @@
       const speech = document.getElementById('astroSpeech');
       if (speech) {
         speech.textContent = `Astro consiglia: "${randomGame.title}"!`;
+        speech.classList.add('visible');
+        if (astroPopTimeout) clearTimeout(astroPopTimeout);
+        astroPopTimeout = setTimeout(() => {
+          speech.classList.remove('visible');
+        }, 4500);
       }
 
       showToast(`🤖 Astro Bot ha scelto: "${randomGame.title}"! 🚀 Buon divertimento!`);
@@ -2567,9 +2577,13 @@
           const speech = document.getElementById('astroSpeech');
           if (speech) {
             speech.textContent = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
+            speech.classList.add('visible');
+            setTimeout(() => {
+              speech.classList.remove('visible');
+            }, 3500);
           }
         }
-      }, 12000);
+      }, 14000);
     }
 
     init();
