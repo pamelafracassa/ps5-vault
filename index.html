@@ -501,6 +501,9 @@
     .dup-actions{display:flex;gap:10px;justify-content:center;}
     .dup-actions .btn{flex:1;justify-content:center;}
 
+    .rawg-credit{text-align:center;font-size:.72rem;color:#5f7596;padding:1.5rem 1rem 6.5rem;}
+    .rawg-credit a{color:#00c8ff;text-decoration:none;font-weight:700;}
+    .rawg-credit a:hover{text-decoration:underline;}
     .btn {
       display: inline-flex;
       align-items: center;
@@ -2243,6 +2246,8 @@
     <section class="games-grid" id="gamesContainer"></section>
   </main>
 
+  <footer class="rawg-credit">Dati dei giochi forniti da <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a> · descrizioni da Wikipedia</footer>
+
   <!-- Astro Bot Standalone Draggable Figurine Widget -->
   <div class="astro-floating-companion" id="astroWidget" title="Trascina Astro Bot dove vuoi o toccalo per estrarre!">
     <div class="astro-speech-pop" id="astroSpeech">Tocca me o premi "Cosa Gioco?" per estrarre!</div>
@@ -2303,6 +2308,7 @@
             <div style="flex:1;">
               <div class="gm-found">Copertina trovata</div>
               <div id="detectedCoverTitle" style="font-size:0.9rem; font-weight:700; color:#fff;"></div>
+              <div id="detectedCoverMeta" class="gm-found" style="color:#8ea3c2;"></div>
               <div style="font-size:0.7rem; color:var(--ps-text-muted);">Aggiornata automaticamente da PlayStation e Wikipedia</div>
             </div>
           </div>
@@ -4190,6 +4196,68 @@
       } catch (e) { return ''; }
     }
 
+    // ---- RAWG (https://rawg.io) : primary source for title / developer / genre ----
+    const RAWG_KEY = 'cf7580bff2084c8383c4870ae90accae';
+    const RAWG_PS5 = 187;
+    const RAWG_GENRES_IT = {
+      'Action': 'Azione', 'Adventure': 'Avventura', 'RPG': 'GDR', 'Shooter': 'Sparatutto', 'Platformer': 'Platform',
+      'Racing': 'Corse', 'Fighting': 'Picchiaduro', 'Strategy': 'Strategia', 'Puzzle': 'Rompicapo', 'Simulation': 'Simulazione',
+      'Sports': 'Sport', 'Indie': 'Indie', 'Arcade': 'Arcade', 'Casual': 'Casual', 'Family': 'Famiglia', 'Massively Multiplayer': 'Multiplayer online',
+      'Board Games': 'Giochi da tavolo', 'Educational': 'Educativo', 'Card': 'Carte'
+    };
+    const rawgCache = new Map();
+    function rawgNorm(t) { return (t || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+    async function rawgLookup(query) {
+      const key = rawgNorm(query);
+      if (key.length < 2) return null;
+      if (rawgCache.has(key)) return rawgCache.get(key);
+      let result = null;
+      try {
+        const sr = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&platforms=${RAWG_PS5}&search_precise=true&page_size=8&search=${encodeURIComponent(query)}`);
+        if (!sr.ok) throw new Error('RAWG ' + sr.status);
+        const list = (await sr.json()).results || [];
+        const qTokens = key.split(' ').filter(w => w.length > 1 || /\d/.test(w));
+        let best = null, bestScore = -1e9;
+        list.forEach((g, idx) => {
+          const nName = rawgNorm(g.name);
+          const tTokens = nName.split(' ');
+          const hit = qTokens.filter(w => tTokens.includes(w)).length;
+          if (qTokens.length && hit / qTokens.length < 0.99) return;   // every typed word must be in the name
+          let score = 10 - idx * 0.3;
+          if (nName === key) score += 6;
+          score -= Math.max(0, tTokens.length - qTokens.length) * 1.5; // closest title wins (DLC / editions lose)
+          const yr = parseInt((g.released || '0').slice(0, 4), 10);
+          if (yr >= 2020) score += 1 + (yr - 2020) * 0.1;
+          if (/separate ways|expansion|dlc|season pass|bundle/i.test(g.name)) score -= 5;
+          if (!g.released) score -= 3;
+          if (score > bestScore) { bestScore = score; best = g; }
+        });
+        if (best) {
+          let d = {};
+          try {
+            const dr = await fetch(`https://api.rawg.io/api/games/${best.id}?key=${RAWG_KEY}`);
+            if (dr.ok) d = await dr.json();
+          } catch (e) {}
+          result = {
+            id: best.id,
+            name: best.name,
+            released: best.released || d.released || '',
+            metacritic: best.metacritic || d.metacritic || null,
+            developer: (d.developers || []).map(x => x.name).slice(0, 2).join(', '),
+            genre: (best.genres || d.genres || []).map(x => RAWG_GENRES_IT[x.name] || x.name).slice(0, 3).join(', '),
+            image: d.background_image || best.background_image || '',
+            slug: d.slug || best.slug || '',
+            description: (d.description_raw || '').trim()
+          };
+        }
+      } catch (e) {
+        console.warn('RAWG lookup failed, falling back to Wikipedia:', e.message || e);
+      }
+      rawgCache.set(key, result);
+      return result;
+    }
+
     async function searchGameMetadataOnline(query) {
       const indicator = document.getElementById('coverSearchIndicator');
       if (indicator) indicator.style.display = 'inline-flex';
@@ -4202,6 +4270,7 @@
         let foundGenre = '';
         let foundReview = '';
         let curatedReview = false;
+        let rawgInfo = null;
 
         // Step 1: Check in our curated PS5 knowledge base for immediate high quality info
         for (const [key, meta] of Object.entries(PS5_CURATED_METADATA)) {
@@ -4214,14 +4283,23 @@
           }
         }
 
-        // Step 2: Fetch from online Wikipedia API for cover and additional information
-        const cleanQuery = query.replace(/[^\w\s:’'-]/gi, ' ').trim();
+        // Step 1b: RAWG (PS5 only) for the official title, developer and genre
+        const rawg = await rawgLookup(query);
+        if (rawg) {
+          if (!foundDev && rawg.developer) foundDev = rawg.developer;
+          if (!foundGenre && rawg.genre) foundGenre = rawg.genre;
+          foundTitle = rawg.name;
+          rawgInfo = rawg;
+        }
+
+        // Step 2: Wikipedia for the Italian description (and cover fallback)
+        const cleanQuery = (rawg ? rawg.name : query).replace(/[^\w\s:’'-]/gi, ' ').trim();
         const bestTitle = await findVideoGameWikiTitle(cleanQuery);
         const firstHit = bestTitle ? { title: bestTitle } : null;
         {
           if (firstHit && firstHit.title) {
-            foundTitle = firstHit.title;
-            const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(foundTitle.replace(/ /g, '_'))}`;
+            if (!rawgInfo) foundTitle = firstHit.title;
+            const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(firstHit.title.replace(/ /g, '_'))}`;
             const sumRes = await fetch(summaryApi);
             if (sumRes.ok) {
               const sumData = await sumRes.json();
@@ -4238,7 +4316,7 @@
               // Italian version: follow the official interlanguage link of the English page
               if (!curatedReview) {
                 try {
-                  const llUrl = `https://en.wikipedia.org/w/api.php?action=query&redirects=1&prop=langlinks&lllang=it&titles=${encodeURIComponent(foundTitle)}&format=json&origin=*`;
+                  const llUrl = `https://en.wikipedia.org/w/api.php?action=query&redirects=1&prop=langlinks&lllang=it&titles=${encodeURIComponent(firstHit.title)}&format=json&origin=*`;
                   const llRes = await fetch(llUrl);
                   let itTitle = '';
                   if (llRes.ok) {
@@ -4265,15 +4343,36 @@
           }
         }
 
+        if (!foundReview && rawgInfo && rawgInfo.description) {
+          foundReview = rawgInfo.description.split(/\n+/).filter(Boolean).slice(0, 2).join(' ').slice(0, 600);
+        }
+
         // Still English? translate it to Italian
         if (foundReview && !curatedReview && looksEnglish(foundReview)) {
           const tr = await translateToItalian(foundReview);
           if (tr) foundReview = tr;
         }
 
+        if (!foundImg && rawgInfo && rawgInfo.image) foundImg = rawgInfo.image;
+
         // Apply detected cover
         if (foundImg) {
           applyDetectedCover(foundImg, foundTitle);
+        }
+        const metaEl = document.getElementById('detectedCoverMeta');
+        if (metaEl) {
+          const bits = [];
+          if (rawgInfo) {
+            if (rawgInfo.released) bits.push(rawgInfo.released.slice(0, 4));
+            if (rawgInfo.metacritic) bits.push('Metacritic ' + rawgInfo.metacritic);
+            bits.push('dati da RAWG');
+          }
+          metaEl.textContent = bits.join(' · ');
+        }
+        // If RAWG knows the official title, offer it in the title field only when it is a clean superset of what was typed
+        if (rawgInfo) {
+          const ti = document.getElementById('gameTitle');
+          if (ti && rawgNorm(ti.value) === rawgNorm(rawgInfo.name) && ti.value.trim() !== rawgInfo.name) ti.value = rawgInfo.name;
         }
 
         // Populate Developer field
