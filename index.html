@@ -1208,6 +1208,49 @@
       }
     }
 
+
+    /* ===== Astro Bot widget animations ===== */
+    .astro-fx{transform-origin:50% 100%;will-change:transform;}
+    .astro-ground-shadow{width:46px;height:9px;margin-top:-4px;border-radius:50%;background:radial-gradient(ellipse,rgba(0,0,0,.55),transparent 70%);animation:astroShadow 3.8s ease-in-out infinite;pointer-events:none;}
+    @keyframes astroShadow{0%,100%{transform:scaleX(1);opacity:.8}50%{transform:scaleX(.7);opacity:.45}}
+    .astro-floating-companion.dragging .astro-ground-shadow{animation:none;opacity:.2;transform:scaleX(.6);}
+    .astro-particles{position:absolute;left:50%;top:40%;width:0;height:0;pointer-events:none;}
+    .astro-spark{position:absolute;left:0;top:0;font-size:var(--sz,14px);line-height:1;color:var(--c,#00f0ff);text-shadow:0 0 8px currentColor;opacity:0;animation:astroSpark var(--d,900ms) ease-out forwards;}
+    @keyframes astroSpark{0%{opacity:0;transform:translate(0,0) scale(.3) rotate(0)}15%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1) rotate(var(--r,180deg))}}
+    .astro-zzz{position:absolute;top:-6px;right:-14px;display:none;pointer-events:none;font-weight:800;color:#8ea3c2;font-family:var(--font-display);}
+    .astro-zzz span{position:absolute;opacity:0;animation:astroZ 2.4s ease-in-out infinite;}
+    .astro-zzz span:nth-child(1){font-size:.7rem;animation-delay:0s}
+    .astro-zzz span:nth-child(2){font-size:.9rem;animation-delay:.8s}
+    .astro-zzz span:nth-child(3){font-size:1.15rem;animation-delay:1.6s}
+    @keyframes astroZ{0%{opacity:0;transform:translate(0,10px)}30%{opacity:1}100%{opacity:0;transform:translate(10px,-26px)}}
+    .astro-floating-companion.asleep .astro-zzz{display:block;}
+    .astro-floating-companion.asleep .astro-figurine-img{animation:astroSleep 4s ease-in-out infinite;filter:saturate(.7) brightness(.85);}
+    @keyframes astroSleep{0%,100%{transform:rotate(9deg) translateY(2px) scale(1)}50%{transform:rotate(9deg) translateY(4px) scale(1.03,.97)}}
+
+    .astro-fx.a-enter{animation:astroEnter 1.1s cubic-bezier(.34,1.3,.5,1) both;}
+    @keyframes astroEnter{0%{transform:translateY(-70vh) scale(.6,1.3) rotate(-20deg);opacity:0}55%{opacity:1;transform:translateY(0) scale(1.18,.8)}72%{transform:translateY(-22px) scale(.95,1.06)}86%{transform:translateY(0) scale(1.06,.94)}100%{transform:translateY(0) scale(1)}}
+    .astro-fx.a-jump{animation:astroJump .8s cubic-bezier(.3,.7,.4,1);}
+    @keyframes astroJump{0%{transform:scale(1)}18%{transform:scale(1.14,.82)}45%{transform:translateY(-58px) scale(.92,1.12)}70%{transform:translateY(-4px) scale(1.02)}82%{transform:scale(1.12,.86)}100%{transform:scale(1)}}
+    .astro-fx.a-spin{animation:astroSpin 1s cubic-bezier(.45,.05,.3,1);}
+    @keyframes astroSpin{0%{transform:translateY(0) rotateY(0)}40%{transform:translateY(-34px) rotateY(540deg)}100%{transform:translateY(0) rotateY(720deg)}}
+    .astro-fx.a-wave{animation:astroWave 1.2s ease-in-out;}
+    @keyframes astroWave{0%,100%{transform:rotate(0)}15%{transform:rotate(-14deg)}30%{transform:rotate(12deg)}45%{transform:rotate(-12deg)}60%{transform:rotate(10deg)}75%{transform:rotate(-6deg)}}
+    .astro-fx.a-dance{animation:astroDance 1.8s ease-in-out;}
+    @keyframes astroDance{0%,100%{transform:translateX(0) rotate(0)}12%{transform:translateX(-12px) rotate(-10deg) scale(1.05,.95)}25%{transform:translateX(0) translateY(-14px) rotate(0)}37%{transform:translateX(12px) rotate(10deg) scale(1.05,.95)}50%{transform:translateX(0) translateY(-14px)}62%{transform:translateX(-12px) rotate(-10deg) scale(1.05,.95)}75%{transform:translateX(0) translateY(-14px)}87%{transform:translateX(12px) rotate(10deg) scale(1.05,.95)}}
+    .astro-fx.a-shake{animation:astroShake .5s ease-in-out;}
+    @keyframes astroShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px) rotate(-5deg)}40%{transform:translateX(7px) rotate(5deg)}60%{transform:translateX(-5px) rotate(-3deg)}80%{transform:translateX(4px) rotate(2deg)}}
+    .astro-fx.a-talk{animation:astroTalk .5s ease-in-out 2;}
+    @keyframes astroTalk{0%,100%{transform:scale(1)}50%{transform:scale(1.06,.95)}}
+    .astro-fx.a-peek{animation:astroPeek .9s ease-in-out;}
+    @keyframes astroPeek{0%,100%{transform:rotate(0)}30%{transform:rotate(-16deg) translateX(-6px)}65%{transform:rotate(14deg) translateX(6px)}}
+    .astro-floating-companion:not(.dragging):not(.asleep):hover .astro-fx{animation:astroHover .6s ease-in-out infinite;}
+    @keyframes astroHover{0%,100%{transform:rotate(-3deg) scale(1.05)}50%{transform:rotate(3deg) scale(1.08)}}
+    .astro-floating-companion.asleep:hover .astro-fx{animation:none;}
+    @media (prefers-reduced-motion: reduce){
+      .astro-fx,.astro-ground-shadow,.astro-figurine-img{animation:none!important;}
+      .astro-spark{display:none;}
+    }
+
     /* Comic Speech Bubble that pops out on hover or click */
     .astro-speech-pop {
       position: absolute;
@@ -2203,7 +2246,10 @@
   <!-- Astro Bot Standalone Draggable Figurine Widget -->
   <div class="astro-floating-companion" id="astroWidget" title="Trascina Astro Bot dove vuoi o toccalo per estrarre!">
     <div class="astro-speech-pop" id="astroSpeech">Tocca me o premi "Cosa Gioco?" per estrarre!</div>
-    <img src="astro-bot.png" alt="Astro Bot Figurine" class="astro-figurine-img" draggable="false">
+    <div class="astro-fx" id="astroFx"><img src="astro-bot.png" alt="Astro Bot Figurine" class="astro-figurine-img" draggable="false"></div>
+    <div class="astro-ground-shadow"></div>
+    <div class="astro-particles" id="astroParticles"></div>
+    <div class="astro-zzz" id="astroZzz"><span>z</span><span>z</span><span>Z</span></div>
   </div>
 
   <!-- Add/Edit Game Modal -->
@@ -2821,11 +2867,90 @@
       if (speech) {
         speech.textContent = text;
         speech.classList.add('visible');
+        if (typeof astroAct === 'function') astroAct('talk');
         if (astroPopTimeout) clearTimeout(astroPopTimeout);
         astroPopTimeout = setTimeout(() => {
           speech.classList.remove('visible');
         }, duration);
       }
+    }
+
+    // ---- Astro Bot widget animations ----
+    const ASTRO_ACTS = ['jump', 'spin', 'wave', 'dance', 'shake', 'peek'];
+    const ASTRO_REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let astroLastActivity = Date.now();
+    let astroActBusy = false;
+
+    function astroSparkles(count = 10, colors = ['#00f0ff', '#ffd23f', '#ff6ec7', '#7dffb0']) {
+      const box = document.getElementById('astroParticles');
+      if (!box || ASTRO_REDUCED) return;
+      const glyphs = ['✦', '★', '✧', '●'];
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'astro-spark';
+        const ang = (Math.PI * 2 * i) / count + Math.random() * 0.6;
+        const dist = 40 + Math.random() * 45;
+        el.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+        el.style.setProperty('--x', Math.cos(ang) * dist + 'px');
+        el.style.setProperty('--y', Math.sin(ang) * dist - 18 + 'px');
+        el.style.setProperty('--r', (Math.random() * 360 - 180) + 'deg');
+        el.style.setProperty('--sz', (10 + Math.random() * 10) + 'px');
+        el.style.setProperty('--d', (700 + Math.random() * 500) + 'ms');
+        el.style.setProperty('--c', colors[Math.floor(Math.random() * colors.length)]);
+        box.appendChild(el);
+        setTimeout(() => el.remove(), 1400);
+      }
+    }
+
+    function astroWake() {
+      astroLastActivity = Date.now();
+      const w = document.getElementById('astroWidget');
+      if (w && w.classList.contains('asleep')) {
+        w.classList.remove('asleep');
+        astroAct('jump', { sparkles: 8 });
+      }
+    }
+
+    function astroAct(name, opts = {}) {
+      const fx = document.getElementById('astroFx');
+      const w = document.getElementById('astroWidget');
+      if (!fx || !w || ASTRO_REDUCED) return;
+      if (w.classList.contains('asleep') && !opts.force) return;
+      fx.className = 'astro-fx';
+      void fx.offsetWidth; // restart the animation
+      fx.classList.add('a-' + name);
+      astroActBusy = true;
+      const dur = { enter: 1100, jump: 800, spin: 1000, wave: 1200, dance: 1800, shake: 500, talk: 1000, peek: 900 }[name] || 900;
+      clearTimeout(fx._t);
+      fx._t = setTimeout(() => { fx.className = 'astro-fx'; astroActBusy = false; }, dur + 30);
+      if (opts.sparkles) astroSparkles(opts.sparkles, opts.colors);
+    }
+
+    // Reaction helpers used by the rest of the app
+    function astroCelebrate() { astroAct('dance', { sparkles: 14 }); setTimeout(() => astroAct('jump', { sparkles: 10 }), 1850); }
+    function astroThink() { astroAct('spin', { sparkles: 6 }); }
+
+    function setupAstroAnimations() {
+      const w = document.getElementById('astroWidget');
+      if (!w) return;
+      // entry drop-in
+      setTimeout(() => { astroAct('enter'); setTimeout(() => astroSparkles(8), 750); }, 400);
+
+      // wake on any interaction
+      ['pointerdown', 'keydown', 'mousemove', 'touchstart', 'scroll'].forEach(ev =>
+        window.addEventListener(ev, () => { if (w.classList.contains('asleep')) astroWake(); else astroLastActivity = Date.now(); }, { passive: true }));
+
+      // little hop + sparkles when tapped (the draggable code still picks a random game)
+      w.addEventListener('pointerup', () => { astroAct('jump', { sparkles: 8 }); });
+      w.addEventListener('pointerenter', () => { if (!w.classList.contains('asleep')) astroSparkles(3); });
+
+      // random idle behaviour every ~9s, falls asleep after 75s without activity
+      setInterval(() => {
+        if (document.hidden || astroActBusy || w.classList.contains('dragging')) return;
+        if (Date.now() - astroLastActivity > 75000) { w.classList.add('asleep'); return; }
+        if (w.classList.contains('asleep')) return;
+        if (Math.random() < 0.7) astroAct(ASTRO_ACTS[Math.floor(Math.random() * ASTRO_ACTS.length)], { sparkles: Math.random() < 0.4 ? 6 : 0 });
+      }, 9000);
     }
 
     function astroRandomQuote() {
@@ -3283,6 +3408,7 @@
         playSound('jump');
         showToast(`🎮 Sessione avviata per "${game.title}"! Buon divertimento!`);
         astroSay(`Stai giocando a "${game.title}"! 🔥`, 4000);
+        if (typeof astroAct === 'function') astroAct('dance', { sparkles: 8 });
 
         // Auto-switch status to 'in_corso' if it was backlog
         if (game.status === 'da_iniziare') {
@@ -3618,6 +3744,9 @@
         showToast('⚠️ Nessun gioco disponibile da estrarre');
         return;
       }
+
+      if (typeof astroWake === 'function') astroWake();
+      if (typeof astroThink === 'function') astroThink();
 
       // Priority 1: Da iniziare o in corso
       let pool = games.filter(g => g.status === 'da_iniziare' || g.status === 'in_corso');
@@ -4716,6 +4845,7 @@
       st.textContent = game.status ? ' (' + getStatusLabel(game.status).replace(/\s*💎/, '') + ')' : '';
       document.getElementById('dupModal').classList.add('open');
       playSound('blip');
+      if (typeof astroAct === 'function') { astroWake(); astroAct('shake'); }
     }
     function closeDupModal() {
       document.getElementById('dupModal').classList.remove('open');
@@ -4787,6 +4917,7 @@
         games.unshift(newGame);
         savedItem = newGame;
         showToast('🎉 Nuovo gioco aggiunto alla libreria PS5!');
+        if (typeof astroAct === 'function') { astroWake(); astroAct('jump', { sparkles: 12 }); }
       }
 
       saveToLocalStorage();
@@ -4846,6 +4977,7 @@
     }
 
     function triggerConfetti() {
+      if (typeof astroCelebrate === 'function') astroCelebrate();
       if (window.confetti) {
         window.confetti({
           particleCount: 120,
@@ -5105,6 +5237,7 @@
       restorePlayingSession();
       loadFromSupabase(false);
       setupAstroDraggable();
+      setupAstroAnimations();
 
       // Periodic playful Astro quotes (spontaneous silent speech bubbles)
       setInterval(() => {
