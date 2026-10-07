@@ -778,6 +778,7 @@
       position: relative;
       transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
     }
 
     .game-card:hover {
@@ -1209,6 +1210,144 @@
     .modal-backdrop.open {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    /* Detail Modal Specific Styling */
+    .detail-hero-banner {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      overflow: hidden;
+      border-radius: 24px 24px 0 0;
+      background: #0a0e1a;
+    }
+
+    .detail-hero-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      filter: blur(12px) brightness(0.4) saturate(1.4);
+      transform: scale(1.1);
+    }
+
+    .detail-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(15,23,42,0.2) 0%, rgba(15,23,42,0.95) 100%);
+    }
+
+    .detail-hero-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      padding: 1.4rem;
+      z-index: 2;
+    }
+
+    .detail-poster-img {
+      width: 110px;
+      height: 145px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 2px solid rgba(0, 240, 255, 0.6);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 240, 255, 0.35);
+      flex-shrink: 0;
+    }
+
+    .detail-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .detail-title-text {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.25;
+      font-family: var(--font-display);
+    }
+
+    .detail-dev-text {
+      font-size: 0.82rem;
+      color: var(--ps-text-muted);
+      font-weight: 600;
+    }
+
+    .detail-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .detail-pill-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      background: rgba(0, 240, 255, 0.15);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      color: #00f0ff;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+
+    .detail-metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: rgba(8, 14, 30, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 18px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .detail-metric-card {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .detail-metric-val {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-family: var(--font-display);
+    }
+
+    .detail-metric-lbl {
+      font-size: 0.68rem;
+      color: var(--ps-text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-synopsis-box {
+      background: rgba(8, 14, 30, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1rem 1.2rem;
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: #e2e8f0;
+    }
+
+    .detail-actions-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 1.2rem 1.6rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(6, 10, 20, 0.5);
+      border-radius: 0 0 28px 28px;
     }
 
     .modal-window {
@@ -2010,6 +2149,66 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
         <button class="btn btn-primary" onclick="saveGame()">Salva Gioco</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Details Popup Modal -->
+  <div class="modal-backdrop" id="gameDetailModal" onclick="closeDetailModalOnBackdrop(event)">
+    <div class="modal-window" style="max-width:580px; padding:0; overflow:hidden;">
+      <div class="detail-hero-banner">
+        <img id="detailHeroBg" class="detail-hero-bg" src="" alt="Sfondo">
+        <div class="detail-hero-overlay"></div>
+        <button class="modal-close" style="position:absolute; top:12px; right:12px; z-index:10; background:rgba(0,0,0,0.6);" onclick="closeDetailModal()">&times;</button>
+        <div class="detail-hero-content">
+          <img id="detailCoverImg" class="detail-poster-img" src="" alt="Copertina">
+          <div class="detail-title-block">
+            <div id="detailCaseFormat" style="font-size:0.68rem; font-weight:800; color:#38bdf8; letter-spacing:1px; text-transform:uppercase;">PLAYSTATION® 5</div>
+            <h2 id="detailTitle" class="detail-title-text">Titolo Gioco</h2>
+            <div id="detailDeveloper" class="detail-dev-text">Studio Sviluppatore</div>
+            <div id="detailTagsWrap" class="detail-tags-wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding:1.4rem; display:flex; flex-direction:column; gap:1.2rem;">
+        <!-- Metrics Bar -->
+        <div class="detail-metrics-grid">
+          <div class="detail-metric-card">
+            <span class="detail-metric-val" id="detailHours">0h</span>
+            <span class="detail-metric-lbl">Ore Giocate</span>
+          </div>
+          <div class="detail-metric-card">
+            <span class="detail-metric-val" id="detailRating" style="color:#facc15;">-</span>
+            <span class="detail-metric-lbl">Voto Personale</span>
+          </div>
+          <div class="detail-metric-card">
+            <span class="detail-metric-val" id="detailTrophies">0%</span>
+            <span class="detail-metric-lbl">Trofei</span>
+          </div>
+          <div class="detail-metric-card">
+            <span class="detail-metric-val" id="detailStatusPill" style="font-size:0.95rem;">-</span>
+            <span class="detail-metric-lbl">Stato</span>
+          </div>
+        </div>
+
+        <!-- Synopsis / Review Section -->
+        <div>
+          <div style="font-size:0.8rem; font-weight:800; color:#00f0ff; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span>📖</span> <span>Trama & Recensione</span>
+          </div>
+          <div id="detailSynopsis" class="detail-synopsis-box">Nessuna recensione disponibile per questo gioco.</div>
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="detail-actions-footer">
+        <button type="button" class="btn btn-secondary" id="detailEditBtn" onclick="">
+          ✏️ Modifica Scheda
+        </button>
+        <button type="button" class="btn btn-primary" id="detailPlayBtn" onclick="" style="padding:0.65rem 1.4rem;">
+          ▶️ Gioca Ora
+        </button>
       </div>
     </div>
   </div>
@@ -3222,7 +3421,7 @@
         const isCurrentlyPlaying = activePlayingSession && activePlayingSession.gameId === game.id;
 
         return `
-          <div class="game-card" onmouseenter="setHeroBackdrop('${cover}')">
+          <div class="game-card" onmouseenter="setHeroBackdrop('${cover}')" onclick="openGameDetail('${game.id}', event)">
             <!-- PS5 Case Header Strip -->
             <div class="ps5-case-header">
               <div class="ps5-case-logo">
@@ -3290,14 +3489,14 @@
                 </div>
               </div>
 
-              <div class="game-actions">
-                <button class="btn btn-secondary btn-card" onclick="editGame('${game.id}')">
+              <div class="game-actions" onclick="event.stopPropagation()">
+                <button class="btn btn-secondary btn-card" onclick="editGame('${game.id}', event)">
                   ✏️ Modifica
                 </button>
-                <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}')" title="Avanza stato rapido">
+                <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}', event)" title="Avanza stato rapido">
                   🔄 Avanza
                 </button>
-                <button class="btn-icon delete" onclick="deleteGame('${game.id}')" title="Elimina dalla libreria">
+                <button class="btn-icon delete" onclick="deleteGame('${game.id}', event)" title="Elimina dalla libreria">
                   🗑️
                 </button>
               </div>
@@ -3880,6 +4079,98 @@
       setTimeout(() => document.getElementById('gameTitle').focus(), 150);
     }
 
+    // Open Game Details Pop-up Modal
+    function openGameDetail(gameId, event) {
+      if (event) event.stopPropagation();
+      const game = games.find(g => g.id === gameId);
+      if (!game) return;
+
+      playSound('blip');
+      setHeroBackdrop(game.coverUrl);
+
+      const modal = document.getElementById('gameDetailModal');
+      const heroBg = document.getElementById('detailHeroBg');
+      const coverImg = document.getElementById('detailCoverImg');
+      const caseFormat = document.getElementById('detailCaseFormat');
+      const title = document.getElementById('detailTitle');
+      const dev = document.getElementById('detailDeveloper');
+      const tagsWrap = document.getElementById('detailTagsWrap');
+      const hours = document.getElementById('detailHours');
+      const rating = document.getElementById('detailRating');
+      const trophies = document.getElementById('detailTrophies');
+      const statusPill = document.getElementById('detailStatusPill');
+      const synopsis = document.getElementById('detailSynopsis');
+      const editBtn = document.getElementById('detailEditBtn');
+      const playBtn = document.getElementById('detailPlayBtn');
+
+      const cover = game.coverUrl || 'https://image.api.playstation.com/vulcan/ap/rnd/202406/0500/8f15268257b878597757fcc5f2c9545840867bc71fc863b1.png';
+      if (heroBg) heroBg.src = cover;
+      if (coverImg) coverImg.src = cover;
+
+      const formatLabel = game.format === 'Disco' ? '💿 BLU-RAY™ PS5' : (game.format === 'Digitale' ? '💾 DIGITALE PS STORE' : '⭐ PLAYSTATION® PLUS');
+      if (caseFormat) caseFormat.textContent = formatLabel;
+      if (title) title.textContent = game.title || 'Senza Titolo';
+      if (dev) dev.textContent = game.developer ? `🏢 ${game.developer}` : 'PlayStation Studios / Partner';
+
+      // Genres tags
+      if (tagsWrap) {
+        const genres = (game.genre || '').split(',').map(s => s.trim()).filter(Boolean);
+        if (genres.length > 0) {
+          tagsWrap.innerHTML = genres.map(g => `<span class="detail-pill-tag">${escapeHtml(g)}</span>`).join('');
+        } else {
+          tagsWrap.innerHTML = `<span class="detail-pill-tag">PS5</span>`;
+        }
+      }
+
+      // Metrics
+      if (hours) hours.textContent = `${game.hours || 0}h`;
+      if (rating) rating.textContent = game.rating ? `⭐ ${game.rating}/10` : 'N/D';
+      if (trophies) {
+        const isPlat = game.platinum || game.status === 'platinato';
+        trophies.innerHTML = isPlat ? '💎 100%' : `🎯 ${game.trophies || 0}%`;
+      }
+      if (statusPill) {
+        statusPill.textContent = getStatusLabel(game.status);
+      }
+
+      // Review / Synopsis
+      if (synopsis) {
+        synopsis.textContent = game.notes && game.notes.trim().length > 0 
+          ? game.notes 
+          : 'Nessuna recensione o nota presente. Clicca su "Modifica Scheda" per personalizzarla!';
+      }
+
+      // Buttons
+      if (editBtn) {
+        editBtn.onclick = () => {
+          closeDetailModal();
+          editGame(game.id);
+        };
+      }
+
+      if (playBtn) {
+        const isCurrentlyPlaying = activePlayingSession && activePlayingSession.gameId === game.id;
+        playBtn.className = isCurrentlyPlaying ? 'btn btn-secondary' : 'btn btn-primary';
+        playBtn.style.color = isCurrentlyPlaying ? '#ef4444' : '#030712';
+        playBtn.innerHTML = isCurrentlyPlaying ? '⏹️ Termina Sessione' : '▶️ Gioca Ora';
+        playBtn.onclick = () => {
+          closeDetailModal();
+          toggleGamePlayTimer(game.id);
+        };
+      }
+
+      if (modal) modal.classList.add('open');
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById('gameDetailModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function closeDetailModalOnBackdrop(e) {
+      if (e.target.id === 'gameDetailModal') closeDetailModal();
+    }
+
     function editGame(id) {
       const game = games.find(g => g.id === id);
       if (!game) return;
@@ -4117,6 +4408,8 @@
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeModal();
+        closeDetailModal();
+        closeAuthModal();
         closeMenuDropdown();
       }
     });
