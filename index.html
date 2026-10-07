@@ -4315,7 +4315,10 @@
     async function psStoreSearch(term) {
       try {
         const url = `https://store.playstation.com/store/api/chihiro/00_09_000/tumbler/IT/it/999/${encodeURIComponent(term)}?size=10&gkb=1&geoCountry=IT&platform=ps5`;
-        const r = await fetch(url);
+        const ctl = new AbortController();
+        const to = setTimeout(() => ctl.abort(), 1800);
+        const r = await fetch(url, { signal: ctl.signal });
+        clearTimeout(to);
         if (!r.ok) return [];
         return (await r.json()).links || [];
       } catch (e) { return []; }
@@ -4525,6 +4528,7 @@
         let foundGenre = '';
         let foundReview = '';
         let psSource = false;
+        let wikiThumb = '';
         let itIntro = '', enIntro = '';
         let curatedReview = false;
         let rawgInfo = null;
@@ -4550,9 +4554,13 @@
         }
 
         // Step 1c: official PlayStation Store art (sharper than RAWG screenshots). Curated covers keep priority.
+        let psPromise = null;
         if (!foundImg) {
-          const ps = await psStoreCover([rawg ? rawg.name : '', query], rawg && rawg.released ? parseInt(rawg.released.slice(0, 4), 10) : 0);
-          if (ps) { foundImg = ps.url; psSource = true; }
+          const PS_DEADLINE = 2000; // if the Store is slow, RAWG/Wikipedia art is used instead
+          psPromise = Promise.race([
+            psStoreCover([rawg ? rawg.name : '', query], rawg && rawg.released ? parseInt(rawg.released.slice(0, 4), 10) : 0),
+            new Promise(res => setTimeout(() => res(null), PS_DEADLINE))
+          ]).catch(() => null);
         }
 
         // Step 2: Wikipedia for the Italian description (and cover fallback)
@@ -4566,8 +4574,9 @@
             const sumRes = await fetch(summaryApi);
             if (sumRes.ok) {
               const sumData = await sumRes.json();
-              if (!foundImg) {
-                foundImg = sumData?.thumbnail?.source || sumData?.originalimage?.source;
+              wikiThumb = sumData?.thumbnail?.source || sumData?.originalimage?.source || '';
+              if (!foundImg && !psPromise) {
+                foundImg = wikiThumb;
               }
 
               // If developer, genre or review were not in curated map, extract clean data
@@ -4629,7 +4638,13 @@
           if (tr) foundReview = tr;
         }
 
+        // Collect the PlayStation Store result (already running in parallel); otherwise fall back
+        if (psPromise) {
+          const ps = await psPromise;
+          if (ps && ps.url) { foundImg = ps.url; psSource = true; }
+        }
         if (!foundImg && rawgInfo && rawgInfo.image) foundImg = rawgInfo.image;
+        if (!foundImg && wikiThumb) foundImg = wikiThumb;
 
         // Apply detected cover
         if (foundImg) {
