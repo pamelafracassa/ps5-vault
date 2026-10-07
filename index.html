@@ -2270,7 +2270,7 @@
               <button type="button" onclick="detailSetStatusPrompt()">&#128260; Cambia stato</button>
               <div class="dt-submenu" id="detailStatusList">
                 <button type="button" onclick="detailChangeStatus('in_corso')">&#9654; In Corso</button>
-                <button type="button" onclick="detailChangeStatus('da_iniziare')">&#128218; Backlog</button>
+                <button type="button" onclick="detailChangeStatus('da_iniziare')">&#9776; Backlog</button>
                 <button type="button" onclick="detailChangeStatus('wishlist')">&#9829; Wishlist</button>
                 <button type="button" onclick="detailChangeStatus('completato')">&#10004; Completato</button>
                 <button type="button" onclick="detailChangeStatus('abbandonato')">&#9632; Abbandonato</button>
@@ -2811,6 +2811,13 @@
       }
     }
 
+    function requireLogin() {
+      if (currentUser) return true;
+      showToast('🔒 Accedi per modificare la libreria');
+      openAuthModal();
+      return false;
+    }
+
     function openAuthModal() {
       playSound('blip');
       updateUserInterface();
@@ -3135,6 +3142,7 @@
 
     function toggleGamePlayTimer(gameId, event) {
       if (event) event.stopPropagation();
+      if (!requireLogin()) return;
       const game = games.find(g => g.id === gameId);
       if (!game) return;
 
@@ -4221,6 +4229,7 @@
     }
 
     function openAddGameModal() {
+      if (!requireLogin()) return;
       playSound('blip');
       document.getElementById('modalTitle').textContent = '➕ Nuovo Gioco PS5';
       document.getElementById('editGameId').value = '';
@@ -4264,6 +4273,7 @@
       document.getElementById('detailStatusList').classList.toggle('open');
     }
     function detailApplyChange(game, changes, msg) {
+      if (!requireLogin()) return;
       Object.assign(game, changes);
       saveToLocalStorage();
       renderGames();
@@ -4274,6 +4284,7 @@
       openGameDetail(game.id);
     }
     function detailChangeStatus(status) {
+      if (!requireLogin()) return;
       const game = games.find(g => g.id === detailGameId);
       if (!game) return;
       const changes = { status };
@@ -4282,12 +4293,14 @@
       if (status === 'completato') triggerConfetti();
     }
     function detailMarkPlatinum() {
+      if (!requireLogin()) return;
       const game = games.find(g => g.id === detailGameId);
       if (!game) return;
       detailApplyChange(game, { status: 'platinato', platinum: true, trophies: 100 }, '💎 Platino sbloccato!');
       triggerConfetti();
     }
     function detailDelete() {
+      if (!requireLogin()) return;
       const id = detailGameId;
       closeDetailMenu();
       closeDetailModal();
@@ -4390,6 +4403,7 @@
     }
 
     function editGame(id) {
+      if (!requireLogin()) return;
       const game = games.find(g => g.id === id);
       if (!game) return;
 
@@ -4425,6 +4439,7 @@
     }
 
     function saveGame() {
+      if (!requireLogin()) return;
       const title = document.getElementById('gameTitle').value.trim();
       if (!title) {
         showToast('⚠️ Inserisci un titolo per il gioco');
@@ -4491,6 +4506,7 @@
     }
 
     function quickCycleStatus(id) {
+      if (!requireLogin()) return;
       const game = games.find(g => g.id === id);
       if (!game) return;
 
@@ -4521,6 +4537,7 @@
     }
 
     function deleteGame(id) {
+      if (!requireLogin()) return;
       const game = games.find(g => g.id === id);
       if (!game) return;
 
@@ -4564,10 +4581,12 @@
     }
 
     function importDataTrigger() {
+      if (!requireLogin()) return;
       document.getElementById('importFileInput').click();
     }
 
     function importData(e) {
+      if (!requireLogin()) return;
       const file = e.target.files[0];
       if (!file) return;
 
