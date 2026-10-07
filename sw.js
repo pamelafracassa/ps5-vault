@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ps5-vault-cache-v5';
+const CACHE_NAME = 'ps5-vault-cache-v6';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

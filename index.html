@@ -1941,6 +1941,15 @@
     .dt-synopsis::-webkit-scrollbar-track{background:transparent;}
     .dt-metric small{white-space:nowrap;}
     .dt-metric{padding:0 10px;}
+    .dt-menu-wrap{position:relative;}
+    .dt-menu{display:none;position:absolute;right:0;bottom:58px;min-width:230px;background:#0b1a33;border:1px solid rgba(0,170,255,.5);border-radius:16px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,.6);z-index:10;}
+    .dt-menu.open{display:block;}
+    .dt-menu button{display:block;width:100%;text-align:left;background:none;border:0;color:#e6edf8;font:inherit;font-weight:700;font-size:.92rem;padding:10px 14px;border-radius:10px;cursor:pointer;}
+    .dt-menu button:hover{background:rgba(0,170,255,.15);}
+    .dt-menu button.danger{color:#ef4444;}
+    .dt-submenu{display:none;padding-left:14px;}
+    .dt-submenu.open{display:block;}
+    .dt-submenu button{font-size:.85rem;font-weight:600;padding:8px 14px;}
     @media (max-width:760px){
       .dt-body{grid-template-columns:1fr;gap:20px;padding:22px 18px 14px;}
       .dt-cover-col{max-width:210px;margin:0 auto;width:100%;}
@@ -2255,7 +2264,21 @@
         <button type="button" class="dt-btn dt-btn-ghost" id="detailEditBtn" onclick=""><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg> Modifica Scheda</button>
         <div class="dt-footer-right">
           <button type="button" class="dt-btn dt-btn-primary" id="detailPlayBtn" onclick="">Gioca Ora</button>
-          <button type="button" class="dt-more" id="detailMoreBtn" onclick="closeDetailModal()" aria-label="Altro">&#8942;</button>
+          <div class="dt-menu-wrap">
+            <button type="button" class="dt-more" id="detailMoreBtn" onclick="toggleDetailMenu(event)" aria-label="Altro">&#8942;</button>
+            <div class="dt-menu" id="detailMenu">
+              <button type="button" onclick="detailSetStatusPrompt()">&#128260; Cambia stato</button>
+              <div class="dt-submenu" id="detailStatusList">
+                <button type="button" onclick="detailChangeStatus('in_corso')">&#9654; In Corso</button>
+                <button type="button" onclick="detailChangeStatus('da_iniziare')">&#128218; Backlog</button>
+                <button type="button" onclick="detailChangeStatus('wishlist')">&#9829; Wishlist</button>
+                <button type="button" onclick="detailChangeStatus('completato')">&#10004; Completato</button>
+                <button type="button" onclick="detailChangeStatus('abbandonato')">&#9632; Abbandonato</button>
+              </div>
+              <button type="button" onclick="detailMarkPlatinum()">&#128142; Segna come platinato</button>
+              <button type="button" class="danger" onclick="detailDelete()">&#128465; Elimina</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -4221,11 +4244,63 @@
     }
 
     // Open Game Details Pop-up Modal
+    // Detail card "more" menu
+    let detailGameId = null;
+    function toggleDetailMenu(e) {
+      if (e) e.stopPropagation();
+      document.getElementById('detailMenu').classList.toggle('open');
+      document.getElementById('detailStatusList').classList.remove('open');
+    }
+    function closeDetailMenu() {
+      const m = document.getElementById('detailMenu');
+      if (m) m.classList.remove('open');
+      const l = document.getElementById('detailStatusList');
+      if (l) l.classList.remove('open');
+    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest || !e.target.closest('.dt-menu-wrap')) closeDetailMenu();
+    });
+    function detailSetStatusPrompt() {
+      document.getElementById('detailStatusList').classList.toggle('open');
+    }
+    function detailApplyChange(game, changes, msg) {
+      Object.assign(game, changes);
+      saveToLocalStorage();
+      renderGames();
+      updateStats();
+      syncGameToCloud(game, false);
+      showToast(msg);
+      closeDetailMenu();
+      openGameDetail(game.id);
+    }
+    function detailChangeStatus(status) {
+      const game = games.find(g => g.id === detailGameId);
+      if (!game) return;
+      const changes = { status };
+      if (status !== 'platinato' && game.platinum) changes.platinum = false;
+      detailApplyChange(game, changes, `Stato: ${getStatusLabel(status)}`);
+      if (status === 'completato') triggerConfetti();
+    }
+    function detailMarkPlatinum() {
+      const game = games.find(g => g.id === detailGameId);
+      if (!game) return;
+      detailApplyChange(game, { status: 'platinato', platinum: true, trophies: 100 }, '💎 Platino sbloccato!');
+      triggerConfetti();
+    }
+    function detailDelete() {
+      const id = detailGameId;
+      closeDetailMenu();
+      closeDetailModal();
+      deleteGame(id);
+    }
+
     function openGameDetail(gameId, event) {
       if (event) event.stopPropagation();
       const game = games.find(g => g.id === gameId);
       if (!game) return;
 
+      detailGameId = game.id;
+      closeDetailMenu();
       playSound('blip');
       setHeroBackdrop(game.coverUrl);
 
