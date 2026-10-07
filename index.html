@@ -1184,6 +1184,12 @@
     .ss-ico{width:34px;height:34px;border-radius:10px;border:1px solid rgba(120,150,200,.3);background:rgba(30,48,88,.55);color:#e2e8f0;cursor:pointer;font-size:.95rem;flex:none;}
     .ss-ico.del:hover{background:rgba(239,68,68,.25);}
     .ss-row.editing{background:rgba(0,170,255,.1);border-radius:10px;padding-left:6px;}
+    .dt-est{margin:10px 0 4px;padding:12px 14px;background:rgba(8,18,38,.7);border:1px solid rgba(255,255,255,.1);border-radius:16px;}
+    .dt-est-row{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;}
+    .dt-est-r{text-align:right;}
+    .dt-est-l{display:block;font-size:.68rem;color:#8ea3c2;text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+    .dt-est b{font-size:1.15rem;color:#00d4ff;font-weight:900;}
+    .dt-est-sub{margin-top:7px;font-size:.78rem;color:#9fb3d1;font-weight:700;}
     .est-wrap{margin:2px 0 4px;}
     .est-top{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:#9fb3d1;font-weight:700;}
     .est-top b{color:#00d4ff;font-weight:900;}
@@ -2569,6 +2575,7 @@
             <div class="dt-metric"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M9 20h6"/></svg><div><b id="detailTrophies">0%</b><small>Trofei</small></div></div>
             <div class="dt-metric"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="9" rx="4"/><path d="M8 11v3M6.5 12.5h3M16 12h.01M18 13.5h.01"/></svg><div><b id="detailStatusPill">-</b><small>Stato</small></div></div>
           </div>
+          <div id="detailEst"></div>
           <div class="dt-section-title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7a3 3 0 013 3v11a2 2 0 00-2-2H4zM20 5h-6"/></svg> Trama &amp; Recensione</div>
           <div id="detailSynopsis" class="dt-synopsis">Nessuna recensione disponibile per questo gioco.</div>
         </div>
@@ -5366,6 +5373,7 @@
       if (statusPill) {
         statusPill.textContent = getStatusLabel(game.status);
       }
+      renderDetailEstimate(game);
 
       // Review / Synopsis
       if (synopsis) {
@@ -5706,6 +5714,21 @@
     function getEst(game) { const e = estMap[game.id]; return e && e.n === game.title && e.h > 0 ? e.h : 0; }
     function remainingHours(g) { const est = getEst(g); return est ? Math.max(0, est - (Number(g.hours) || 0)) : 1e9; }
 
+    function renderDetailEstimate(game) {
+      const el = document.getElementById('detailEst');
+      if (!el) return;
+      const est = getEst(game);
+      if (!est) { el.innerHTML = ''; return; }
+      const played = Number(game.hours) || 0;
+      const done = game.status === 'completato' || game.status === 'platinato';
+      const rawPct = played / est * 100;
+      const pct = done ? 100 : Math.min(100, Math.round(rawPct));
+      const over = !done && rawPct >= 100;
+      const left = Math.max(0, est - played);
+      const sub = done ? 'Completato' : over ? 'Hai superato la stima' : played > 0 ? `Ti mancano ~${formatPlaytime(left)}` : 'Non ancora iniziato';
+      el.innerHTML = `<div class="dt-est"><div class="dt-est-row"><div><span class="dt-est-l">Ore per finirlo (RAWG)</span><b>~${formatPlaytime(est)}</b></div><div class="dt-est-r"><span class="dt-est-l">Completamento</span><b>${pct}%</b></div></div><div class="est-bar ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="dt-est-sub">${formatPlaytime(played)} giocate · ${sub}</div></div>`;
+    }
+
     function estimateBlock(game) {
       if (game.status === 'completato' || game.status === 'platinato') return '';
       const est = getEst(game);
@@ -5741,7 +5764,7 @@
         }
         try { localStorage.setItem(EST_KEY, JSON.stringify(estMap)); } catch (e) {}
       } finally { estBusy = false; }
-      if (found) renderGames();
+      if (found) { renderGames(); const dm = document.getElementById('gameDetailModal'); if (dm && dm.classList.contains('open')) { const dg = games.find(x => x.id === detailGameId); if (dg) renderDetailEstimate(dg); } }
     }
 
     // "Cosa gioco?": favour games already started and those closest to the end
