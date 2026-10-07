@@ -1129,6 +1129,15 @@
       font-weight: 600;
     }
 
+    .card-menu{position:fixed;z-index:200;min-width:230px;background:#0a1530;border:1px solid rgba(0,200,255,.4);border-radius:14px;box-shadow:0 18px 40px rgba(0,0,0,.65);padding:6px;display:none;}
+    .card-menu.show{display:block;animation:cmIn .14s ease-out;}
+    @keyframes cmIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+    .card-menu button{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:#e8f1ff;font:inherit;font-weight:700;font-size:.9rem;padding:11px 12px;border-radius:10px;cursor:pointer;text-align:left;}
+    .card-menu button:hover{background:rgba(0,200,255,.14);}
+    .card-menu button.danger{color:#ff8a8a;}
+    .card-menu button.danger:hover{background:rgba(239,68,68,.2);}
+    .card-menu .cm-sep{height:1px;background:rgba(255,255,255,.08);margin:4px 6px;}
+    .card-menu svg{flex:none}
     .btn-icon {
       padding: 0.5rem;
       width: 38px;
@@ -3987,7 +3996,7 @@
               <div class="game-actions" onclick="event.stopPropagation()">
                 <button class="btn btn-secondary btn-card" onclick="editGame('${game.id}', event)">✎ Modifica</button>
                 <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}', event)" title="Avanza stato rapido">▶ Avanza</button>
-                <button class="btn-icon delete" onclick="deleteGame('${game.id}', event)" title="Elimina dalla libreria">⋮</button>
+                <button class="btn-icon more" onclick="openCardMenu('${game.id}', event)" title="Altre azioni" aria-haspopup="true">⋮</button>
               </div>
             </div>
           </div>
@@ -5360,6 +5369,54 @@
       updateStats();
       syncGameToCloud(game, false);
     }
+
+    // ---- Card "⋮" menu: trailer on YouTube (Italian) + delete ----
+    function trailerUrl(game) {
+      const q = `${game.title} trailer ufficiale ITA`;
+      return 'https://www.youtube.com/results?hl=it&gl=IT&sp=EgIQAQ%3D%3D&search_query=' + encodeURIComponent(q);
+    }
+    function closeCardMenu() {
+      const m = document.getElementById('cardMenu');
+      if (m) m.classList.remove('show');
+    }
+    function openCardMenu(id, e) {
+      if (e) { e.stopPropagation(); e.preventDefault(); }
+      const game = games.find(g => g.id === id);
+      if (!game) return;
+      let m = document.getElementById('cardMenu');
+      if (!m) { m = document.createElement('div'); m.id = 'cardMenu'; m.className = 'card-menu'; m.setAttribute('role', 'menu'); document.body.appendChild(m); }
+      if (m.classList.contains('show') && m.dataset.gid === id) { closeCardMenu(); return; }
+      m.dataset.gid = id;
+      m.innerHTML = `
+        <button type="button" role="menuitem" onclick="openTrailer('${id}')">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 00-1.76-1.77C18.3 5 12 5 12 5s-6.3 0-7.84.43A2.5 2.5 0 002.4 7.2C2 8.76 2 12 2 12s0 3.24.4 4.8a2.5 2.5 0 001.76 1.77C5.7 19 12 19 12 19s6.3 0 7.84-.43a2.5 2.5 0 001.76-1.77C22 15.24 22 12 22 12s0-3.24-.4-4.8zM10 15V9l5.2 3z"/></svg>
+          Guarda il trailer (YouTube)
+        </button>
+        <div class="cm-sep"></div>
+        <button type="button" role="menuitem" class="danger" onclick="closeCardMenu();deleteGame('${id}')">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14"/></svg>
+          Rimuovi dalla libreria
+        </button>`;
+      const r = e && e.currentTarget ? e.currentTarget.getBoundingClientRect() : { right: innerWidth - 20, top: 100, bottom: 140 };
+      m.classList.add('show');
+      const w = m.offsetWidth, h = m.offsetHeight;
+      let left = Math.min(Math.max(10, r.right - w), innerWidth - w - 10);
+      let top = r.top - h - 8;                       // prefer opening upwards (button sits at the card bottom)
+      if (top < 10) top = Math.min(r.bottom + 8, innerHeight - h - 10);
+      m.style.left = left + 'px';
+      m.style.top = top + 'px';
+    }
+    function openTrailer(id) {
+      const game = games.find(g => g.id === id);
+      closeCardMenu();
+      if (!game) return;
+      window.open(trailerUrl(game), '_blank', 'noopener');
+      if (typeof astroAct === 'function') astroAct('wave');
+    }
+    document.addEventListener('click', (ev) => { if (!ev.target.closest('#cardMenu') && !ev.target.closest('.btn-icon.more')) closeCardMenu(); });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeCardMenu(); });
+    window.addEventListener('scroll', closeCardMenu, { passive: true });
+    window.addEventListener('resize', closeCardMenu);
 
     function deleteGame(id) {
       if (!requireLogin()) return;
