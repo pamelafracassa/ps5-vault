@@ -1816,6 +1816,87 @@
         justify-content: center;
       }
     }
+
+    /* ===== PS5 VAULT — dashboard redesign ===== */
+    body { background: #050b1c; background-image: radial-gradient(1200px 600px at 50% -10%, rgba(0,112,209,0.18), transparent 70%); }
+    .astro-bubble, .ps-micro-texture { display: none !important; }
+    .hero-dynamic-backdrop { opacity: 0.08 !important; }
+    .ps-top-system-bar { display: none !important; }
+
+    header { top: 0 !important; padding: 0.85rem 2rem !important; background: rgba(6,12,28,0.92) !important; border-bottom: 1px solid rgba(80,140,220,0.18) !important; }
+    .nav-container { max-width: 1480px; display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: 14px; cursor: pointer; }
+    .brand-ps5 { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; letter-spacing: 3px; color: #fff; font-style: italic; }
+    .brand-sep { width: 1px; height: 30px; background: rgba(255,255,255,0.25); }
+    .brand-vault { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; letter-spacing: 2px; color: #19b4ff; }
+    .header-stats { display: flex; align-items: center; gap: 2rem; }
+    .hs-item { display: inline-flex; align-items: center; gap: 8px; font-size: 1.05rem; color: #e2e8f0; }
+    .hs-item b { font-weight: 600; }
+    .hs-ico { font-size: 1.2rem; }
+    .header-actions { justify-self: end; display: flex; align-items: center; gap: 1rem; }
+    .user-pill { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; gap: 10px !important; color: #fff !important; font-size: 0.95rem; }
+    .user-avatar-dot { width: 42px !important; height: 42px !important; border-radius: 50% !important; background: radial-gradient(circle at 30% 30%, #1d4f9a, #0b1f45) !important; border: 2px solid #19b4ff !important; display:flex; align-items:center; justify-content:center; font-weight:700; }
+    .pill-caret { font-size: 1.1rem; color: #cbd5e1; margin-top: -6px; }
+    .btn-add { background: linear-gradient(135deg, #00a2ff, #0a84e8) !important; border: none !important; color: #fff !important; border-radius: 999px !important; padding: 0.7rem 1.3rem !important; font-weight: 600; box-shadow: 0 6px 20px rgba(0,162,255,0.35) !important; white-space: nowrap; }
+    .btn-add .plus { font-size: 1.3rem; margin-right: 6px; line-height: 1; }
+    .btn-menu-trigger { border-radius: 14px !important; }
+
+    main { max-width: 1480px !important; padding-top: 1.6rem !important; }
+    .controls-panel { background: transparent !important; border: none !important; box-shadow: none !important; backdrop-filter: none !important; padding: 0 !important; gap: 0.9rem !important; margin-bottom: 1.4rem !important; }
+    .controls-row-top { display: grid !important; grid-template-columns: minmax(260px, 1fr) auto; gap: 1rem !important; }
+    .search-box { position: relative; }
+    .search-svg { position: absolute; left: 1.2rem; top: 50%; transform: translateY(-50%); color: #cbd5e1; pointer-events: none; }
+    .search-box input { height: 58px; border-radius: 999px !important; padding-left: 3.4rem !important; font-size: 1.05rem !important; background: rgba(8,18,42,0.9) !important; border: 2px solid rgba(60,120,210,0.45) !important; }
+    .search-box input:focus { transform: none !important; border-color: #19b4ff !important; box-shadow: 0 0 0 4px rgba(25,180,255,0.15) !important; }
+    .status-pills { display: flex; gap: 0.7rem; overflow-x: auto; scrollbar-width: none; }
+    .status-pills::-webkit-scrollbar { display: none; }
+    .status-pill { display: inline-flex; align-items: center; gap: 8px; height: 58px; padding: 0 1.5rem; border-radius: 999px; border: 1.5px solid rgba(120,150,200,0.28); background: rgba(14,24,48,0.85); color: #e2e8f0; font-family: var(--font-body); font-size: 1rem; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all .2s; }
+    .status-pill:hover { border-color: #19b4ff; }
+    .status-pill.active { background: linear-gradient(135deg, #12b5ff, #0a8de8); border-color: transparent; color: #fff; box-shadow: 0 6px 20px rgba(0,162,255,0.4); }
+    .results-count { color: #4aa8ff !important; font-size: 0.95rem !important; margin-top: 0.4rem; }
+    .chip-lbl { font-size: 0.7rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; flex-shrink: 0; }
+    .filter-chip { border-radius: 999px !important; font-weight: 500 !important; }
+
+    .games-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)) !important; gap: 1.5rem !important; }
+    .game-card { background: linear-gradient(180deg, rgba(14,26,54,0.95), rgba(8,16,36,0.97)) !important; border: 1.5px solid rgba(80,130,210,0.28) !important; border-radius: 20px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.45) !important; }
+    .game-card:hover { transform: translateY(-5px) !important; border-color: #19b4ff !important; box-shadow: 0 16px 40px rgba(0,112,209,0.35) !important; }
+    .game-cover-wrap { height: auto !important; aspect-ratio: 1 / 0.9; }
+    .game-cover { object-position: center center !important; }
+    .game-status-badge { top: 14px !important; right: 14px !important; padding: 6px 14px !important; font-size: 0.82rem !important; font-weight: 600 !important; display: inline-flex; align-items: center; gap: 6px; }
+    .status-in_corso { background: #1d8cf0 !important; color: #fff !important; }
+    .status-wishlist { background: #f4c20d !important; color: #1a1300 !important; }
+    .status-da_iniziare { background: #8b5cf6 !important; color: #fff !important; }
+    .status-completato { background: #10b981 !important; color: #04170f !important; }
+    .game-info { padding: 1.1rem 1.2rem 1.2rem !important; gap: 0.8rem !important; }
+    .game-title { font-size: 1.3rem !important; font-weight: 600 !important; }
+    .game-meta { color: #8fa3c4 !important; font-size: 0.92rem !important; }
+    .genre-tag { border-radius: 999px !important; padding: 5px 14px !important; font-size: 0.82rem !important; background: rgba(40,60,100,0.5) !important; border-color: rgba(120,150,200,0.2) !important; }
+    .game-notes { font-size: 0.88rem; color: #7f93b4; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .game-stats-row { border-top: 1px solid rgba(255,255,255,0.08) !important; border-bottom: none !important; padding: 0.8rem 0 0.2rem !important; }
+    .game-stats-row .si { opacity: .95; }
+    .trophy-red { filter: hue-rotate(-30deg) saturate(2); font-size: .9rem; }
+    .rating-stars small { font-size: .7rem; color: #64748b; }
+    .btn-card { border-radius: 14px !important; padding: 0.7rem 0.6rem !important; background: rgba(30,48,88,0.55) !important; border: 1px solid rgba(120,150,200,0.25) !important; color: #e2e8f0 !important; font-weight: 500 !important; }
+    .btn-icon { width: 44px !important; height: 44px !important; border-radius: 14px !important; font-size: 1.3rem; background: rgba(30,48,88,0.55) !important; border: 1px solid rgba(120,150,200,0.25) !important; color: #e2e8f0 !important; }
+
+    @media (max-width: 1100px) {
+      .nav-container { grid-template-columns: auto 1fr; }
+      .header-stats { display: none; }
+      .controls-row-top { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      header { padding: 0.6rem 0.8rem !important; }
+      .brand-ps5, .brand-vault { font-size: 1.25rem; }
+      .ps-logo-svg { width: 28px; height: 24px; }
+      .user-pill #userPillLabel, .pill-caret, .add-label { display: none; }
+      .btn-add { padding: 0.55rem 0.9rem !important; }
+      .btn-add .plus { margin: 0; }
+      .header-actions { gap: 0.5rem; }
+      .status-pill { height: 46px; padding: 0 1.1rem; }
+      .search-box input { height: 50px; }
+      .games-grid { grid-template-columns: 1fr !important; }
+      .game-cover-wrap { aspect-ratio: 1 / 0.85; height: auto !important; }
+    }
   </style>
 </head>
 <body>
@@ -1828,58 +1909,50 @@
   <div class="hero-dynamic-backdrop" id="heroBackdrop"></div>
   <div class="ps-micro-texture"></div>
 
-  <!-- PlayStation 5 Top System Bar -->
-  <div class="ps-top-system-bar">
-    <div class="system-left-badge">
-      <span style="font-weight:700; color:#fff;">PlayStation® Network</span>
-      <div class="trophy-cabinet-bar" title="Bacheca Trofei PlayStation Network">
-        <span class="trophy-item trophy-plat">💎 <span id="sysPlatCount">0</span></span>
-        <span class="trophy-item trophy-gold">🥇 <span id="sysGoldCount">0</span></span>
-        <span class="trophy-item trophy-silver">🥈 <span id="sysSilverCount">0</span></span>
-        <span class="trophy-item trophy-bronze">🥉 <span id="sysBronzeCount">0</span></span>
-      </div>
-    </div>
-    <div class="system-right-info">
-      <!-- PlayStation User / Login Pill with Touch ID -->
-      <div class="user-pill" id="userPillBtn" onclick="openAuthModal()" title="Profilo Utente & Accesso">
-        <div class="user-avatar-dot" id="userAvatarDot">👤</div>
-        <span id="userPillLabel">Accedi</span>
-      </div>
-      <span id="systemClock" style="font-weight:700; color:#fff; font-family:var(--font-display);">12:00</span>
-    </div>
+  <!-- Hidden legacy counters (kept so existing JS keeps working) -->
+  <div id="legacyHidden" style="display:none">
+    <span id="sysGoldCount">0</span><span id="sysSilverCount">0</span><span id="sysBronzeCount">0</span>
+    <span id="systemClock"></span>
+    <span id="statTotalGames">0</span><span id="statInCorso">0</span><span id="statCompletati">0</span><span id="statTotalHours">0h</span>
+    <div id="statCardAll"></div><div id="statCardInCorso"></div><div id="statCardCompletati"></div>
   </div>
 
   <!-- Header -->
   <header>
     <div class="nav-container">
       <div class="brand" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-        <div class="brand-badge">
-          <img src="astro-bot.png" alt="Astro Bot" class="astro-badge-mascot">
-        </div>
-        <div class="brand-title">
-          <h1>PS5 <span>VAULT</span></h1>
-          <p>Astro Bot • Game Library</p>
-        </div>
+        <svg class="ps-logo-svg" viewBox="0 0 48 40" width="38" height="32" fill="#fff"><path d="M18 2v32l7 2.4V9.6c0-1.5.7-2.5 1.8-2.1 1.5.4 1.8 1.8 1.8 3.3v13.4c5.2 2.5 9.3 0 9.3-6.7 0-6.9-2.4-10-9.4-12.3C23.6 3.600 20.500 2.600 18 2zM3 30.500c-2.900 1-3.400 2.800-1 3.700 2.500.9 6.700 1.100 10 .3V31.600c-1.800.5-3.600.7-5.300.4-.9-.2-.9-.6.100-.9l5.200-1.800v-3.200L3 30.500zM30.500 29.300v3.200l11-3.900c2.800-1 3.300-2.800 1-3.700-2.500-.9-6.200-1.200-9.300-.4v3.200c1.500-.3 3 0 3.500.3.500.4-.2.700-1.700 1.200l-4.500 1.100z"/></svg>
+        <span class="brand-ps5">PS5</span>
+        <span class="brand-sep"></span>
+        <span class="brand-vault">VAULT</span>
+      </div>
+
+      <div class="header-stats" title="Riepilogo libreria">
+        <span class="hs-item"><span class="hs-ico">🎮</span><b id="hdrGames">0</b></span>
+        <span class="hs-item"><span class="hs-ico">🏆</span><b id="sysPlatCount">0</b></span>
+        <span class="hs-item"><span class="hs-ico" style="color:#38bdf8">★</span><b id="hdrDone">0</b></span>
+        <span class="hs-item"><span class="hs-ico">🔥</span><b id="hdrHours">0h</b></span>
       </div>
 
       <div class="header-actions">
-        <!-- Main primary action button -->
-        <button class="btn btn-primary" onclick="openAddGameModal()" title="Aggiungi un nuovo gioco alla libreria">
-          ➕ Aggiungi Gioco
+        <div class="user-pill" id="userPillBtn" onclick="openAuthModal()" title="Profilo Utente & Accesso">
+          <div class="user-avatar-dot" id="userAvatarDot">👤</div>
+          <span id="userPillLabel">Accedi</span>
+          <span class="pill-caret">⌄</span>
+        </div>
+
+        <button class="btn btn-primary btn-add" onclick="openAddGameModal()" title="Aggiungi un nuovo gioco alla libreria">
+          <span class="plus">+</span><span class="add-label">Aggiungi gioco</span>
         </button>
 
-        <!-- Clean PS5 Hamburger Menu for secondary utilities -->
         <div class="menu-dropdown-wrap">
           <button class="btn-menu-trigger" id="menuTriggerBtn" onclick="toggleMenuDropdown(event)" title="Menu Opzioni & Strumenti">
             <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="3" y1="6" x2="21" y2="6"></line>
-              <line x1="3" y1="12" x2="21" y2="12"></line>
-              <line x1="3" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line>
             </svg>
           </button>
 
           <div class="menu-dropdown-panel" id="menuDropdownPanel" onclick="event.stopPropagation()">
-            <!-- Cloud Status Item -->
             <div style="padding:0.4rem 0.6rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:0.2rem;">
               <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:700; text-transform:uppercase;">Stato Database</span>
               <span id="cloudStatusBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:12px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-weight:700;">
@@ -1887,105 +1960,59 @@
                 Supabase
               </span>
             </div>
-
-            <!-- User Profile / Accedi in hamburger menu -->
             <button class="menu-item-btn" onclick="closeMenuDropdown(); openAuthModal();" style="background:rgba(0,240,255,0.1); border-color:rgba(0,240,255,0.3); color:#00f0ff; font-weight:700;">
-              <span>👤</span>
-              <span id="menuUserLabel">Profilo / Accedi</span>
+              <span>👤</span><span id="menuUserLabel">Profilo / Accedi</span>
             </button>
-
-            <!-- Cosa Gioco? inside Menu -->
             <button class="menu-item-btn astro-pick-item" onclick="closeMenuDropdown(); pickRandomBacklog();">
-              <span>🤖</span>
-              <span>Cosa Gioco? (Astro)</span>
+              <span>🤖</span><span>Cosa Gioco? (Astro)</span>
             </button>
-
             <button class="menu-item-btn" onclick="closeMenuDropdown(); loadFromSupabase(true);">
-              <span>🔄</span>
-              <span>Sincronizza Cloud</span>
+              <span>🔄</span><span>Sincronizza Cloud</span>
             </button>
-
             <div class="menu-divider"></div>
-
-            <!-- Install PWA App Button -->
             <button class="menu-item-btn" id="installPwaBtn" onclick="installPwaApp();" style="display:none; color:#10b981; font-weight:700;">
-              <span>📲</span>
-              <span>Installa App</span>
+              <span>📲</span><span>Installa App</span>
             </button>
-
             <button class="menu-item-btn" onclick="closeMenuDropdown(); exportData();">
-              <span>💾</span>
-              <span>Backup JSON</span>
+              <span>💾</span><span>Backup JSON</span>
             </button>
-
             <button class="menu-item-btn" onclick="closeMenuDropdown(); importDataTrigger();">
-              <span>📥</span>
-              <span>Ripristina Backup</span>
+              <span>📥</span><span>Ripristina Backup</span>
             </button>
           </div>
         </div>
-
         <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)">
       </div>
     </div>
   </header>
 
   <main>
-    <!-- Live Stats / Quick Clickable Filters -->
-    <section class="stats-grid" id="statsGrid">
-      <div class="stat-card" id="statCardAll" onclick="setStatusFilter('all')" title="Mostra tutti i giochi">
-        <div class="stat-icon" style="background: rgba(0, 112, 209, 0.2); color: #00f0ff;">🎮</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statTotalGames">0</div>
-          <div class="stat-label">Giochi Totali</div>
-        </div>
-      </div>
-      <div class="stat-card" id="statCardInCorso" onclick="setStatusFilter('in_corso')" title="Filtra: Solo giochi In Corso">
-        <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">🕹️</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statInCorso">0</div>
-          <div class="stat-label">In Corso</div>
-        </div>
-      </div>
-      <div class="stat-card" id="statCardCompletati" onclick="setStatusFilter('completati_combo')" title="Filtra: Giochi Completati e Platinati">
-        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">🏆</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statCompletati">0</div>
-          <div class="stat-label">Completati / Platino</div>
-        </div>
-      </div>
-      <div class="stat-card" style="cursor:default;" title="Totale ore giocate registrate">
-        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;">⏱️</div>
-        <div class="stat-info">
-          <div class="stat-value" id="statTotalHours">0h</div>
-          <div class="stat-label">Ore Giocate</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Controls Panel: Clean Search & Quick Filters -->
     <section class="controls-panel">
       <div class="controls-row-top">
-        <div class="search-row">
-          <div class="search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Cerca titolo, genere, sviluppatore..." oninput="renderGames()">
-          </div>
+        <div class="search-box">
+          <svg class="search-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.500" y1="16.500" x2="21" y2="21"/></svg>
+          <input type="text" id="searchInput" placeholder="Cerca nella tua libreria..." oninput="renderGames()">
+        </div>
+        <div class="status-pills" id="statusFilterTabs">
+          <button type="button" class="filter-tab status-pill active" data-status="all" onclick="setStatusFilter('all')"><span class="pi">▦</span> Tutti</button>
+          <button type="button" class="filter-tab status-pill" data-status="in_corso" onclick="setStatusFilter('in_corso')"><span class="pi">▶</span> In corso</button>
+          <button type="button" class="filter-tab status-pill" data-status="wishlist" onclick="setStatusFilter('wishlist')"><span class="pi">♥</span> Wishlist</button>
+          <button type="button" class="filter-tab status-pill" data-status="da_iniziare" onclick="setStatusFilter('da_iniziare')"><span class="pi">◷</span> Backlog</button>
+          <button type="button" class="filter-tab status-pill" data-status="completati_combo" onclick="setStatusFilter('completati_combo')"><span class="pi">✔</span> Completati</button>
         </div>
       </div>
 
-      <!-- Quick Sort & Genre Chips -->
+      <div class="results-count" id="resultsCount">Visualizzazione 0 giochi</div>
+
       <div class="sort-genre-bar">
-        <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:800; text-transform:uppercase; margin-right:2px; flex-shrink:0;">ORDINA:</span>
+        <span class="chip-lbl">Ordina</span>
         <button type="button" class="filter-chip active" id="sortChip_recent" onclick="setSortFilter('recent')">🕒 Più Recenti</button>
         <button type="button" class="filter-chip" id="sortChip_rating" onclick="setSortFilter('rating_desc')">⭐ Più Votati</button>
         <button type="button" class="filter-chip" id="sortChip_hours" onclick="setSortFilter('hours_desc')">⏱️ Più Giocati</button>
         <button type="button" class="filter-chip" id="sortChip_title" onclick="setSortFilter('title_asc')">🔤 A - Z</button>
-
         <div class="filter-chip-divider"></div>
-
-        <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:800; text-transform:uppercase; margin-right:2px; flex-shrink:0;">GENERE:</span>
-        <button type="button" class="filter-chip active" id="genreChip_all" onclick="setGenreFilter('all')">Tutti i Generi</button>
+        <span class="chip-lbl">Genere</span>
+        <button type="button" class="filter-chip active" id="genreChip_all" onclick="setGenreFilter('all')">Tutti</button>
         <button type="button" class="filter-chip" id="genreChip_azione" onclick="setGenreFilter('Azione')">Azione</button>
         <button type="button" class="filter-chip" id="genreChip_avventura" onclick="setGenreFilter('Avventura')">Avventura</button>
         <button type="button" class="filter-chip" id="genreChip_gdr" onclick="setGenreFilter('GDR')">GDR / Soulslike</button>
@@ -1993,11 +2020,9 @@
         <button type="button" class="filter-chip" id="genreChip_platform" onclick="setGenreFilter('Platform')">Platform</button>
         <button type="button" class="filter-chip" id="genreChip_corse" onclick="setGenreFilter('Corse')">Corse</button>
       </div>
-
-      <div class="results-count" id="resultsCount">Visualizzazione 0 giochi</div>
     </section>
 
-    <!-- Games Grid -->
+  <!-- Games Grid -->
     <section class="games-grid" id="gamesContainer"></section>
   </main>
 
@@ -3377,6 +3402,9 @@
       document.getElementById('statInCorso').textContent = inCorso;
       document.getElementById('statCompletati').textContent = completati;
       document.getElementById('statTotalHours').textContent = formatPlaytime(totalHours);
+      const hg = document.getElementById('hdrGames'); if (hg) hg.textContent = total;
+      const hd = document.getElementById('hdrDone'); if (hd) hd.textContent = completati;
+      const hh = document.getElementById('hdrHours'); if (hh) hh.textContent = formatPlaytime(totalHours);
 
       // Update Top Trophy Cabinet
       document.getElementById('sysPlatCount').textContent = platCount;
@@ -3544,85 +3572,44 @@
         const isPlat = game.platinum || game.status === 'platinato';
         const isCurrentlyPlaying = activePlayingSession && activePlayingSession.gameId === game.id;
 
+        const statusIcon = { in_corso:'▶', wishlist:'♥', da_iniziare:'◷', completato:'✔', platinato:'💎', abbandonato:'■' }[game.status] || '';
+        const ratingTxt = game.rating ? `${game.rating}<small>/10</small>` : 'N/A';
+
         return `
           <div class="game-card ${isCurrentlyPlaying ? 'playing-active' : ''}" onmouseenter="setHeroBackdrop('${cover}')" onclick="openGameDetail('${game.id}', event)">
-            <!-- PS5 Case Header Strip -->
-            <div class="ps5-case-header">
-              <div class="ps5-case-logo">
-                <svg viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h-2v-6h2v6zm4 0h-2v-6h2v6zm-4-8h-2V7h2v2zm4 0h-2V7h2v2z"/>
-                </svg>
-                <span>PlayStation® 5</span>
-              </div>
-              <span class="ps5-case-format">${game.format === 'Disco' ? '💿 BLU-RAY™' : game.format === 'Digitale' ? '💾 DIGITAL' : '⭐ PS PLUS'}</span>
-            </div>
-
             <div class="game-cover-wrap">
               <img src="${cover}" alt="${escapeHtml(game.title)}" class="game-cover" loading="lazy">
-              
-              <div class="game-status-badge status-${game.status}">
-                ${getStatusLabel(game.status)}
-              </div>
-
-              ${isPlat ? `
-                <div class="vip-astro-stamp" title="Trofeo Platino PlayStation® Sbloccato!">
-                  <img src="platinum-trophy.png" alt="Trofeo Platino">
-                </div>
-              ` : ''}
+              <div class="game-status-badge status-${game.status}"><span>${statusIcon}</span> ${getStatusLabel(game.status)}</div>
+              ${isPlat ? `<div class="vip-astro-stamp" title="Trofeo Platino"><img src="platinum-trophy.png" alt="Trofeo Platino"></div>` : ''}
             </div>
 
             <div class="game-info">
               <div class="game-header-area">
                 <div class="game-title-row">
                   <h4 class="game-title">${escapeHtml(game.title)}</h4>
-                  <button type="button" 
-                    id="playToggleBtn_${game.id}" 
-                    class="btn-play-toggle ${isCurrentlyPlaying ? 'playing' : 'idle'}" 
-                    onclick="toggleGamePlayTimer('${game.id}', event)" 
-                    title="${isCurrentlyPlaying ? 'Ferma sessione di gioco' : 'Avvia sessione di gioco per ' + escapeHtml(game.title)}">
-                    ${isCurrentlyPlaying 
-                      ? `<span class="live-pulse-dot"></span> ⏹️ Stop` 
-                      : `▶️ Gioca`}
+                  <button type="button" id="playToggleBtn_${game.id}"
+                    class="btn-play-toggle ${isCurrentlyPlaying ? 'playing' : 'idle'}"
+                    onclick="toggleGamePlayTimer('${game.id}', event)"
+                    title="${isCurrentlyPlaying ? 'Ferma sessione di gioco' : 'Avvia sessione di gioco'}">
+                    ${isCurrentlyPlaying ? `<span class="live-pulse-dot"></span> ⏹ Stop` : `▶ Gioca`}
                   </button>
                 </div>
-                <div class="game-meta">
-                  ${game.developer ? `<span>🏢 ${escapeHtml(game.developer)}</span>` : ''}
-                </div>
-                ${genres.length > 0 ? `
-                  <div class="game-genres">
-                    ${genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('')}
-                  </div>
-                ` : ''}
+                ${game.developer ? `<div class="game-meta"><span class="dev-ico">🏢</span> ${escapeHtml(game.developer)}</div>` : ''}
+                ${genres.length > 0 ? `<div class="game-genres">${genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('')}</div>` : ''}
               </div>
 
-              ${game.notes ? `
-                <p style="font-size:0.8rem; color:var(--ps-text-muted); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
-                  ${escapeHtml(game.notes)}
-                </p>
-              ` : ''}
+              ${game.notes ? `<p class="game-notes">${escapeHtml(game.notes)}</p>` : ''}
 
               <div class="game-stats-row">
-                <div class="rating-stars">
-                  ${game.rating ? `⭐ ${game.rating}<span style="font-size:0.7rem; color:var(--ps-text-muted);">/10</span>` : '<span style="color:var(--ps-text-muted); font-size:0.75rem;">N/D</span>'}
-                </div>
-                <div class="playtime-badge">
-                  ⏱️ ${formatPlaytime(game.hours)}
-                </div>
-                <div class="trophy-badge ${isPlat ? 'plat' : ''}">
-                  ${isPlat ? '💎 Platino 100%' : `🎯 ${game.trophies || 0}%`}
-                </div>
+                <div class="rating-stars"><span class="si">★</span> ${ratingTxt}</div>
+                <div class="playtime-badge"><span class="si">◷</span> ${formatPlaytime(game.hours)}</div>
+                <div class="trophy-badge ${isPlat ? 'plat' : ''}"><span class="si trophy-red">🏆</span> ${isPlat ? '100%' : `${game.trophies || 0}%`}</div>
               </div>
 
               <div class="game-actions" onclick="event.stopPropagation()">
-                <button class="btn btn-secondary btn-card" onclick="editGame('${game.id}', event)">
-                  ✏️ Modifica
-                </button>
-                <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}', event)" title="Avanza stato rapido">
-                  🔄 Avanza
-                </button>
-                <button class="btn-icon delete" onclick="deleteGame('${game.id}', event)" title="Elimina dalla libreria">
-                  🗑️
-                </button>
+                <button class="btn btn-secondary btn-card" onclick="editGame('${game.id}', event)">✎ Modifica</button>
+                <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}', event)" title="Avanza stato rapido">▶ Avanza</button>
+                <button class="btn-icon delete" onclick="deleteGame('${game.id}', event)" title="Elimina dalla libreria">⋮</button>
               </div>
             </div>
           </div>
