@@ -3964,6 +3964,47 @@
       }, 450);
     }
 
+    // Find the Wikipedia page that is really the VIDEO GAME (not a comic, film, person...)
+    async function findVideoGameWikiTitle(q) {
+      const api = 'https://en.wikipedia.org/w/api.php?origin=*&format=json&action=query';
+      const norm = t => t.toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+      const qTokens = norm(q).split(' ').filter(w => w.length > 1 || /\d/.test(w));
+      try {
+        const terms = [q + ' PlayStation 5 video game', q + ' video game'];
+        const lists = await Promise.all(terms.map(t =>
+          fetch(`${api}&list=search&srlimit=8&srsearch=${encodeURIComponent(t)}`).then(r => r.ok ? r.json() : null).catch(() => null)));
+        const order = [];
+        lists.forEach(l => (l?.query?.search || []).forEach(h => { if (!order.includes(h.title)) order.push(h.title); }));
+        if (!order.length) return '';
+        const dRes = await fetch(`${api}&prop=description&redirects=1&titles=${encodeURIComponent(order.slice(0, 12).join('|'))}`);
+        const dData = dRes.ok ? await dRes.json() : null;
+        const desc = {};
+        Object.values(dData?.query?.pages || {}).forEach(p => { desc[p.title] = p.description || ''; });
+        let best = '', bestScore = -1;
+        const qNorm = norm(q);
+        order.forEach((title, idx) => {
+          const d = desc[title] || '';
+          // must look like a game page: description says game, or the title itself says "(... video game)"
+          const isGame = /\bgames?\b|videogame/i.test(d) || /\(.*video game.*\)/i.test(title);
+          if (!isGame) return;
+          if (/series|franchise|collection|compilation|awards|developer|publisher|company|character|protagonist|expansion|soundtrack|film|list of/i.test(d + ' ' + title.replace(/\(.*?\)/g, ''))) return;
+          const tNorm = norm(title);
+          const tTokens = tNorm.split(' ');
+          const hit = qTokens.filter(w => tTokens.includes(w)).length;
+          if (qTokens.length && hit / qTokens.length < 0.99) return;   // every searched word (numbers too) must be in the title
+          let score = 10 - idx * 0.3;
+          if (tNorm === qNorm) score += 3;                             // exact title
+          score -= Math.max(0, tTokens.filter(w => !/^(19|20)\d\d$|^(video|game)$/.test(w)).length - qTokens.length) * 2.5;  // closest title wins
+          const yr = parseInt(((title.match(/\((\d{4})/) || d.match(/(19|20)\d\d/) || [])[0] || '').replace('(', '').slice(0, 4) || '0', 10);
+          if (yr >= 2020) score += 8 + (yr - 2020) * 0.3;               // PS5 era, newest edition first
+          if (/upcoming/i.test(d)) score -= 6;                           // not released yet
+          if (/playstation 5|ps5/i.test(d)) score += 2;
+          if (score > bestScore) { bestScore = score; best = title; }
+        });
+        return best;
+      } catch (e) { return ''; }
+    }
+
     // Heuristic: is this text English?
     function looksEnglish(t) {
       const en = (t.match(/\b(the|and|is|was|of|in|with|by|that|which|are|for|as|an|it|its|player|players)\b/gi) || []).length;
@@ -4021,12 +4062,9 @@
 
         // Step 2: Fetch from online Wikipedia API for cover and additional information
         const cleanQuery = query.replace(/[^\w\s:’'-]/gi, ' ').trim();
-        const searchApi = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery + ' video game')}&format=json&origin=*`;
-        const sRes = await fetch(searchApi);
-        if (sRes.ok) {
-          const sData = await sRes.json();
-          const firstHit = sData?.query?.search?.[0];
-
+        const bestTitle = await findVideoGameWikiTitle(cleanQuery);
+        const firstHit = bestTitle ? { title: bestTitle } : null;
+        {
           if (firstHit && firstHit.title) {
             foundTitle = firstHit.title;
             const summaryApi = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(foundTitle.replace(/ /g, '_'))}`;
