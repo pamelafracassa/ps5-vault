@@ -1138,6 +1138,39 @@
     .card-menu button.danger:hover{background:rgba(239,68,68,.2);}
     .card-menu .cm-sep{height:1px;background:rgba(255,255,255,.08);margin:4px 6px;}
     .card-menu svg{flex:none}
+    #statsModal .st-card{position:relative;width:100%;max-width:640px;max-height:92vh;overflow:auto;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(0,170,255,.55);border-radius:28px;box-shadow:0 0 40px rgba(0,140,255,.35),0 30px 80px rgba(0,0,0,.6);padding:22px 22px 20px;transform:scale(.94);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+    #statsModal.open .st-card{transform:scale(1);}
+    .st-title{margin:2px 0 14px;font-size:1.4rem;color:#fff;}
+    .st-tabs{display:flex;gap:6px;background:rgba(255,255,255,.05);padding:4px;border-radius:14px;margin-bottom:12px;}
+    .st-tab{flex:1;border:0;background:none;color:#9fb3d1;font:inherit;font-weight:800;font-size:.85rem;padding:9px 4px;border-radius:10px;cursor:pointer;}
+    .st-tab.active{background:linear-gradient(135deg,#0ea5ff,#00d4ff);color:#04101f;}
+    .st-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .st-arrow{width:38px;height:38px;border-radius:12px;border:1px solid rgba(120,150,200,.3);background:rgba(30,48,88,.55);color:#e2e8f0;font-size:1.4rem;cursor:pointer;line-height:1;}
+    .st-arrow:disabled{opacity:.3;cursor:default;}
+    .st-range{font-weight:800;color:#fff;font-size:1rem;text-align:center;}
+    .st-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+    .st-kpi{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 8px;text-align:center;display:flex;flex-direction:column;gap:2px;}
+    .st-kv{font-size:1.25rem;font-weight:900;color:#00d4ff;}
+    .st-kl{font-size:.68rem;color:#8ea3c2;text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+    .st-chart{display:flex;align-items:flex-end;gap:4px;height:170px;padding:8px 2px 0;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
+    .st-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;}
+    .st-bar{width:100%;max-width:44px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#00d4ff,#0a6dff);min-height:2px;transition:height .45s cubic-bezier(.22,1,.36,1);}
+    .st-bar.zero{background:rgba(255,255,255,.1);}
+    .st-bar.now{background:linear-gradient(180deg,#ffd23f,#ff8a00);}
+    .st-val{font-size:.62rem;color:#cfe6ff;font-weight:800;height:12px;white-space:nowrap;}
+    .st-labels{display:flex;gap:4px;margin-bottom:14px;}
+    .st-labels span{flex:1;min-width:0;text-align:center;font-size:.64rem;color:#8ea3c2;font-weight:700;overflow:hidden;}
+    .st-sub{font-size:.75rem;color:#00c8ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin:4px 0 8px;}
+    .st-top{display:flex;flex-direction:column;gap:8px;}
+    .st-row{display:flex;align-items:center;gap:10px;}
+    .st-row img{width:34px;height:34px;border-radius:8px;object-fit:cover;flex:none;background:#101c3a;}
+    .st-rname{flex:1;min-width:0;}
+    .st-rname b{display:block;font-size:.85rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .st-rbar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:4px;overflow:hidden;}
+    .st-rbar i{display:block;height:100%;background:linear-gradient(90deg,#00d4ff,#0a6dff);border-radius:4px;}
+    .st-rh{font-weight:800;font-size:.8rem;color:#cfe6ff;white-space:nowrap;}
+    .st-empty{color:#8ea3c2;font-size:.85rem;text-align:center;padding:10px 0;}
+    .st-note{margin-top:14px;font-size:.7rem;color:#6f86a8;line-height:1.4;}
     .btn-icon {
       padding: 0.5rem;
       width: 38px;
@@ -2203,6 +2236,11 @@
               <span class="mi-text"><span>Sincronizza cloud</span><small>Aggiorna la libreria</small></span>
             </button>
 
+            <button type="button" class="menu-item-btn" onclick="closeMenuDropdown(); openStatsModal();">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+              <span class="mi-text"><span>Statistiche di gioco</span><small>Ore per giorno, settimana, mese, anno</small></span>
+            </button>
+
             <div class="mi-group-label">Dati e app</div>
             <button type="button" class="menu-item-btn mi-install" id="installPwaBtn" onclick="installPwaApp();" style="display:none;">
               <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M12 8v6M9.5 12l2.5 2.5 2.5-2.5"/></svg></span>
@@ -2426,6 +2464,37 @@
   </div>
 
   <!-- Game Details Popup Modal -->
+  <!-- Play statistics modal -->
+  <div class="modal-backdrop" id="statsModal" onclick="if(event.target.id==='statsModal')closeStatsModal()">
+    <div class="st-card">
+      <button type="button" class="dt-close" onclick="closeStatsModal()" aria-label="Chiudi">&times;</button>
+      <div class="st-head">
+        <div class="gm-eyebrow">PS5 VAULT</div>
+        <h3 class="st-title">Statistiche di gioco</h3>
+      </div>
+      <div class="st-tabs" role="tablist">
+        <button type="button" class="st-tab active" data-p="day" onclick="setStatsPeriod('day')">Giorno</button>
+        <button type="button" class="st-tab" data-p="week" onclick="setStatsPeriod('week')">Settimana</button>
+        <button type="button" class="st-tab" data-p="month" onclick="setStatsPeriod('month')">Mese</button>
+        <button type="button" class="st-tab" data-p="year" onclick="setStatsPeriod('year')">Anno</button>
+      </div>
+      <div class="st-nav">
+        <button type="button" class="st-arrow" onclick="shiftStats(-1)" aria-label="Precedente">&#8249;</button>
+        <div class="st-range" id="stRange"></div>
+        <button type="button" class="st-arrow" id="stNext" onclick="shiftStats(1)" aria-label="Successivo">&#8250;</button>
+      </div>
+      <div class="st-kpis">
+        <div class="st-kpi"><span class="st-kv" id="stTotal">0h</span><span class="st-kl">Ore giocate</span></div>
+        <div class="st-kpi"><span class="st-kv" id="stAvg">0h</span><span class="st-kl" id="stAvgLbl">Media</span></div>
+        <div class="st-kpi"><span class="st-kv" id="stSessions">0</span><span class="st-kl">Sessioni</span></div>
+      </div>
+      <div class="st-chart" id="stChart"></div>
+      <div class="st-sub">Giochi più giocati nel periodo</div>
+      <div class="st-top" id="stTop"></div>
+      <div class="st-note" id="stNote"></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="gameDetailModal" onclick="closeDetailModalOnBackdrop(event)">
     <div class="dt-card">
       <button type="button" class="dt-close" onclick="closeDetailModal()" aria-label="Chiudi">&times;</button>
@@ -3340,6 +3409,59 @@
       renderGames();
     }
 
+    // ---- Play log: one entry per finished session { g: gameId, s: startMs, d: seconds } ----
+    const PLAYLOG_KEY = 'ps5_play_log_v1';
+    const PLAYLOG_ROW_ID = '__play_log__';
+    let playLog = [];
+    try { playLog = JSON.parse(localStorage.getItem(PLAYLOG_KEY) || '[]'); if (!Array.isArray(playLog)) playLog = []; } catch (e) { playLog = []; }
+
+    function savePlayLogLocal() { try { localStorage.setItem(PLAYLOG_KEY, JSON.stringify(playLog)); } catch (e) {} }
+
+    function mergePlayLog(a, b) {
+      const seen = new Map();
+      [...a, ...b].forEach(x => { if (x && x.g && x.s && x.d > 0) seen.set(x.g + '|' + x.s, { g: String(x.g), s: Number(x.s), d: Math.round(Number(x.d)) }); });
+      return [...seen.values()].sort((p, q) => p.s - q.s);
+    }
+
+    async function pushPlayLogToCloud() {
+      try {
+        // keep the cloud row compact: drop sessions older than 2 years
+        const limit = Date.now() - 730 * 86400000;
+        const body = {
+          id: PLAYLOG_ROW_ID, title: '__playlog__', status: 'da_iniziare', format: 'Digitale',
+          genre: '', developer: '', hours: 0, rating: null, trophies: 0, platinum: false,
+          cover_url: '', notes: JSON.stringify(playLog.filter(x => x.s >= limit)), created_at: 0
+        };
+        await fetch(`${SUPABASE_URL}/rest/v1/games`, {
+          method: 'POST',
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates' },
+          body: JSON.stringify(body)
+        });
+      } catch (e) { console.warn('Play log push failed', e); }
+    }
+
+    async function pullPlayLogFromCloud() {
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/games?id=eq.${PLAYLOG_ROW_ID}&select=notes`, { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` } });
+        if (!r.ok) return;
+        const rows = await r.json();
+        const remote = rows.length ? JSON.parse(rows[0].notes || '[]') : [];
+        const merged = mergePlayLog(playLog, Array.isArray(remote) ? remote : []);
+        const changed = merged.length !== playLog.length;
+        playLog = merged;
+        savePlayLogLocal();
+        if (merged.length !== (Array.isArray(remote) ? remote.length : 0)) pushPlayLogToCloud();
+        if (changed && document.getElementById('statsModal')?.classList.contains('open')) renderStats();
+      } catch (e) { /* offline */ }
+    }
+
+    function recordPlaySession(gameId, startMs, seconds) {
+      if (!gameId || !startMs || !(seconds >= 30)) return;   // ignore accidental taps (< 30 s)
+      playLog = mergePlayLog(playLog, [{ g: gameId, s: startMs, d: seconds }]);
+      savePlayLogLocal();
+      pushPlayLogToCloud();
+    }
+
     // Live Game Session Timer State
     let activePlayingSession = null; // { gameId, startTime, timerInterval }
 
@@ -3513,6 +3635,7 @@
 
       const elapsedSeconds = Math.max(0, (Date.now() - startTime) / 1000);
       const elapsedHours = elapsedSeconds / 3600; // actual exact floating hours
+      recordPlaySession(gameId, startTime, elapsedSeconds);
 
       activePlayingSession = null;
       localStorage.removeItem('ps5_active_session');
@@ -3588,7 +3711,7 @@
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const rawData = await response.json();
-        const data = Array.isArray(rawData) ? rawData.filter(d => d.id !== SESSION_ROW_ID) : rawData;
+        const data = Array.isArray(rawData) ? rawData.filter(d => d.id !== SESSION_ROW_ID && d.id !== PLAYLOG_ROW_ID) : rawData;
         if (Array.isArray(data) && data.length > 0) {
           games = data.map(dbItem => ({
             id: dbItem.id,
@@ -5370,6 +5493,128 @@
       syncGameToCloud(game, false);
     }
 
+    // ---- Statistics modal ----
+    let statsPeriod = 'day', statsOffset = 0;
+    const IT_DAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+    const IT_MONTHS = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+    const IT_MONTHS_L = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+
+    function openStatsModal() {
+      statsPeriod = 'day'; statsOffset = 0;
+      pullPlayLogFromCloud();
+      document.getElementById('statsModal').classList.add('open');
+      renderStats();
+    }
+    function closeStatsModal() { document.getElementById('statsModal').classList.remove('open'); }
+    function setStatsPeriod(p) { statsPeriod = p; statsOffset = 0; renderStats(); }
+    function shiftStats(d) { statsOffset = Math.min(0, statsOffset + d); renderStats(); }
+
+    // Split every session across the days it covers (sessions can pass midnight)
+    function sessionsByDay() {
+      const map = new Map(); // 'YYYY-MM-DD' -> { total, games: {id: sec} , n }
+      const key = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      playLog.forEach(x => {
+        let start = new Date(x.s), remain = x.d, first = true;
+        while (remain > 0) {
+          const endOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1).getTime();
+          const chunk = Math.min(remain, Math.max(1, (endOfDay - start.getTime()) / 1000));
+          const k = key(start);
+          const e = map.get(k) || { total: 0, games: {}, n: 0 };
+          e.total += chunk; e.games[x.g] = (e.games[x.g] || 0) + chunk; if (first) e.n++;
+          map.set(k, e);
+          remain -= chunk; first = false; start = new Date(endOfDay);
+        }
+      });
+      return { map, key };
+    }
+
+    function renderStats() {
+      const { map, key } = sessionsByDay();
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      let buckets = [], title = '';
+      const mk = (label, dates, isNow) => ({ label, dates, isNow });
+      if (statsPeriod === 'day') {
+        const d = new Date(today); d.setDate(d.getDate() + statsOffset);
+        const ds = []; for (let h = 0; h < 1; h++) ds.push(new Date(d));
+        // last 7 days ending at the selected day, the selected day is the "now" bar
+        for (let i = 6; i >= 0; i--) { const x = new Date(d); x.setDate(x.getDate() - i); buckets.push(mk(IT_DAYS[(x.getDay() + 6) % 7] + ' ' + x.getDate(), [x], i === 0)); }
+        title = d.getTime() === today.getTime() ? 'Oggi e gli ultimi 6 giorni' : `${d.getDate()} ${IT_MONTHS_L[d.getMonth()]} ${d.getFullYear()} e i 6 giorni prima`;
+      } else if (statsPeriod === 'week') {
+        const base = new Date(today); base.setDate(base.getDate() - ((base.getDay() + 6) % 7) + statsOffset * 7);
+        for (let i = 6; i >= 0; i--) { // 7 weeks
+          const ws = new Date(base); ws.setDate(ws.getDate() - i * 7);
+          const days = []; for (let k = 0; k < 7; k++) { const x = new Date(ws); x.setDate(x.getDate() + k); days.push(x); }
+          buckets.push(mk(ws.getDate() + '/' + (ws.getMonth() + 1), days, i === 0));
+        }
+        const we = new Date(base); we.setDate(we.getDate() + 6);
+        title = `Settimana ${base.getDate()} ${IT_MONTHS[base.getMonth()]} – ${we.getDate()} ${IT_MONTHS[we.getMonth()]} (e le 6 precedenti)`;
+      } else if (statsPeriod === 'month') {
+        const base = new Date(today.getFullYear(), today.getMonth() + statsOffset, 1);
+        for (let i = 11; i >= 0; i--) {
+          const ms = new Date(base.getFullYear(), base.getMonth() - i, 1);
+          const days = []; const n = new Date(ms.getFullYear(), ms.getMonth() + 1, 0).getDate();
+          for (let k = 1; k <= n; k++) days.push(new Date(ms.getFullYear(), ms.getMonth(), k));
+          buckets.push(mk(IT_MONTHS[ms.getMonth()], days, i === 0));
+        }
+        title = `${IT_MONTHS_L[base.getMonth()]} ${base.getFullYear()} e gli 11 mesi precedenti`;
+      } else {
+        const y0 = today.getFullYear() + statsOffset;
+        for (let i = 4; i >= 0; i--) {
+          const y = y0 - i; const days = [];
+          for (let m = 0; m < 12; m++) { const n = new Date(y, m + 1, 0).getDate(); for (let k = 1; k <= n; k++) days.push(new Date(y, m, k)); }
+          buckets.push(mk(String(y), days, i === 0));
+        }
+        title = `Anno ${y0} e i 4 precedenti`;
+      }
+
+      const sums = buckets.map(b => {
+        let sec = 0, n = 0; const gm = {};
+        b.dates.forEach(dt => { const e = map.get(key(dt)); if (e) { sec += e.total; n += e.n; for (const g in e.games) gm[g] = (gm[g] || 0) + e.games[g]; } });
+        return { sec, n, gm };
+      });
+      const cur = sums[sums.length - 1];
+      const max = Math.max(...sums.map(s => s.sec), 1);
+      const hrs = s => s / 3600;
+      const fmt = s => formatPlaytime(hrs(s));
+
+      document.querySelectorAll('.st-tab').forEach(t => t.classList.toggle('active', t.dataset.p === statsPeriod));
+      document.getElementById('stRange').textContent = title;
+      document.getElementById('stNext').disabled = statsOffset >= 0;
+      document.getElementById('stTotal').textContent = fmt(cur.sec);
+      document.getElementById('stSessions').textContent = cur.n;
+      const unitDays = buckets[buckets.length - 1].dates.filter(d => d.getTime() <= today.getTime()).length || 1;
+      document.getElementById('stAvg').textContent = statsPeriod === 'day' ? fmt(cur.sec / Math.max(1, cur.n || 1)) : fmt(cur.sec / unitDays);
+      document.getElementById('stAvgLbl').textContent = statsPeriod === 'day' ? 'Media per sessione' : 'Media al giorno';
+
+      const lastLbl = { day: 'giorno', week: 'settimana', month: 'mese', year: 'anno' }[statsPeriod];
+      document.getElementById('stChart').innerHTML = buckets.map((b, i) => {
+        const h = sums[i].sec ? Math.max(4, Math.round(sums[i].sec / max * 100)) : 0;
+        return `<div class="st-col"><span class="st-val">${sums[i].sec ? (hrs(sums[i].sec) >= 10 ? Math.round(hrs(sums[i].sec)) : (Math.round(hrs(sums[i].sec) * 10) / 10)) + 'h' : ''}</span><div class="st-bar${sums[i].sec ? '' : ' zero'}${b.isNow ? ' now' : ''}" style="height:${h || 2}%" title="${b.label}: ${fmt(sums[i].sec)}"></div></div>`;
+      }).join('') ;
+      // labels row appended after chart
+      let lab = document.getElementById('stLabels');
+      if (!lab) { lab = document.createElement('div'); lab.id = 'stLabels'; lab.className = 'st-labels'; document.getElementById('stChart').after(lab); }
+      lab.innerHTML = buckets.map(b => `<span>${b.label}</span>`).join('');
+
+      const entries = Object.entries(cur.gm).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      const top = document.getElementById('stTop');
+      if (!entries.length) {
+        top.innerHTML = `<div class="st-empty">Nessuna sessione in questo ${lastLbl === 'giorno' ? 'giorno' : 'periodo'}.<br>Avvia il timer con ▶ Gioca per registrarle.</div>`;
+      } else {
+        const m0 = entries[0][1];
+        top.innerHTML = entries.map(([id, sec]) => {
+          const g = games.find(x => x.id === id);
+          const nm = g ? g.title : 'Gioco rimosso';
+          const cv = g && g.coverUrl ? g.coverUrl : '';
+          return `<div class="st-row">${cv ? `<img src="${escapeHtml(cv)}" alt="" loading="lazy">` : '<img alt="">'}<div class="st-rname"><b>${escapeHtml(nm)}</b><div class="st-rbar"><i style="width:${Math.round(sec / m0 * 100)}%"></i></div></div><span class="st-rh">${fmt(sec)}</span></div>`;
+        }).join('');
+      }
+      const first = playLog.length ? new Date(playLog[0].s) : null;
+      document.getElementById('stNote').textContent = first
+        ? `Le statistiche contano le sessioni registrate con il timer ▶ Gioca, dal ${first.getDate()} ${IT_MONTHS_L[first.getMonth()]} ${first.getFullYear()}. Le ore inserite a mano e quelle di prima non hanno una data e non compaiono qui.`
+        : 'Le statistiche contano le sessioni registrate con il timer ▶ Gioca. Le ore inserite a mano e quelle precedenti non hanno una data e non compaiono qui.';
+    }
+
     // ---- Card "⋮" menu: trailer on YouTube (Italian) + delete ----
     function trailerUrl(game) {
       const q = `${game.title} trailer ufficiale ITA`;
@@ -5414,7 +5659,7 @@
       if (typeof astroAct === 'function') astroAct('wave');
     }
     document.addEventListener('click', (ev) => { if (!ev.target.closest('#cardMenu') && !ev.target.closest('.btn-icon.more')) closeCardMenu(); });
-    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') closeCardMenu(); });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { closeCardMenu(); closeStatsModal(); } });
     window.addEventListener('scroll', closeCardMenu, { passive: true });
     window.addEventListener('resize', closeCardMenu);
 
@@ -5707,6 +5952,7 @@
       loadFromLocalStorage();
       restorePlayingSession();
       loadFromSupabase(false);
+      pullPlayLogFromCloud();
       setupAstroDraggable();
       setupAstroAnimations();
 
