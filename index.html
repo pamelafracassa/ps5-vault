@@ -2311,7 +2311,7 @@
         <button type="button" class="filter-chip" id="sortChip_rating" onclick="setSortFilter('rating_desc')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> Più Votati</button>
         <button type="button" class="filter-chip" id="sortChip_hours" onclick="setSortFilter('hours_desc')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="12" cy="13" r="8"/><path d="M12 9v4M9 2h6"/></svg> Più Giocati</button>
         <button type="button" class="filter-chip" id="sortChip_title" onclick="setSortFilter('title_asc')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M3 18l4-12 4 12M4.5 14h5M14 6h6l-6 12h6"/></svg> A - Z</button>
-        <button type="button" class="filter-chip" id="sortChip_remaining" onclick="setSortFilter('remaining_asc')" title="Giochi da iniziare o in corso, dal più vicino alla fine in base alle ore stimate da RAWG"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg> Da finire</button>
+        <button type="button" class="filter-chip" id="sortChip_remaining" onclick="setSortFilter('remaining_asc')" title="Giochi in corso, dal più vicino alla fine in base alle ore stimate da RAWG"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg> Da finire</button>
         <div class="filter-chip-divider"></div>
         <span class="chip-lbl">Genere</span>
         <button type="button" class="filter-chip active" id="genreChip_all" onclick="setGenreFilter('all')">Tutti</button>
@@ -4112,8 +4112,8 @@
             return false;
           }
         }
-        // 'Da finire': only unfinished games with a known estimate
-        if (activeSortFilter === 'remaining_asc' && !((game.status === 'da_iniziare' || game.status === 'in_corso') && getEst(game) > 0)) return false;
+        // 'Da finire': only games in progress with a known estimate
+        if (activeSortFilter === 'remaining_asc' && !(game.status === 'in_corso' && getEst(game) > 0)) return false;
         // Text search box
         if (tokens.length && scoreOf(game) < 0) return false;
         return true;
