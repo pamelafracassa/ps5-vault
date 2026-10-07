@@ -285,8 +285,105 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    /* PS5 Popover Menu for Secondary Actions */
+    .menu-dropdown-wrap {
+      position: relative;
+    }
+
+    .btn-menu-trigger {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.16);
+      color: var(--ps-text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-menu-trigger:hover,
+    .btn-menu-trigger.active {
+      background: rgba(0, 240, 255, 0.18);
+      border-color: #00f0ff;
+      color: #00f0ff;
+      transform: scale(1.08);
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+    }
+
+    .menu-dropdown-panel {
+      position: absolute;
+      top: 54px;
+      right: 0;
+      width: 260px;
+      background: #0f172a;
+      border: 2px solid rgba(0, 240, 255, 0.45);
+      border-radius: 20px;
+      padding: 0.6rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 240, 255, 0.25);
+      backdrop-filter: blur(25px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      z-index: 70;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px) scale(0.95);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .menu-dropdown-panel.open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    .menu-item-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.65rem 0.9rem;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ps-text-main);
+      font-family: var(--font-body);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .menu-item-btn:hover {
+      background: rgba(0, 240, 255, 0.14);
+      border-color: rgba(0, 240, 255, 0.35);
+      color: #00f0ff;
+      transform: translateX(4px);
+    }
+
+    .menu-item-btn.astro-pick-item {
+      color: #ec4899;
+      font-weight: 700;
+    }
+
+    .menu-item-btn.astro-pick-item:hover {
+      background: rgba(236, 72, 153, 0.16);
+      border-color: #ec4899;
+      color: #f472b6;
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0.2rem 0.4rem;
     }
 
     .btn {
@@ -1297,30 +1394,32 @@
       }
       header {
         top: 27px;
-        padding: 0.5rem 0.6rem;
+        padding: 0.5rem 0.75rem;
       }
       .nav-container {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
         gap: 0.5rem;
       }
       .brand {
-        justify-content: center;
+        justify-content: flex-start;
       }
       .header-actions {
-        justify-content: center;
-        width: 100%;
+        width: auto;
+        gap: 0.5rem;
       }
-      .header-actions button {
-        flex: 1 1 auto;
-        justify-content: center;
-        padding: 0.5rem 0.6rem;
-        font-size: 0.74rem;
+      .header-actions .btn-primary {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.8rem;
       }
-      #cloudStatusBadge {
-        width: 100%;
-        justify-content: center;
-        order: -1;
+      .btn-menu-trigger {
+        width: 40px;
+        height: 40px;
+      }
+      .menu-dropdown-panel {
+        right: -6px;
+        width: 250px;
       }
       .games-grid {
         grid-template-columns: 1fr;
@@ -1390,27 +1489,57 @@
       </div>
 
       <div class="header-actions">
-        <span id="cloudStatusBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; padding:0.4rem 0.8rem; border-radius:20px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-weight:600;">
-          <span style="width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow:0 0 8px #10b981;"></span>
-          Cloud Supabase
-        </span>
-        <button class="btn btn-astro-pick" onclick="pickRandomBacklog()" title="Chiedi ad Astro Bot cosa giocare stasera">
-          <img src="astro-bot.png" alt="Astro Bot">
-          <span>Cosa Gioco?</span>
-        </button>
-        <button class="btn btn-secondary" onclick="loadFromSupabase(true)" title="Sincronizza subito con il Database Cloud">
-          🔄 Sync Cloud
-        </button>
-        <button class="btn btn-secondary" onclick="exportData()" title="Esporta dati in JSON">
-          💾 Backup
-        </button>
-        <button class="btn btn-secondary" onclick="importDataTrigger()" title="Ripristina dati da JSON">
-          📥 Ripristina
-        </button>
-        <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)">
-        <button class="btn btn-primary" onclick="openAddGameModal()">
+        <!-- Main primary action button -->
+        <button class="btn btn-primary" onclick="openAddGameModal()" title="Aggiungi un nuovo gioco alla libreria">
           ➕ Aggiungi Gioco
         </button>
+
+        <!-- Clean PS5 Hamburger Menu for secondary utilities -->
+        <div class="menu-dropdown-wrap">
+          <button class="btn-menu-trigger" id="menuTriggerBtn" onclick="toggleMenuDropdown(event)" title="Menu Opzioni & Strumenti">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <div class="menu-dropdown-panel" id="menuDropdownPanel" onclick="event.stopPropagation()">
+            <!-- Cloud Status Item -->
+            <div style="padding:0.4rem 0.6rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:0.2rem;">
+              <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:700; text-transform:uppercase;">Stato Database</span>
+              <span id="cloudStatusBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; padding:0.25rem 0.65rem; border-radius:12px; background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-weight:700;">
+                <span style="width:7px; height:7px; border-radius:50%; background:#10b981; box-shadow:0 0 6px #10b981;"></span>
+                Supabase
+              </span>
+            </div>
+
+            <!-- Cosa Gioco? inside Menu -->
+            <button class="menu-item-btn astro-pick-item" onclick="closeMenuDropdown(); pickRandomBacklog();">
+              <span>🤖</span>
+              <span>Cosa Gioco? (Astro)</span>
+            </button>
+
+            <button class="menu-item-btn" onclick="closeMenuDropdown(); loadFromSupabase(true);">
+              <span>🔄</span>
+              <span>Sincronizza Cloud</span>
+            </button>
+
+            <div class="menu-divider"></div>
+
+            <button class="menu-item-btn" onclick="closeMenuDropdown(); exportData();">
+              <span>💾</span>
+              <span>Backup JSON</span>
+            </button>
+
+            <button class="menu-item-btn" onclick="closeMenuDropdown(); importDataTrigger();">
+              <span>📥</span>
+              <span>Ripristina Backup</span>
+            </button>
+          </div>
+        </div>
+
+        <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)">
       </div>
     </div>
   </header>
@@ -1930,7 +2059,15 @@
       "Hai sbloccato un nuovo trofeo?",
       "Cosa giochiamo oggi capitano?",
       "Volo tra le galassie PlayStation!",
-      "Tocca qui e scelgo io per te!"
+      "Trascina qui il controller!",
+      "Sei una leggenda dei videogiochi!",
+      "Oggi è una giornata perfetta per il Platino!",
+      "Psst... ho nascosto una moneta dietro la console!",
+      "Bzzzt! Sensori aptici al massimo!",
+      "Ho lucidato il trofeo Platino per te!",
+      "Attento ai glitch cosmici!",
+      "Sto volando col DualSense Speedster!",
+      "Ti sfido a platinare un altro gioco!"
     ];
 
     let astroPopTimeout = null;
@@ -2212,9 +2349,8 @@
       playSound('tada');
       triggerConfetti();
 
-      // Astro Bot speaks up
-      astroSay(`Astro consiglia: "${randomGame.title}"! 🚀`, 5000);
-      showToast(`🤖 Astro Bot ha estratto: "${randomGame.title}"!`);
+      // Astro Bot speaks up (comic bubble above Astro)
+      astroSay(`Ho scelto: "${randomGame.title}"! 🚀`, 5000);
 
       // Reset filter so the extracted game is guaranteed visible in grid
       activeStatusFilter = 'all';
@@ -2620,8 +2756,40 @@
       reader.readAsText(file);
     }
 
+    function toggleMenuDropdown(e) {
+      if (e) e.stopPropagation();
+      playSound('blip');
+      const panel = document.getElementById('menuDropdownPanel');
+      const trigger = document.getElementById('menuTriggerBtn');
+      if (!panel) return;
+      const isOpen = panel.classList.contains('open');
+      if (isOpen) {
+        closeMenuDropdown();
+      } else {
+        panel.classList.add('open');
+        if (trigger) trigger.classList.add('active');
+      }
+    }
+
+    function closeMenuDropdown() {
+      const panel = document.getElementById('menuDropdownPanel');
+      const trigger = document.getElementById('menuTriggerBtn');
+      if (panel) panel.classList.remove('open');
+      if (trigger) trigger.classList.remove('active');
+    }
+
+    document.addEventListener('click', (e) => {
+      const wrap = document.querySelector('.menu-dropdown-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        closeMenuDropdown();
+      }
+    });
+
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape') {
+        closeModal();
+        closeMenuDropdown();
+      }
     });
 
     // Draggable Astro Bot Implementation (Touch & Mouse)
@@ -2736,19 +2904,17 @@
       loadFromSupabase(false);
       setupAstroDraggable();
 
-      // Periodic playful Astro quote
+      // Periodic playful Astro quotes (spontaneous every 8 seconds)
       setInterval(() => {
-        if (Math.random() > 0.6) {
-          const speech = document.getElementById('astroSpeech');
-          if (speech) {
-            speech.textContent = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
-            speech.classList.add('visible');
-            setTimeout(() => {
-              speech.classList.remove('visible');
-            }, 3500);
+        const speech = document.getElementById('astroSpeech');
+        if (speech && !speech.classList.contains('visible')) {
+          const quote = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
+          astroSay(quote, 3800);
+          if (Math.random() > 0.4) {
+            playSound('blip');
           }
         }
-      }, 14000);
+      }, 8000);
     }
 
     init();
