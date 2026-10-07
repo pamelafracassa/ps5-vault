@@ -1898,12 +1898,13 @@
       .game-cover-wrap { aspect-ratio: 1 / 0.85; height: auto !important; }
     }
 
-    /* Cover framing: show the whole artwork, blurred copy fills the gaps */
-    .game-cover-wrap { aspect-ratio: 4 / 3 !important; isolation: isolate; }
-    .game-cover-wrap::before { content: ''; position: absolute; inset: -20px; background: var(--cover) center / cover no-repeat; filter: blur(22px) brightness(0.55) saturate(1.2); z-index: -1; }
-    .game-cover { object-fit: contain !important; object-position: center center !important; }
-    .game-card:hover .game-cover { transform: scale(1.04) !important; }
-    @media (max-width: 900px) { .game-cover-wrap { aspect-ratio: 4 / 3 !important; } }
+    /* Cover framing: portrait box-art fills the frame, no side bars */
+    .game-cover-wrap { aspect-ratio: 3 / 3.4 !important; height: auto !important; }
+    .game-cover-wrap::before { display: none !important; }
+    .game-cover { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center top !important; }
+    .game-card:hover .game-cover { transform: scale(1.03) !important; }
+    .game-status-badge { top: auto !important; right: auto !important; bottom: 12px !important; left: 12px !important; }
+    @media (max-width: 900px) { .game-cover-wrap { aspect-ratio: 3 / 3.4 !important; } }
   </style>
 </head>
 <body>
