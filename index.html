@@ -1208,6 +1208,69 @@
     }
 
     /* Modal Styling */
+
+    /* ===== Add / edit game modal (dashboard style) ===== */
+    #gameModal .gm-window{max-width:680px;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(0,170,255,.55);border-radius:28px;box-shadow:0 0 40px rgba(0,140,255,.35),0 30px 80px rgba(0,0,0,.6);padding:0;overflow:hidden;max-height:92vh;}
+    .gm-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:22px 28px 16px;border-bottom:1px solid rgba(255,255,255,.07);}
+    .gm-eyebrow{font-size:.68rem;font-weight:800;letter-spacing:1.5px;color:#00c8ff;}
+    .gm-title{font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:#fff;margin:2px 0 0;line-height:1.15;}
+    .gm-close{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;flex-shrink:0;transition:all .2s;}
+    .gm-close:hover{background:rgba(239,68,68,.3);transform:rotate(90deg);}
+    .gm-body{padding:20px 28px;display:flex;flex-direction:column;gap:18px;overflow-y:auto;min-height:0;flex:1;}
+    .gm-footer{display:flex;justify-content:flex-end;gap:12px;padding:16px 28px 22px;border-top:1px solid rgba(255,255,255,.07);background:rgba(6,12,26,.5);}
+    .gm-scan{display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(8,18,38,.7);border:1px solid rgba(0,200,255,.25);border-radius:18px;}
+    .gm-scan-ico{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:rgba(0,170,255,.15);color:#00c8ff;flex-shrink:0;}
+    .gm-scan-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+    .gm-scan-txt b{font-size:.92rem;color:#fff;font-weight:800;}
+    .gm-scan-txt span{font-size:.75rem;color:#8ea3c2;}
+    .gm-scan-btn{border:1px solid rgba(0,200,255,.5);background:rgba(0,170,255,.12);color:#fff;font-weight:800;font-size:.82rem;padding:.55rem 1rem;border-radius:999px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .2s;}
+    .gm-scan-btn:hover{background:linear-gradient(135deg,#0a84ff,#00c8ff);border-color:transparent;}
+    .gm-candidates{flex-direction:column;gap:8px;background:rgba(8,18,38,.7);border:1px solid rgba(0,200,255,.25);border-radius:16px;padding:10px 14px;}
+    .gm-cand-label{font-size:.72rem;color:#00c8ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
+    .gm-cand-list{display:flex;flex-wrap:wrap;gap:6px;}
+    .gm-cand-list button{background:rgba(0,170,255,.12)!important;border:1px solid rgba(0,200,255,.4)!important;border-radius:999px!important;color:#fff;font-family:inherit;}
+    .gm-section{background:rgba(8,18,38,.55);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:14px;}
+    .gm-sec-title{display:flex;align-items:center;gap:8px;margin:0;color:#00c8ff;font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;}
+    #gameModal .form-label{font-size:.7rem;font-weight:800;color:#8ea3c2;text-transform:uppercase;letter-spacing:.5px;}
+    #gameModal .form-input,#gameModal .form-select,#gameModal .form-textarea{background:rgba(5,11,24,.85);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:.75rem 1rem;color:#fff;font-size:.92rem;}
+    #gameModal .form-select{appearance:none;-webkit-appearance:none;padding-right:2.2rem;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2300c8ff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 14px center;}
+    #gameModal .form-input:focus,#gameModal .form-select:focus,#gameModal .form-textarea:focus{border-color:#00c8ff;box-shadow:0 0 0 3px rgba(0,200,255,.18);}
+    #gameModal .form-textarea{resize:vertical;min-height:84px;}
+    #gameModal .form-input,#gameModal .form-select,#gameModal .form-textarea{width:100%;box-sizing:border-box;}
+    #gameModal .form-row.gm-row3{grid-template-columns:repeat(3,1fr);}
+    #gameModal .form-row>.form-group{min-width:0;}
+    #gameModal .preset-covers{display:flex;flex-direction:row;flex-wrap:nowrap;gap:10px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.4) transparent;}
+    #gameModal .preset-cover-thumb{flex:0 0 auto;width:58px;height:76px;}
+    .gm-body{scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.35) transparent;}
+    .gm-body::-webkit-scrollbar{width:8px;}
+    .gm-body::-webkit-scrollbar-track{background:transparent;}
+    .gm-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,.3);border-radius:8px;}
+    #gameModal .gm-row3 .form-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .gm-hint{font-size:.74rem;color:#8ea3c2;margin-top:4px;}
+    .gm-found{font-size:.68rem;color:#00c8ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
+    #gameModal .cover-preview-card{border:1px solid rgba(0,200,255,.3);background:rgba(5,11,24,.85);border-radius:16px;margin-top:0;}
+    .gm-check{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:.9rem;color:#e6edf8;font-weight:600;user-select:none;}
+    .gm-check input{position:absolute;opacity:0;pointer-events:none;}
+    .gm-check-box{width:22px;height:22px;border-radius:7px;border:1px solid rgba(255,255,255,.25);background:rgba(5,11,24,.85);display:inline-flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+    .gm-check input:checked + .gm-check-box{background:linear-gradient(135deg,#0a84ff,#00c8ff);border-color:transparent;}
+    .gm-check input:checked + .gm-check-box::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px);}
+    .gm-check input:focus-visible + .gm-check-box{box-shadow:0 0 0 3px rgba(0,200,255,.3);}
+    @media (max-width:640px){
+      #gameModal .gm-window{max-width:96%;max-height:94vh;border-radius:20px;}
+      .gm-header{padding:16px 18px 12px;}
+      .gm-title{font-size:1.2rem;}
+      .gm-body{padding:14px 16px;gap:14px;}
+      .gm-footer{padding:12px 16px 16px;}
+      .gm-footer .btn{flex:1;}
+      .gm-scan{flex-wrap:wrap;}
+      .gm-scan-btn{width:100%;padding:.7rem;}
+      .gm-section{padding:14px;}
+      #gameModal .form-row{grid-template-columns:1fr;gap:.9rem;}
+      #gameModal .form-row.gm-row3{grid-template-columns:1fr 1fr 1fr;gap:.5rem;}
+      #gameModal .gm-row3 .form-input{padding:.7rem .6rem;}
+      #gameModal .gm-row3 .form-label{font-size:.62rem;letter-spacing:.2px;}
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -2097,139 +2160,135 @@
 
   <!-- Add/Edit Game Modal -->
   <div class="modal-backdrop" id="gameModal" onclick="closeModalOnBackdrop(event)">
-    <div class="modal-window">
-      <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">➕ Nuovo Gioco PS5</h3>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div class="modal-window gm-window">
+      <div class="gm-header">
+        <div>
+          <div class="gm-eyebrow">PS5 VAULT</div>
+          <h3 class="gm-title" id="modalTitle">Nuovo gioco</h3>
+        </div>
+        <button type="button" class="gm-close" onclick="closeModal()" aria-label="Chiudi">&times;</button>
       </div>
 
-      <div class="modal-body">
+      <div class="gm-body">
         <input type="hidden" id="editGameId">
 
-        <!-- AI Optical Camera Scan Section -->
-        <div class="scan-box-banner">
-          <div class="scan-box-info">
-            <div class="scan-cam-icon">📸</div>
-            <div>
-              <div style="font-weight:800; font-size:0.95rem; color:#fff;">Scansiona Copertina / Disco</div>
-              <div style="font-size:0.75rem; color:var(--ps-text-muted);">Scatta una foto per riconoscere titolo e dettagli</div>
-            </div>
+        <div class="gm-scan">
+          <div class="gm-scan-ico"><svg viewBox="0 0 24 24" width="1.3em" height="1.3em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
+          <div class="gm-scan-txt">
+            <b>Scansiona copertina o disco</b>
+            <span>Scatta una foto per riconoscere il titolo</span>
           </div>
-          <div>
-            <input type="file" id="coverCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleCoverPhotoUpload(event)">
-            <button type="button" class="btn-camera-trigger" onclick="document.getElementById('coverCameraInput').click()">
-              <span>📷 Scatta Foto</span>
-            </button>
-          </div>
+          <input type="file" id="coverCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleCoverPhotoUpload(event)">
+          <button type="button" class="gm-scan-btn" onclick="document.getElementById('coverCameraInput').click()">Scatta foto</button>
         </div>
 
-        <!-- Scanning progress feedback -->
         <div id="scanStatusIndicator" class="scan-status-loading">
           <span class="spinner-disc"></span>
-          <span id="scanStatusMsg">Analisi della copertina con OCR e riconoscimento in corso...</span>
+          <span id="scanStatusMsg">Analisi della copertina in corso...</span>
         </div>
 
-        <!-- Detected Candidates Chips (in case OCR extracts multiple words) -->
-        <div id="scanCandidatesBox" style="display:none; flex-direction:column; gap:6px; background:rgba(0,112,209,0.12); border:1px solid rgba(0,240,255,0.3); border-radius:14px; padding:8px 12px;">
-          <div style="font-size:0.75rem; color:#00f0ff; font-weight:700;">Titoli rilevati dalla foto (tocca per scegliere):</div>
-          <div id="scanCandidatesList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        <div id="scanCandidatesBox" class="gm-candidates" style="display:none;">
+          <div class="gm-cand-label">Titoli rilevati, tocca per scegliere</div>
+          <div id="scanCandidatesList" class="gm-cand-list"></div>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Titolo del Gioco *</label>
-          <div style="position:relative;">
-            <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot, God of War" required oninput="debounceOnlineCoverSearch(this.value)">
-            <div id="coverSearchIndicator" style="display:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:0.75rem; color:#00f0ff; align-items:center; gap:6px;">
-              <span class="spinner-disc"></span> <span>Ricerca cover...</span>
+        <section class="gm-section">
+          <h4 class="gm-sec-title"><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 14h8"/></svg> Dettagli</h4>
+          <div class="form-group">
+            <label class="form-label" for="gameTitle">Titolo *</label>
+            <div style="position:relative;">
+              <input type="text" id="gameTitle" class="form-input" placeholder="es. Spider-Man 2, Astro Bot" required oninput="debounceOnlineCoverSearch(this.value)">
+              <div id="coverSearchIndicator" style="display:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:0.75rem; color:#00c8ff; align-items:center; gap:6px;">
+                <span class="spinner-disc"></span> <span>Ricerca cover...</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Auto detected cover preview box -->
-        <div id="detectedCoverPreviewBox" class="cover-preview-card" style="display:none;">
-          <img id="detectedCoverImg" src="" alt="Copertina online">
-          <div style="flex:1;">
-            <div style="font-size:0.72rem; color:#00f0ff; font-weight:800; text-transform:uppercase;">Copertina Trovata Online</div>
-            <div id="detectedCoverTitle" style="font-size:0.88rem; font-weight:700; color:#fff;"></div>
-            <div style="font-size:0.7rem; color:var(--ps-text-muted);">Aggiornata automaticamente via PlayStation & Wikipedia</div>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Stato Partita</label>
-            <select id="gameStatus" class="form-select">
-              <option value="in_corso">🕹️ In Corso</option>
-              <option value="da_iniziare">📦 Da Iniziare (Backlog)</option>
-              <option value="completato">✅ Completato</option>
-              <option value="platinato">💎 Platinato (100%)</option>
-              <option value="wishlist">✨ Wishlist</option>
-              <option value="abbandonato">⏹️ Abbandonato</option>
-            </select>
+          <div id="detectedCoverPreviewBox" class="cover-preview-card" style="display:none;">
+            <img id="detectedCoverImg" src="" alt="Copertina online">
+            <div style="flex:1;">
+              <div class="gm-found">Copertina trovata</div>
+              <div id="detectedCoverTitle" style="font-size:0.9rem; font-weight:700; color:#fff;"></div>
+              <div style="font-size:0.7rem; color:var(--ps-text-muted);">Aggiornata automaticamente da PlayStation e Wikipedia</div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Formato / Edizione</label>
-            <select id="gameFormat" class="form-select">
-              <option value="Digitale">💾 Digitale (PS Store)</option>
-              <option value="Disco">💿 Disco Fisico</option>
-              <option value="PS Plus Extra/Deluxe">⭐ PS Plus Extra/Deluxe</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Genere</label>
-            <input type="text" id="gameGenre" class="form-input" placeholder="es. Azione, Platform, Open World">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Sviluppatore / Studio</label>
-            <input type="text" id="gameDeveloper" class="form-input" placeholder="es. Team ASOBI, Naughty Dog">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Ore Giocate</label>
-            <input type="number" id="gameHours" class="form-input" min="0" step="0.5" placeholder="0">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Voto Personale (1 - 10)</label>
-            <input type="number" id="gameRating" class="form-input" min="1" max="10" step="0.5" placeholder="9.5">
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Percentuale Trofei / Platino</label>
           <div class="form-row">
-            <input type="number" id="gameTrophies" class="form-input" min="0" max="100" placeholder="% Trofei (es. 85)">
-            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; cursor:pointer;">
-              <input type="checkbox" id="gamePlatCheckbox" style="width:18px; height:18px;">
-              💎 Trofeo Platino Ottenuto
-            </label>
+            <div class="form-group">
+              <label class="form-label" for="gameStatus">Stato</label>
+              <select id="gameStatus" class="form-select">
+                <option value="in_corso">In corso</option>
+                <option value="da_iniziare">Backlog</option>
+                <option value="completato">Completato</option>
+                <option value="platinato">Platinato (100%)</option>
+                <option value="wishlist">Wishlist</option>
+                <option value="abbandonato">Abbandonato</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gameFormat">Formato</label>
+              <select id="gameFormat" class="form-select">
+                <option value="Digitale">Digitale (PS Store)</option>
+                <option value="Disco">Disco fisico</option>
+                <option value="PS Plus Extra/Deluxe">PS Plus Extra/Deluxe</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label">URL Copertina Gioco</label>
-          <input type="url" id="gameCoverUrl" class="form-input" placeholder="Lascia vuoto per rilevamento automatico PlayStation">
-          
-          <span style="font-size:0.75rem; color:var(--ps-text-muted); margin-top:4px;">Oppure seleziona una copertina rapida:</span>
-          <div class="preset-covers" id="presetCoversList"></div>
-        </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="gameGenre">Genere</label>
+              <input type="text" id="gameGenre" class="form-input" placeholder="es. Azione, Platform">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gameDeveloper">Sviluppatore</label>
+              <input type="text" id="gameDeveloper" class="form-input" placeholder="es. Team ASOBI">
+            </div>
+          </div>
+        </section>
 
-        <div class="form-group">
-          <label class="form-label">Note Personali / Recensione</label>
-          <textarea id="gameNotes" class="form-textarea" rows="3" placeholder="Pensieri sul gameplay, grilletti DualSense, grafica..."></textarea>
-        </div>
+        <section class="gm-section">
+          <h4 class="gm-sec-title"><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V9M10 19V5M16 19v-8M22 19H2"/></svg> Progressi</h4>
+          <div class="form-row gm-row3">
+            <div class="form-group">
+              <label class="form-label" for="gameHours">Ore</label>
+              <input type="number" id="gameHours" class="form-input" min="0" step="0.5" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gameRating">Voto (1-10)</label>
+              <input type="number" id="gameRating" class="form-input" min="1" max="10" step="0.5" placeholder="9.5">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="gameTrophies">Trofei %</label>
+              <input type="number" id="gameTrophies" class="form-input" min="0" max="100" placeholder="85">
+            </div>
+          </div>
+          <label class="gm-check">
+            <input type="checkbox" id="gamePlatCheckbox">
+            <span class="gm-check-box"></span>
+            <span>Trofeo Platino ottenuto</span>
+          </label>
+        </section>
+
+        <section class="gm-section">
+          <h4 class="gm-sec-title"><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/></svg> Copertina</h4>
+          <div class="form-group">
+            <label class="form-label" for="gameCoverUrl">URL copertina</label>
+            <input type="url" id="gameCoverUrl" class="form-input" placeholder="Lascia vuoto per il rilevamento automatico">
+            <span class="gm-hint">Oppure scegli una copertina rapida</span>
+            <div class="preset-covers" id="presetCoversList"></div>
+          </div>
+        </section>
+
+        <section class="gm-section">
+          <h4 class="gm-sec-title"><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5zM9 9h6M9 13h6M9 17h3"/></svg> Note</h4>
+          <textarea id="gameNotes" class="form-textarea" rows="3" placeholder="Pensieri sul gameplay, grafica, DualSense..."></textarea>
+        </section>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal()">Annulla</button>
-        <button class="btn btn-primary" onclick="saveGame()">Salva Gioco</button>
+      <div class="gm-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Annulla</button>
+        <button type="button" class="btn btn-primary" onclick="saveGame()">Salva gioco</button>
       </div>
     </div>
   </div>
@@ -4261,7 +4320,7 @@
     function openAddGameModal() {
       if (!requireLogin()) return;
       playSound('blip');
-      document.getElementById('modalTitle').textContent = '➕ Nuovo Gioco PS5';
+      document.getElementById('modalTitle').textContent = 'Nuovo gioco';
       document.getElementById('editGameId').value = '';
       document.getElementById('gameTitle').value = '';
       document.getElementById('gameStatus').value = 'in_corso';
@@ -4437,7 +4496,7 @@
       const game = games.find(g => g.id === id);
       if (!game) return;
 
-      document.getElementById('modalTitle').textContent = '✏️ Modifica ' + game.title;
+      document.getElementById('modalTitle').textContent = 'Modifica ' + game.title;
       document.getElementById('editGameId').value = game.id;
       document.getElementById('gameTitle').value = game.title || '';
       document.getElementById('gameStatus').value = game.status || 'in_corso';
