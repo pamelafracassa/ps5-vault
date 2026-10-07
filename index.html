@@ -3473,6 +3473,10 @@
           const game = games.find(g => g.id === gameId);
           if (game) {
             startSessionTimer(gameId, startTime);
+            if ((Date.now() - startTime) / 1000 >= MAX_SESSION_SECONDS) {
+              stopGamePlayTimer(true, true);
+              showToast(`⏱️ Sessione di "${game.title}" chiusa a 3 ore (limite massimo)`);
+            }
           } else {
             localStorage.removeItem('ps5_active_session');
           }
@@ -3520,6 +3524,7 @@
             if (local?.timerInterval) clearInterval(local.timerInterval);
             startSessionTimer(remote.gameId, remote.startTime);
             activePlayingSession.pushed = true;
+            if ((Date.now() - remote.startTime) / 1000 >= MAX_SESSION_SECONDS) { stopGamePlayTimer(true, true); return; }
             localStorage.setItem('ps5_active_session', JSON.stringify(remote));
             renderGames();
             const g = games.find(x => x.id === remote.gameId);
@@ -3619,21 +3624,30 @@
       }
     }
 
+    // A single session can never count for more than 3 hours (forgotten timers)
+    const MAX_SESSION_SECONDS = 3 * 3600;
+
     function updateLiveSessionDisplay() {
       if (!activePlayingSession) return;
       const elapsedSeconds = Math.max(0, (Date.now() - activePlayingSession.startTime) / 1000);
+      if (elapsedSeconds >= MAX_SESSION_SECONDS) {
+        const g = games.find(x => x.id === activePlayingSession.gameId);
+        stopGamePlayTimer(true, true);
+        if (typeof showToast === 'function') showToast(`⏱️ Sessione chiusa dopo 3 ore${g ? ' su "' + g.title + '"' : ''} (limite massimo)`);
+        return;
+      }
       const btn = document.getElementById(`playToggleBtn_${activePlayingSession.gameId}`);
       if (btn) {
         btn.innerHTML = `<span class="live-pulse-dot"></span> ⏹️ Stop (${formatSessionDuration(elapsedSeconds)})`;
       }
     }
 
-    function stopGamePlayTimer(manualStop = true) {
+    function stopGamePlayTimer(manualStop = true, autoCapped = false) {
       if (!activePlayingSession) return;
       const { gameId, startTime, timerInterval } = activePlayingSession;
       clearInterval(timerInterval);
 
-      const elapsedSeconds = Math.max(0, (Date.now() - startTime) / 1000);
+      const elapsedSeconds = Math.min(MAX_SESSION_SECONDS, Math.max(0, (Date.now() - startTime) / 1000));
       const elapsedHours = elapsedSeconds / 3600; // actual exact floating hours
       recordPlaySession(gameId, startTime, elapsedSeconds);
 
@@ -3658,7 +3672,7 @@
         const formattedSessionTime = elapsedSeconds >= 3600 ? formatPlaytime(finalAdded) : `${durationMinutes}m`;
         const formattedTotalTime = formatPlaytime(newTotal);
 
-        if (manualStop) {
+        if (manualStop && !autoCapped) {
           playSound('tada');
           showToast(`⏹️ Sessione terminata per "${game.title}"! +${formattedSessionTime} (Tot: ${formattedTotalTime})`);
           astroSay(`Ottima sessione su "${game.title}"! (+${formattedSessionTime}) 🎉`, 4500);
