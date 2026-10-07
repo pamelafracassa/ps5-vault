@@ -5202,22 +5202,35 @@
         }
       } catch (e) {}
 
+      function clampWidget() {
+        if (!widget.style.left || widget.style.left === 'auto') return;
+        const maxX = Math.max(10, window.innerWidth - widget.offsetWidth - 10);
+        const maxY = Math.max(10, window.innerHeight - widget.offsetHeight - 10);
+        const x = Math.max(10, Math.min(parseFloat(widget.style.left) || 10, maxX));
+        const y = Math.max(10, Math.min(parseFloat(widget.style.top) || 10, maxY));
+        widget.style.left = x + 'px';
+        widget.style.top = y + 'px';
+      }
+      window.addEventListener('resize', clampWidget);
+      setTimeout(clampWidget, 300);
+
       function onPointerDown(e) {
         // Only left click or single touch
         if (e.button !== undefined && e.button !== 0) return;
 
         isDragging = true;
         hasMoved = false;
-        widget.classList.add('dragging');
 
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+        // Measure BEFORE the 'dragging' class (its scale/rotate would skew the rect)
         const rect = widget.getBoundingClientRect();
         startX = clientX;
         startY = clientY;
         initialLeft = rect.left;
         initialTop = rect.top;
+        widget.classList.add('dragging');
 
         widget.style.bottom = 'auto';
         widget.style.right = 'auto';
@@ -5266,11 +5279,12 @@
         window.removeEventListener('pointerup', onPointerUp);
         window.removeEventListener('pointercancel', onPointerUp);
 
-        // Save position in storage
-        const rect = widget.getBoundingClientRect();
-        try {
-          localStorage.setItem('astro_widget_pos', JSON.stringify({ x: rect.left, y: rect.top }));
-        } catch (e) {}
+        // Save the real (untransformed) position, only if it was actually dragged
+        if (hasMoved) {
+          const x = parseFloat(widget.style.left) || 0;
+          const y = parseFloat(widget.style.top) || 0;
+          try { localStorage.setItem('astro_widget_pos', JSON.stringify({ x, y })); } catch (e) {}
+        }
 
         // If it was just a click/tap without moving -> trigger random game extraction!
         if (!hasMoved) {
