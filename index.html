@@ -2334,7 +2334,7 @@
     <section class="games-grid" id="gamesContainer"></section>
   </main>
 
-  <footer class="rawg-credit">Dati dei giochi forniti da <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a> · descrizioni da Wikipedia</footer>
+  <footer class="rawg-credit">Dati dei giochi forniti da <a href="https://rawg.io" target="_blank" rel="noopener">RAWG</a> · tempi di gioco anche da <a href="https://www.igdb.com" target="_blank" rel="noopener">IGDB</a> · descrizioni da Wikipedia</footer>
 
   <!-- Astro Bot Standalone Draggable Figurine Widget -->
   <div class="astro-floating-companion" id="astroWidget" title="Trascina Astro Bot dove vuoi o toccalo per estrarre!">
@@ -5714,6 +5714,7 @@
     function getEst(game) { const e = estMap[game.id]; return e && e.n === game.title && e.h > 0 ? e.h : 0; }
     function remainingHours(g) { const est = getEst(g); return est ? Math.max(0, est - (Number(g.hours) || 0)) : 1e9; }
 
+    function estSource(g) { const e = estMap[g.id]; return e && e.s ? e.s : 'RAWG'; }
     function renderDetailEstimate(game) {
       const el = document.getElementById('detailEst');
       if (!el) return;
@@ -5726,7 +5727,7 @@
       const over = !done && rawPct >= 100;
       const left = Math.max(0, est - played);
       const sub = done ? 'Completato' : over ? 'Hai superato la stima' : played > 0 ? `Ti mancano ~${formatPlaytime(left)}` : 'Non ancora iniziato';
-      el.innerHTML = `<div class="dt-est"><div class="dt-est-row"><div><span class="dt-est-l">Ore per finirlo (RAWG)</span><b>~${formatPlaytime(est)}</b></div><div class="dt-est-r"><span class="dt-est-l">Completamento</span><b>${pct}%</b></div></div><div class="est-bar ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="dt-est-sub">${formatPlaytime(played)} giocate · ${sub}</div></div>`;
+      el.innerHTML = `<div class="dt-est"><div class="dt-est-row"><div><span class="dt-est-l">Ore per finirlo (${estSource(game)})</span><b>~${formatPlaytime(est)}</b></div><div class="dt-est-r"><span class="dt-est-l">Completamento</span><b>${pct}%</b></div></div><div class="est-bar ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="dt-est-sub">${formatPlaytime(played)} giocate · ${sub}</div></div>`;
     }
 
     function estimateBlock(game) {
@@ -5737,9 +5738,22 @@
       const rawPct = played / est * 100;
       const pct = Math.min(100, Math.round(rawPct));
       const over = rawPct >= 100;
-      const tip = 'Stima media RAWG per finire il gioco: ' + formatPlaytime(est);
+      const tip = 'Stima media (' + estSource(game) + ') per finire il gioco: ' + formatPlaytime(est);
       if (played <= 0) return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ~${formatPlaytime(est)} per finirlo</span></div></div>`;
       return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ${over ? 'Oltre la stima (' + formatPlaytime(est) + ')' : formatPlaytime(played) + ' di ~' + formatPlaytime(est)}</span><b>${pct}%</b></div><div class="est-bar ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div></div>`;
+    }
+
+    // IGDB "time to beat" through a Supabase Edge Function (keeps the Twitch secret off the website)
+    const IGDB_FN = SUPABASE_URL + '/functions/v1/igdb-time';
+    let igdbDown = 0;   // timestamp until which we skip IGDB after a failure (function not deployed, secrets missing...)
+    async function igdbLookup(title) {
+      if (Date.now() < igdbDown) return 0;
+      try {
+        const r = await fetch(IGDB_FN + '?q=' + encodeURIComponent(title), { headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        if (!r.ok) { igdbDown = Date.now() + 10 * 60000; return 0; }
+        const j = await r.json();
+        return j && j.found && j.hours > 0 ? j.hours : 0;
+      } catch (e) { igdbDown = Date.now() + 10 * 60000; return 0; }
     }
 
     let estBusy = false;
@@ -5750,16 +5764,19 @@
         if (g.status === 'completato' || g.status === 'platinato') return false;
         const e = estMap[g.id];
         if (!e || e.n !== g.title) return true;
-        return e.h <= 0 && Date.now() - e.t > DAY;   // retry titles RAWG had no estimate for, once a day
+        if (e.h > 0) return false;
+        if (!e.s2 && Date.now() >= igdbDown) return true;   // entries saved before IGDB existed: try IGDB once
+        return Date.now() - e.t > DAY;   // retry titles with no estimate once a day
       });
       if (!todo.length) return;
       estBusy = true;
       let found = false;
       try {
         for (const g of todo) {
-          let h = 0;
-          try { const r = await rawgLookup(g.title); h = r && r.playtime ? r.playtime : 0; } catch (e) {}
-          estMap[g.id] = { n: g.title, h, t: Date.now() };
+          let h = 0, src = '';
+          try { const r = await rawgLookup(g.title); if (r && r.playtime) { h = r.playtime; src = 'RAWG'; } } catch (e) {}
+          if (!h) { const x = await igdbLookup(g.title); if (x) { h = x; src = 'IGDB'; } }
+          estMap[g.id] = { n: g.title, h, s: src, t: Date.now(), s2: Date.now() >= igdbDown ? 1 : 0 };
           if (h > 0) found = true;
         }
         try { localStorage.setItem(EST_KEY, JSON.stringify(estMap)); } catch (e) {}
