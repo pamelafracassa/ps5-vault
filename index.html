@@ -1768,6 +1768,12 @@
           <span id="scanStatusMsg">Analisi della copertina con OCR e riconoscimento in corso...</span>
         </div>
 
+        <!-- Detected Candidates Chips (in case OCR extracts multiple words) -->
+        <div id="scanCandidatesBox" style="display:none; flex-direction:column; gap:6px; background:rgba(0,112,209,0.12); border:1px solid rgba(0,240,255,0.3); border-radius:14px; padding:8px 12px;">
+          <div style="font-size:0.75rem; color:#00f0ff; font-weight:700;">Titoli rilevati dalla foto (tocca per scegliere):</div>
+          <div id="scanCandidatesList" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        </div>
+
         <div class="form-group">
           <label class="form-label">Titolo del Gioco *</label>
           <div style="position:relative;">
@@ -2795,6 +2801,53 @@
       if (box) box.style.display = 'none';
     }
 
+    // Preprocess uploaded image on canvas to dramatically improve OCR accuracy on game covers
+    async function preprocessImageForOcr(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Contrast & Grayscale Enhancement for Crisp Text Recognition
+          const imgData = ctx.getImageData(0, 0, width, height);
+          const data = imgData.data;
+          const contrast = 1.35; // boost text edges
+          const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+          for (let i = 0; i < data.length; i += 4) {
+            // Luminance
+            const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+            const contrasted = factor * (gray - 128) + 128;
+            const finalVal = Math.min(255, Math.max(0, contrasted));
+            data[i] = finalVal;
+            data[i + 1] = finalVal;
+            data[i + 2] = finalVal;
+          }
+          ctx.putImageData(imgData, 0, 0);
+          resolve(canvas);
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
     // Photo OCR Scanner for PS5 Game Covers / Discs
     async function handleCoverPhotoUpload(event) {
       const file = event.target.files && event.target.files[0];
@@ -2802,8 +2855,12 @@
 
       const indicator = document.getElementById('scanStatusIndicator');
       const statusMsg = document.getElementById('scanStatusMsg');
+      const candidatesBox = document.getElementById('scanCandidatesBox');
+      const candidatesList = document.getElementById('scanCandidatesList');
+
       if (indicator) indicator.classList.add('active');
-      if (statusMsg) statusMsg.textContent = 'Caricamento foto e lettura testo con OCR...';
+      if (statusMsg) statusMsg.textContent = 'Miglioramento immagine e contrasto per OCR...';
+      if (candidatesBox) candidatesBox.style.display = 'none';
       playSound('blip');
 
       try {
@@ -2811,8 +2868,13 @@
           throw new Error('Libreria Tesseract non caricata');
         }
 
-        // Run OCR with Tesseract
-        const { data: { text } } = await Tesseract.recognize(file, 'eng+ita', {
+        // Step 1: Preprocess image on canvas
+        const enhancedCanvas = await preprocessImageForOcr(file);
+
+        if (statusMsg) statusMsg.textContent = 'Lettura del testo sulla copertina in corso...';
+
+        // Step 2: Run OCR with Tesseract
+        const { data: { text, words } } = await Tesseract.recognize(enhancedCanvas, 'eng+ita', {
           logger: m => {
             if (statusMsg && m.status === 'recognizing text') {
               statusMsg.textContent = `Scansione testo copertina (${Math.round((m.progress || 0) * 100)}%)...`;
@@ -2820,21 +2882,53 @@
           }
         });
 
-        if (statusMsg) statusMsg.textContent = 'Analisi e recupero metadati del gioco...';
+        if (statusMsg) statusMsg.textContent = 'Analisi e identificazione del titolo...';
 
-        // Filter and clean extracted lines
-        const rawLines = text.split('\n')
-          .map(l => l.trim())
-          .filter(l => l.length >= 3 && !l.match(/^(playstation|ps5|sony|blu-ray|disc|pegi|konami|capcom|edition|standard|disc|game|console|cero|esrb)$/i));
+        // Filter blacklisted words (PS5 branding, publisher boilerplate, PEGI ratings, etc.)
+        const blacklistRegex = /^(playstation|ps5|ps4|sony|interactive|entertainment|blu-ray|disc|pegi|cero|esrb|usk|konami|capcom|square|enix|ubisoft|ea|electronic|arts|edition|standard|deluxe|collector|remastered|remake|pro|video|game|games|console|network|plus|all|rights|reserved|trademark|licensed|for|distribution|in|only)$/i;
 
-        // Find the most likely game title line
+        // Clean lines
+        const candidateLines = text.split('\n')
+          .map(l => l.replace(/[^a-zA-Z0-9\s:’'-]/g, ' ').replace(/\s+/g, ' ').trim())
+          .filter(l => {
+            if (l.length < 3 || l.length > 45) return false;
+            const words = l.split(' ');
+            const nonBlacklisted = words.filter(w => !w.match(blacklistRegex) && isNaN(w));
+            return nonBlacklisted.length >= 1;
+          });
+
+        // Also extract high-confidence word combinations
+        const uniqueCandidates = [];
+        for (const line of candidateLines) {
+          // Clean line from trailing boilerplate
+          const sanitized = line.split(' ')
+            .filter(w => !w.match(blacklistRegex))
+            .join(' ').trim();
+          if (sanitized.length >= 3 && !uniqueCandidates.some(c => c.toLowerCase() === sanitized.toLowerCase())) {
+            uniqueCandidates.push(sanitized);
+          }
+        }
+
+        // Check if any candidate directly matches our official PlayStation game database
         let bestCandidate = '';
-        for (const line of rawLines) {
-          const clean = line.replace(/[^a-zA-Z0-9\s:’'-]/g, ' ').replace(/\s+/g, ' ').trim();
-          if (clean.length >= 3 && clean.length <= 40) {
-            bestCandidate = clean;
+        for (const cand of uniqueCandidates) {
+          const directMatch = getOfficialCoverForTitle(cand);
+          if (directMatch) {
+            bestCandidate = cand;
             break;
           }
+        }
+
+        if (!bestCandidate && uniqueCandidates.length > 0) {
+          // Sort by likelihood: 2-4 words is typical for game titles (e.g., "The Last of Us", "God of War", "Elden Ring")
+          uniqueCandidates.sort((a, b) => {
+            const aWords = a.split(' ').length;
+            const bWords = b.split(' ').length;
+            const aScore = (aWords >= 2 && aWords <= 5) ? 2 : 1;
+            const bScore = (bWords >= 2 && bWords <= 5) ? 2 : 1;
+            return bScore - aScore;
+          });
+          bestCandidate = uniqueCandidates[0];
         }
 
         if (bestCandidate) {
@@ -2842,17 +2936,26 @@
           if (titleInput) {
             titleInput.value = bestCandidate;
           }
-          // Set format to Physical Disc since photo was taken of the case/disc
           const formatSelect = document.getElementById('gameFormat');
           if (formatSelect) {
             formatSelect.value = 'Disco';
           }
 
-          showToast(`📸 Testo riconosciuto: "${bestCandidate}"! Recupero dati online...`);
+          // Show interactive chips if multiple candidates were spotted
+          if (candidatesBox && candidatesList && uniqueCandidates.length > 1) {
+            candidatesList.innerHTML = uniqueCandidates.slice(0, 5).map(c => `
+              <button type="button" style="background:rgba(0,240,255,0.18); border:1px solid #00f0ff; color:#fff; border-radius:12px; padding:4px 10px; font-size:0.75rem; font-weight:700; cursor:pointer;" onclick="selectCandidateTitle('${c.replace(/'/g, "\\'")}')">
+                🎯 ${escapeHtml(c)}
+              </button>
+            `).join('');
+            candidatesBox.style.display = 'flex';
+          }
+
+          showToast(`📸 Testo riconosciuto: "${bestCandidate}"!`);
           playSound('jump');
           searchGameMetadataOnline(bestCandidate);
         } else {
-          showToast('📸 Foto acquisita: inserisci o correggi il titolo per trovare la cover!');
+          showToast('📸 Foto acquisita: prova a digitare le prime lettere del titolo per completarlo!');
         }
       } catch (err) {
         console.error('OCR Error:', err);
@@ -2861,6 +2964,16 @@
         if (indicator) indicator.classList.remove('active');
         event.target.value = '';
       }
+    }
+
+    function selectCandidateTitle(title) {
+      const titleInput = document.getElementById('gameTitle');
+      if (titleInput) {
+        titleInput.value = title;
+      }
+      playSound('blip');
+      showToast(`🎯 Selezionato: "${title}"`);
+      searchGameMetadataOnline(title);
     }
 
     function openAddGameModal() {
@@ -2879,6 +2992,8 @@
       document.getElementById('gameCoverUrl').value = '';
       document.getElementById('gameNotes').value = '';
       hideDetectedCoverBox();
+      const candidatesBox = document.getElementById('scanCandidatesBox');
+      if (candidatesBox) candidatesBox.style.display = 'none';
 
       document.getElementById('gameModal').classList.add('open');
       setTimeout(() => document.getElementById('gameTitle').focus(), 150);
