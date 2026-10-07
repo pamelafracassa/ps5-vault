@@ -988,6 +988,23 @@
       50% { opacity: 0.3; transform: scale(0.7); }
     }
 
+    /* Lampeggio vivo per la scheda del gioco attualmente in riproduzione */
+    .game-card.playing-active {
+      border-color: #00f0ff !important;
+      animation: pulsePlayingCard 2s infinite ease-in-out !important;
+    }
+
+    @keyframes pulsePlayingCard {
+      0%, 100% {
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.5), 0 0 40px rgba(0, 112, 209, 0.4);
+        border-color: #00f0ff;
+      }
+      50% {
+        box-shadow: 0 0 35px rgba(0, 240, 255, 0.85), 0 0 70px rgba(16, 185, 129, 0.6), inset 0 0 15px rgba(0, 240, 255, 0.25);
+        border-color: #38bdf8;
+      }
+    }
+
     .game-meta {
       font-size: 0.82rem;
       color: var(--ps-text-muted);
@@ -2703,12 +2720,15 @@
 
         if (loggedSection) loggedSection.style.display = 'none';
         if (emailForm) emailForm.style.display = 'flex';
-        if (tabsRow) tabsRow.style.display = 'flex';
-        if (bioSection) bioSection.style.display = hasWebAuthn ? 'block' : 'none';
+        if (tabsRow) tabsRow.style.display = 'none';
+        // Show biometric button only if a passkey was already registered on this device
+        if (bioSection) {
+          bioSection.style.display = (hasWebAuthn && hasRegisteredBio) ? 'block' : 'none';
+        }
 
         const bioLabel = document.getElementById('biometricBtnLabel');
         if (bioLabel) {
-          bioLabel.textContent = hasRegisteredBio ? 'Accedi con Touch ID / Face ID' : 'Touch ID / Face ID (Avvia)';
+          bioLabel.textContent = 'Accedi con Touch ID / Face ID';
         }
       }
     }
@@ -2780,11 +2800,16 @@
         return;
       }
 
+      if (!currentUser?.email) {
+        showToast('⚠️ Effettua prima l\'accesso per registrare Touch ID');
+        return;
+      }
+
       try {
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
 
-        const email = currentUser?.email || 'gamer@playstation.local';
+        const email = currentUser.email;
         const userId = new TextEncoder().encode(email);
 
         const createOptions = {
@@ -2815,7 +2840,7 @@
           // Convert rawId to string and store locally
           const credIdStr = btoa(String.fromCharCode.apply(null, new Uint8Array(credential.rawId)));
           localStorage.setItem('ps5_biometric_credential_id', credIdStr);
-          localStorage.setItem('ps5_biometric_user', JSON.stringify(currentUser || { email }));
+          localStorage.setItem('ps5_biometric_user', JSON.stringify(currentUser));
           playSound('tada');
           triggerConfetti();
           showToast('🔐 Touch ID / Face ID registrato con successo!');
@@ -2835,13 +2860,9 @@
 
       const hasRegistered = localStorage.getItem('ps5_biometric_credential_id');
 
-      // If not registered yet, start registration or quick biometric login
+      // If no passkey registered yet, inform the user cleanly
       if (!hasRegistered) {
-        // If not logged in yet, prompt email or register device
-        const defaultEmail = prompt('Inserisci la tua email PSN per abilitare Touch ID su questo dispositivo:');
-        if (!defaultEmail) return;
-        currentUser = { email: defaultEmail.trim() };
-        await registerBiometricCredential();
+        showToast('ℹ️ Accedi prima con email e password, poi attiva Touch ID nel tuo profilo');
         return;
       }
 
@@ -2849,12 +2870,31 @@
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
 
+        // Convert base64 stored credId back to Uint8Array
+        let rawIdBytes;
+        try {
+          const binaryStr = atob(hasRegistered);
+          rawIdBytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) {
+            rawIdBytes[i] = binaryStr.charCodeAt(i);
+          }
+        } catch (e) {
+          console.warn('CredId decode error:', e);
+        }
+
         const getOptions = {
           challenge: challenge,
           timeout: 60000,
           userVerification: "required",
           rpId: window.location.hostname
         };
+
+        if (rawIdBytes) {
+          getOptions.allowCredentials = [{
+            type: 'public-key',
+            id: rawIdBytes
+          }];
+        }
 
         const assertion = await navigator.credentials.get({ publicKey: getOptions });
         if (assertion) {
@@ -2870,7 +2910,11 @@
         }
       } catch (err) {
         console.warn('Biometric verify error:', err);
-        showToast('⚠️ Autenticazione biometrica annullata');
+        if (err.name === 'NotAllowedError') {
+          showToast('⚠️ Accesso Touch ID annullato');
+        } else {
+          showToast('⚠️ Nessuna impronta/passkey valida trovata. Accedi con email');
+        }
       }
     }
 
@@ -3434,7 +3478,7 @@
         const isCurrentlyPlaying = activePlayingSession && activePlayingSession.gameId === game.id;
 
         return `
-          <div class="game-card" onmouseenter="setHeroBackdrop('${cover}')" onclick="openGameDetail('${game.id}', event)">
+          <div class="game-card ${isCurrentlyPlaying ? 'playing-active' : ''}" onmouseenter="setHeroBackdrop('${cover}')" onclick="openGameDetail('${game.id}', event)">
             <!-- PS5 Case Header Strip -->
             <div class="ps5-case-header">
               <div class="ps5-case-logo">
