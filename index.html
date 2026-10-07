@@ -4301,6 +4301,79 @@
       if (t && t !== 'Copertina trovata') { ti.value = t; tsPicked = t; hideTitleSuggest(); if (typeof astroAct === 'function') astroAct('hop'); }
     }
 
+    // ---- PlayStation Store cover lookup (official art, CORS-open endpoint) ----
+    const psCoverCache = new Map();
+    function psNorm(t) {
+      return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[®™©]/g, '').replace(/[’‘`]/g, "'").replace(/&/g, ' and ')
+        .replace(/\bps4\b|\bps5\b|\bps4 and ps5\b/g, ' ').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    function psImgUrl(u) {
+      if (!u) return '';
+      return u.replace('vulcan.dl.playstation.net/', 'image.api.playstation.com/vulcan/');
+    }
+    async function psStoreSearch(term) {
+      try {
+        const url = `https://store.playstation.com/store/api/chihiro/00_09_000/tumbler/IT/it/999/${encodeURIComponent(term)}?size=10&gkb=1&geoCountry=IT&platform=ps5`;
+        const r = await fetch(url);
+        if (!r.ok) return [];
+        return (await r.json()).links || [];
+      } catch (e) { return []; }
+    }
+    // Returns { url, name } for the best full-game match, or null
+    async function psStoreCover(titles, year) {
+      const list = (Array.isArray(titles) ? titles : [titles]).filter(Boolean);
+      const key = list.map(psNorm).join('|') + '|' + (year || '');
+      if (psCoverCache.has(key)) return psCoverCache.get(key);
+      let best = null, bestScore = -1e9;
+      const seen = new Set();
+      const variants = [];
+      list.forEach(t => {
+        variants.push(t);
+        const noSub = t.split(':')[0].trim();               // "Lego Batman: Legacy..." -> "Lego Batman"
+        if (noSub && noSub !== t) variants.push(noSub);
+        const compact = t.replace(/[-\s]+/g, '');           // spider-man -> spiderman (the Store likes it)
+        if (/-/.test(t) && compact.length > 5) variants.push(t.replace(/-/g, ''));
+      });
+      const uniq = [...new Set(variants.map(v => v.trim()).filter(v => v.length > 1))].slice(0, 5);
+      for (const term of uniq) {
+        const links = await psStoreSearch(term);
+        for (const x of links) {
+          if (!x || !x.id || seen.has(x.id)) continue;
+          seen.add(x.id);
+          const img = (x.images || []).find(i => i.type === 10) || (x.images || [])[0];
+          if (!img || !img.url) continue;
+          const ct = x.game_contentType || '';
+          const isFull = /gioco completo|full game/i.test(ct);
+          const isBundle = /bundle/i.test(ct);
+          if (ct && !isFull && !isBundle) continue; // never DLC / costumes / add-ons
+          const nName = psNorm(x.name);
+          const tokensOf = s => s.split(' ').filter(w => w.length > 1 || /\d/.test(w));
+          let score = -1e9;
+          for (const t of list) {
+            const nt = psNorm(t);
+            const qTokens = tokensOf(nt);
+            const nTokens = nName.split(' ');
+            const hit = qTokens.filter(w => nTokens.includes(w)).length;
+            if (!qTokens.length || hit / qTokens.length < 0.99) continue;           // every word (and number) must be in the name
+            let sc = 20 - Math.max(0, nTokens.length - qTokens.length) * 3;
+            if (nName === nt) sc += 10;
+            if (isBundle) sc -= 8;                                                    // full game wins over editions
+            score = Math.max(score, sc);
+          }
+          if (score < -1e8) continue;
+          if (year && x.release_date) {
+            const yr = parseInt(x.release_date.slice(0, 4), 10);
+            if (yr) score += yr === year ? 6 : -Math.min(Math.abs(yr - year), 5) * 2;
+          }
+          if (score > bestScore) { bestScore = score; best = { url: psImgUrl(img.url), name: x.name }; }
+        }
+        if (best && bestScore >= 28) break; // exact-ish match found, stop querying
+      }
+      psCoverCache.set(key, best);
+      return best;
+    }
+
     // Find the Wikipedia page that is really the VIDEO GAME (not a comic, film, person...)
     async function findVideoGameWikiTitle(q, hintYear) {
       const api = 'https://en.wikipedia.org/w/api.php?origin=*&format=json&action=query';
@@ -4451,6 +4524,7 @@
         let foundDev = '';
         let foundGenre = '';
         let foundReview = '';
+        let psSource = false;
         let itIntro = '', enIntro = '';
         let curatedReview = false;
         let rawgInfo = null;
@@ -4473,6 +4547,12 @@
           if (!foundGenre && rawg.genre) foundGenre = rawg.genre;
           foundTitle = rawg.name;
           rawgInfo = rawg;
+        }
+
+        // Step 1c: official PlayStation Store art (sharper than RAWG screenshots). Curated covers keep priority.
+        if (!foundImg) {
+          const ps = await psStoreCover([rawg ? rawg.name : '', query], rawg && rawg.released ? parseInt(rawg.released.slice(0, 4), 10) : 0);
+          if (ps) { foundImg = ps.url; psSource = true; }
         }
 
         // Step 2: Wikipedia for the Italian description (and cover fallback)
@@ -4564,6 +4644,7 @@
             else if (rawgInfo.userRating && rawgInfo.ratingsCount >= 20) bits.push('Utenti ' + rawgInfo.userRating.toFixed(1) + '/5');
             bits.push('dati da RAWG');
           }
+          if (psSource) bits.push('copertina PlayStation Store');
           metaEl.textContent = bits.join(' · ');
         }
         // Suggested rating (1-10) from RAWG, only if the field is empty
