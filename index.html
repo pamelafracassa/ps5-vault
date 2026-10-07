@@ -1905,7 +1905,53 @@
     .game-card:hover .game-cover { transform: scale(1.03) !important; }
     .game-status-badge { top: auto !important; right: auto !important; bottom: 12px !important; left: 12px !important; }
     @media (max-width: 900px) { .game-cover-wrap { aspect-ratio: 3 / 3.4 !important; } }
-  </style>
+  
+    /* ===== Detail card (redesign) ===== */
+    #gameDetailModal .dt-card{position:relative;width:100%;max-width:960px;max-height:92vh;overflow:auto;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(0,170,255,.55);border-radius:28px;box-shadow:0 0 40px rgba(0,140,255,.35),0 30px 80px rgba(0,0,0,.6);}
+    .dt-close{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.08);color:#fff;font-size:1.4rem;cursor:pointer;z-index:5;line-height:1;}
+    .dt-body{display:grid;grid-template-columns:300px 1fr;gap:32px;padding:36px 36px 24px;}
+    .dt-cover-wrap{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.6);aspect-ratio:3/4;background:#0a0e1a;}
+    .dt-cover{width:100%;height:100%;object-fit:cover;object-position:center top;display:block;}
+    .dt-cover-badge{position:absolute;top:10px;right:10px;background:#00b4ff;color:#02101f;font-weight:800;font-size:.78rem;padding:5px 12px;border-radius:999px;}
+    .dt-cover-badge:empty{display:none;}
+    .dt-info-col{min-width:0;display:flex;flex-direction:column;gap:10px;padding-right:34px;}
+    .dt-platform{font-size:.82rem;font-weight:800;color:#9fb6d6;letter-spacing:.5px;text-transform:uppercase;}
+    .dt-title{font-family:var(--font-display);font-size:2.2rem;font-weight:800;color:#fff;line-height:1.1;margin:0;}
+    .dt-dev{color:#b8c7de;font-size:.95rem;font-weight:600;}
+    .dt-tags{display:flex;flex-wrap:wrap;gap:8px;}
+    .dt-tags .detail-pill-tag{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#00c8ff;font-size:.82rem;padding:6px 16px;border-radius:999px;}
+    .dt-metrics{display:grid;grid-template-columns:repeat(4,1fr);background:rgba(8,18,38,.7);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:16px 8px;margin:8px 0 6px;}
+    .dt-metric{display:flex;align-items:center;gap:10px;padding:0 14px;border-left:1px solid rgba(255,255,255,.1);color:#e6edf8;min-width:0;}
+    .dt-metric:first-child{border-left:0;}
+    .dt-metric svg{flex-shrink:0;color:#e6edf8;}
+    .dt-metric b{display:block;font-size:1.05rem;font-weight:800;color:#fff;white-space:nowrap;}
+    .dt-metric small{display:block;font-size:.62rem;font-weight:700;color:#8ea3c2;text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+    .dt-section-title{display:flex;align-items:center;gap:8px;color:#00c8ff;font-weight:800;font-size:.9rem;text-transform:uppercase;letter-spacing:.5px;margin-top:6px;}
+    .dt-synopsis{background:rgba(8,18,38,.55);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:18px 22px;font-size:.95rem;line-height:1.65;color:#dbe5f4;max-height:220px;overflow:auto;white-space:pre-wrap;}
+    .dt-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 36px 28px;border-top:1px solid rgba(255,255,255,.06);}
+    .dt-footer-right{display:flex;align-items:center;gap:12px;}
+    .dt-btn{display:inline-flex;align-items:center;gap:10px;border-radius:999px;font-weight:800;font-size:1rem;cursor:pointer;padding:14px 28px;font-family:inherit;}
+    .dt-btn-ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.2);color:#fff;}
+    .dt-btn-primary{background:linear-gradient(180deg,#19c3ff,#0096f0);border:0;color:#02101f;padding:14px 48px;box-shadow:0 0 24px rgba(0,170,255,.5);}
+    .dt-btn-primary.stop{background:rgba(239,68,68,.15);border:1px solid #ef4444;color:#ef4444;box-shadow:none;}
+    .dt-more{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;font-size:1.3rem;cursor:pointer;}
+    .dt-synopsis{scrollbar-width:thin;scrollbar-color:rgba(0,180,255,.5) transparent;max-height:240px !important;}
+    .dt-synopsis::-webkit-scrollbar{width:6px;}
+    .dt-synopsis::-webkit-scrollbar-thumb{background:rgba(0,180,255,.5);border-radius:6px;}
+    .dt-synopsis::-webkit-scrollbar-track{background:transparent;}
+    .dt-metric small{white-space:nowrap;}
+    .dt-metric{padding:0 10px;}
+    @media (max-width:760px){
+      .dt-body{grid-template-columns:1fr;gap:20px;padding:22px 18px 14px;}
+      .dt-cover-col{max-width:210px;margin:0 auto;width:100%;}
+      .dt-info-col{padding-right:0;}
+      .dt-title{font-size:1.6rem;}
+      .dt-metrics{grid-template-columns:1fr 1fr;row-gap:14px;}
+      .dt-metric:nth-child(3){border-left:0;}
+      .dt-footer{padding:14px 18px 22px;flex-wrap:wrap;}
+      .dt-btn-primary{padding:14px 28px;}
+    }
+</style>
 </head>
 <body>
   <!-- Playful Floating Ambient Bubbles -->
@@ -2181,60 +2227,36 @@
 
   <!-- Game Details Popup Modal -->
   <div class="modal-backdrop" id="gameDetailModal" onclick="closeDetailModalOnBackdrop(event)">
-    <div class="modal-window" style="max-width:580px; padding:0; overflow:hidden;">
-      <div class="detail-hero-banner">
-        <img id="detailHeroBg" class="detail-hero-bg" src="" alt="Sfondo">
-        <div class="detail-hero-overlay"></div>
-        <button class="modal-close" style="position:absolute; top:12px; right:12px; z-index:10; background:rgba(0,0,0,0.6);" onclick="closeDetailModal()">&times;</button>
-        <div class="detail-hero-content">
-          <img id="detailCoverImg" class="detail-poster-img" src="" alt="Copertina">
-          <div class="detail-title-block">
-            <div id="detailCaseFormat" style="font-size:0.68rem; font-weight:800; color:#38bdf8; letter-spacing:1px; text-transform:uppercase;">PLAYSTATION® 5</div>
-            <h2 id="detailTitle" class="detail-title-text">Titolo Gioco</h2>
-            <div id="detailDeveloper" class="detail-dev-text">Studio Sviluppatore</div>
-            <div id="detailTagsWrap" class="detail-tags-wrap"></div>
+    <div class="dt-card">
+      <button type="button" class="dt-close" onclick="closeDetailModal()" aria-label="Chiudi">&times;</button>
+      <div class="dt-body">
+        <div class="dt-cover-col">
+          <div class="dt-cover-wrap">
+            <img id="detailCoverImg" class="dt-cover" src="" alt="Copertina">
+            <span class="dt-cover-badge" id="detailCoverBadge"></span>
           </div>
+        </div>
+        <div class="dt-info-col">
+          <div id="detailCaseFormat" class="dt-platform">PS5</div>
+          <h2 id="detailTitle" class="dt-title">Titolo Gioco</h2>
+          <div id="detailDeveloper" class="dt-dev">Studio Sviluppatore</div>
+          <div id="detailTagsWrap" class="dt-tags"></div>
+          <div class="dt-metrics">
+            <div class="dt-metric"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><b id="detailHours">0h</b><small>Ore giocate</small></div></div>
+            <div class="dt-metric"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><div><b id="detailRating">-</b><small>Voto personale</small></div></div>
+            <div class="dt-metric"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M9 20h6"/></svg><div><b id="detailTrophies">0%</b><small>Trofei</small></div></div>
+            <div class="dt-metric"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="9" rx="4"/><path d="M8 11v3M6.5 12.5h3M16 12h.01M18 13.5h.01"/></svg><div><b id="detailStatusPill">-</b><small>Stato</small></div></div>
+          </div>
+          <div class="dt-section-title"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7a3 3 0 013 3v11a2 2 0 00-2-2H4zM20 5h-6"/></svg> Trama &amp; Recensione</div>
+          <div id="detailSynopsis" class="dt-synopsis">Nessuna recensione disponibile per questo gioco.</div>
         </div>
       </div>
-
-      <div style="padding:1.4rem; display:flex; flex-direction:column; gap:1.2rem;">
-        <!-- Metrics Bar -->
-        <div class="detail-metrics-grid">
-          <div class="detail-metric-card">
-            <span class="detail-metric-val" id="detailHours">0h</span>
-            <span class="detail-metric-lbl">Ore Giocate</span>
-          </div>
-          <div class="detail-metric-card">
-            <span class="detail-metric-val" id="detailRating" style="color:#facc15;">-</span>
-            <span class="detail-metric-lbl">Voto Personale</span>
-          </div>
-          <div class="detail-metric-card">
-            <span class="detail-metric-val" id="detailTrophies">0%</span>
-            <span class="detail-metric-lbl">Trofei</span>
-          </div>
-          <div class="detail-metric-card">
-            <span class="detail-metric-val" id="detailStatusPill" style="font-size:0.95rem;">-</span>
-            <span class="detail-metric-lbl">Stato</span>
-          </div>
+      <div class="dt-footer">
+        <button type="button" class="dt-btn dt-btn-ghost" id="detailEditBtn" onclick=""><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg> Modifica Scheda</button>
+        <div class="dt-footer-right">
+          <button type="button" class="dt-btn dt-btn-primary" id="detailPlayBtn" onclick="">Gioca Ora</button>
+          <button type="button" class="dt-more" id="detailMoreBtn" onclick="closeDetailModal()" aria-label="Altro">&#8942;</button>
         </div>
-
-        <!-- Synopsis / Review Section -->
-        <div>
-          <div style="font-size:0.8rem; font-weight:800; color:#00f0ff; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-            <span>📖</span> <span>Trama & Recensione</span>
-          </div>
-          <div id="detailSynopsis" class="detail-synopsis-box">Nessuna recensione disponibile per questo gioco.</div>
-        </div>
-      </div>
-
-      <!-- Action Footer -->
-      <div class="detail-actions-footer">
-        <button type="button" class="btn btn-secondary" id="detailEditBtn" onclick="">
-          ✏️ Modifica Scheda
-        </button>
-        <button type="button" class="btn btn-primary" id="detailPlayBtn" onclick="" style="padding:0.65rem 1.4rem;">
-          ▶️ Gioca Ora
-        </button>
       </div>
     </div>
   </div>
@@ -4226,10 +4248,12 @@
       if (heroBg) heroBg.src = cover;
       if (coverImg) coverImg.src = cover;
 
-      const formatLabel = game.format === 'Disco' ? '💿 BLU-RAY™ PS5' : (game.format === 'Digitale' ? '💾 DIGITALE PS STORE' : '⭐ PLAYSTATION® PLUS');
+      const formatLabel = game.format === 'Disco' ? 'PS5 · Disco' : (game.format === 'Digitale' ? 'PS5 · Digitale' : 'PS5 · PS Plus');
       if (caseFormat) caseFormat.textContent = formatLabel;
+      const coverBadge = document.getElementById('detailCoverBadge');
+      if (coverBadge) coverBadge.textContent = getStatusLabel(game.status);
       if (title) title.textContent = game.title || 'Senza Titolo';
-      if (dev) dev.textContent = game.developer ? `🏢 ${game.developer}` : 'PlayStation Studios / Partner';
+      if (dev) dev.textContent = game.developer ? game.developer : 'PlayStation Studios / Partner';
 
       // Genres tags
       if (tagsWrap) {
@@ -4243,10 +4267,10 @@
 
       // Metrics
       if (hours) hours.textContent = formatPlaytime(game.hours);
-      if (rating) rating.textContent = game.rating ? `⭐ ${game.rating}/10` : 'N/D';
+      if (rating) rating.textContent = game.rating ? `${game.rating}/10` : 'N/D';
       if (trophies) {
         const isPlat = game.platinum || game.status === 'platinato';
-        trophies.innerHTML = isPlat ? '💎 100%' : `🎯 ${game.trophies || 0}%`;
+        trophies.textContent = isPlat ? '100%' : `${game.trophies || 0}%`;
       }
       if (statusPill) {
         statusPill.textContent = getStatusLabel(game.status);
@@ -4269,9 +4293,9 @@
 
       if (playBtn) {
         const isCurrentlyPlaying = activePlayingSession && activePlayingSession.gameId === game.id;
-        playBtn.className = isCurrentlyPlaying ? 'btn btn-secondary' : 'btn btn-primary';
-        playBtn.style.color = isCurrentlyPlaying ? '#ef4444' : '#030712';
-        playBtn.innerHTML = isCurrentlyPlaying ? '⏹️ Termina Sessione' : '▶️ Gioca Ora';
+        playBtn.className = 'dt-btn dt-btn-primary' + (isCurrentlyPlaying ? ' stop' : '');
+        playBtn.style.color = '';
+        playBtn.innerHTML = isCurrentlyPlaying ? '&#9632; Termina Sessione' : '&#9654; Gioca Ora';
         playBtn.onclick = () => {
           closeDetailModal();
           toggleGamePlayTimer(game.id);
