@@ -3964,6 +3964,37 @@
       }, 450);
     }
 
+    // Heuristic: is this text English?
+    function looksEnglish(t) {
+      const en = (t.match(/\b(the|and|is|was|of|in|with|by|that|which|are|for|as|an|it|its|player|players)\b/gi) || []).length;
+      const it = (t.match(/\b(il|lo|la|le|gli|di|del|della|che|con|per|è|un|una|nel|nella|sono|come|dei|delle)\b/gi) || []).length;
+      return en > it * 1.5 && en >= 4;
+    }
+
+    // Free translation (MyMemory), split into <=450 char chunks on sentence boundaries
+    async function translateToItalian(text) {
+      try {
+        const sentences = text.split(/(?<=[.?!])\s+/);
+        const chunks = [];
+        let cur = '';
+        for (const sn of sentences) {
+          if ((cur + ' ' + sn).length > 450 && cur) { chunks.push(cur); cur = sn; }
+          else cur = cur ? cur + ' ' + sn : sn;
+        }
+        if (cur) chunks.push(cur);
+        const out = [];
+        for (const c of chunks.slice(0, 6)) {
+          const r = await fetch('https://api.mymemory.translated.net/get?langpair=en|it&q=' + encodeURIComponent(c));
+          if (!r.ok) return '';
+          const j = await r.json();
+          const t = j?.responseData?.translatedText;
+          if (!t || /MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(t)) return '';
+          out.push(t);
+        }
+        return out.join(' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+      } catch (e) { return ''; }
+    }
+
     async function searchGameMetadataOnline(query) {
       const indicator = document.getElementById('coverSearchIndicator');
       if (indicator) indicator.style.display = 'inline-flex';
@@ -3975,6 +4006,7 @@
         let foundDev = '';
         let foundGenre = '';
         let foundReview = '';
+        let curatedReview = false;
 
         // Step 1: Check in our curated PS5 knowledge base for immediate high quality info
         for (const [key, meta] of Object.entries(PS5_CURATED_METADATA)) {
@@ -3982,6 +4014,7 @@
             foundDev = meta.developer;
             foundGenre = meta.genre;
             foundReview = meta.review;
+            curatedReview = true;
             break;
           }
         }
@@ -4010,24 +4043,40 @@
               if (!foundGenre && parsed.genre) foundGenre = parsed.genre;
               if (!foundReview && parsed.review) foundReview = parsed.review;
 
-              // Check Italian Wikipedia summary if review is still missing or in English
-              if (!foundReview || !foundReview.match(/[àèéìòù]/i)) {
+              // Italian version: follow the official interlanguage link of the English page
+              if (!curatedReview) {
                 try {
-                  const itUrl = `https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(cleanQuery.replace(/ /g, '_'))}`;
-                  const itRes = await fetch(itUrl);
-                  if (itRes.ok) {
-                    const itData = await itRes.json();
-                    if (itData?.extract && itData?.type === 'standard' && itData.extract.length > 50) {
-                      const itParsed = parseCleanReviewAndGenre(itData.extract);
-                      if (itParsed.review) foundReview = itParsed.review;
-                      if (!foundGenre && itParsed.genre) foundGenre = itParsed.genre;
-                      if (!foundDev && itParsed.developer) foundDev = itParsed.developer;
+                  const llUrl = `https://en.wikipedia.org/w/api.php?action=query&redirects=1&prop=langlinks&lllang=it&titles=${encodeURIComponent(foundTitle)}&format=json&origin=*`;
+                  const llRes = await fetch(llUrl);
+                  let itTitle = '';
+                  if (llRes.ok) {
+                    const llData = await llRes.json();
+                    const pages = llData?.query?.pages || {};
+                    const pg = Object.values(pages)[0];
+                    itTitle = pg?.langlinks?.[0]?.['*'] || '';
+                  }
+                  if (itTitle) {
+                    const itRes = await fetch(`https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(itTitle.replace(/ /g, '_'))}`);
+                    if (itRes.ok) {
+                      const itData = await itRes.json();
+                      if (itData?.extract && itData.extract.length > 50) {
+                        const itParsed = parseCleanReviewAndGenre(itData.extract);
+                        if (itParsed.review) foundReview = itParsed.review;
+                        if (!foundGenre && itParsed.genre) foundGenre = itParsed.genre;
+                        if (!foundDev && itParsed.developer) foundDev = itParsed.developer;
+                      }
                     }
                   }
                 } catch (e) {}
               }
             }
           }
+        }
+
+        // Still English? translate it to Italian
+        if (foundReview && !curatedReview && looksEnglish(foundReview)) {
+          const tr = await translateToItalian(foundReview);
+          if (tr) foundReview = tr;
         }
 
         // Apply detected cover
