@@ -2203,12 +2203,6 @@
       </div>
 
       <div class="modal-body" style="gap:1.1rem;">
-        <!-- Auth Tabs: Login vs Register (shown when logged out) -->
-        <div id="authTabsRow" style="display:flex; gap:8px;">
-          <button type="button" class="auth-tab-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Accedi</button>
-          <button type="button" class="auth-tab-btn" id="tabRegisterBtn" onclick="switchAuthTab('register')">Crea Account</button>
-        </div>
-
         <!-- Touch ID / Face ID Biometric One-Touch Button -->
         <div id="biometricSection">
           <button type="button" class="btn-biometric" id="touchIdAuthBtn" onclick="handleBiometricAuth()">
@@ -2220,7 +2214,7 @@
           
           <div style="display:flex; align-items:center; gap:10px; margin:0.8rem 0 0.4rem 0;">
             <div style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></div>
-            <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:700;">OPPURE CON EMAIL</span>
+            <span style="font-size:0.75rem; color:var(--ps-text-muted); font-weight:700;">OPPURE LOGIN AMMINISTRATORE</span>
             <div style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></div>
           </div>
         </div>
@@ -2249,16 +2243,16 @@
           </button>
         </div>
 
-        <!-- Email & Password Form -->
+        <!-- Email & Password Form (Login Only - Registrazione Disabilitata) -->
         <form id="authEmailForm" onsubmit="handleEmailAuth(event)" style="display:flex; flex-direction:column; gap:0.9rem;">
           <div class="form-group">
-            <label class="form-label">Email PSN</label>
-            <input type="email" id="authEmailInput" class="form-input" placeholder="esempio@playstation.com" required autocomplete="username">
+            <label class="form-label">Email Amministratore</label>
+            <input type="email" id="authEmailInput" class="form-input" placeholder="tua-email@playstation.com" required autocomplete="username">
           </div>
 
           <div class="form-group">
             <label class="form-label">Password</label>
-            <input type="password" id="authPasswordInput" class="form-input" placeholder="Minimo 6 caratteri" required autocomplete="current-password">
+            <input type="password" id="authPasswordInput" class="form-input" placeholder="Password account" required autocomplete="current-password">
           </div>
 
           <button type="submit" class="btn btn-primary" id="authSubmitBtn" style="width:100%; justify-content:center; margin-top:0.3rem;">
@@ -2735,24 +2729,7 @@
       if (e.target.id === 'authModal') closeAuthModal();
     }
 
-    function switchAuthTab(mode) {
-      playSound('blip');
-      authMode = mode;
-      const tabLogin = document.getElementById('tabLoginBtn');
-      const tabReg = document.getElementById('tabRegisterBtn');
-      const submitBtn = document.getElementById('authSubmitBtn');
-
-      if (tabLogin && tabReg) {
-        tabLogin.classList.toggle('active', mode === 'login');
-        tabReg.classList.toggle('active', mode === 'register');
-      }
-
-      if (submitBtn) {
-        submitBtn.textContent = mode === 'login' ? 'Accedi' : 'Crea Account';
-      }
-    }
-
-    // Email + Password Supabase Auth
+    // Email + Password Supabase Auth (Login Only)
     async function handleEmailAuth(event) {
       event.preventDefault();
       const email = document.getElementById('authEmailInput').value.trim();
@@ -2766,7 +2743,7 @@
       const submitBtn = document.getElementById('authSubmitBtn');
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = 'Attendere...';
+        submitBtn.textContent = 'Verifica in corso...';
       }
 
       try {
@@ -2774,31 +2751,24 @@
           throw new Error('Supabase client non inizializzato');
         }
 
-        if (authMode === 'login') {
-          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          currentUser = data.user;
-          localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
-          playSound('tada');
-          showToast(`🎮 Bentornato, ${email.split('@')[0]}!`);
-        } else {
-          const { data, error } = await supabaseClient.auth.signUp({ email, password });
-          if (error) throw error;
-          currentUser = data.user || { email };
-          localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
-          playSound('tada');
-          showToast(`🎉 Account creato con successo! Benvenuto!`);
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          throw new Error('Credenziali non valide o account inesistente.');
         }
+        currentUser = data.user;
+        localStorage.setItem('ps5_auth_user', JSON.stringify(currentUser));
+        playSound('tada');
+        showToast(`🎮 Bentornato, ${email.split('@')[0]}!`);
 
         updateUserInterface();
         closeAuthModal();
       } catch (err) {
         console.error('Auth error:', err);
-        showToast(`⚠️ ${err.message || 'Errore di autenticazione'}`);
+        showToast(`⚠️ ${err.message || 'Accesso non riuscito'}`);
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = authMode === 'login' ? 'Accedi' : 'Crea Account';
+          submitBtn.textContent = 'Accedi';
         }
       }
     }
