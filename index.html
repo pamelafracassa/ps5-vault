@@ -1138,8 +1138,8 @@
     .card-menu button.danger:hover{background:rgba(239,68,68,.2);}
     .card-menu .cm-sep{height:1px;background:rgba(255,255,255,.08);margin:4px 6px;}
     .card-menu svg{flex:none}
-    #statsModal .st-card{position:relative;width:100%;max-width:640px;max-height:92vh;overflow:auto;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(0,170,255,.55);border-radius:28px;box-shadow:0 0 40px rgba(0,140,255,.35),0 30px 80px rgba(0,0,0,.6);padding:22px 22px 20px;transform:scale(.94);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
-    #statsModal.open .st-card{transform:scale(1);}
+    #statsModal .st-card,#sessionsModal .st-card{position:relative;width:100%;max-width:640px;max-height:92vh;overflow:auto;background:linear-gradient(160deg,#0b1a33 0%,#07101f 100%);border:2px solid rgba(0,170,255,.55);border-radius:28px;box-shadow:0 0 40px rgba(0,140,255,.35),0 30px 80px rgba(0,0,0,.6);padding:22px 22px 20px;transform:scale(.94);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+    #statsModal.open .st-card,#sessionsModal.open .st-card{transform:scale(1);}
     .st-title{margin:2px 0 14px;font-size:1.4rem;color:#fff;}
     .st-tabs{display:flex;gap:6px;background:rgba(255,255,255,.05);padding:4px;border-radius:14px;margin-bottom:12px;}
     .st-tab{flex:1;border:0;background:none;color:#9fb3d1;font:inherit;font-weight:800;font-size:.85rem;padding:9px 4px;border-radius:10px;cursor:pointer;}
@@ -1170,6 +1170,26 @@
     .st-rbar i{display:block;height:100%;background:linear-gradient(90deg,#00d4ff,#0a6dff);border-radius:4px;}
     .st-rh{font-weight:800;font-size:.8rem;color:#cfe6ff;white-space:nowrap;}
     .st-empty{color:#8ea3c2;font-size:.85rem;text-align:center;padding:10px 0;}
+    .st-head{position:relative;}
+    .st-manage{margin:-6px 0 12px;border:1px solid rgba(0,200,255,.4);background:rgba(0,170,255,.12);color:#7fd8ff;font:inherit;font-weight:800;font-size:.78rem;padding:7px 12px;border-radius:10px;cursor:pointer;}
+    .st-manage:hover{background:rgba(0,170,255,.24);}
+    .ss-form{display:flex;flex-direction:column;gap:10px;}
+    .ss-form .form-row{gap:10px;}
+    .ss-check{display:flex;gap:8px;align-items:center;font-size:.82rem;color:#cfe6ff;cursor:pointer;}
+    .ss-btns{display:flex;gap:8px;flex-wrap:wrap;}
+    .ss-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.07);}
+    .ss-info{flex:1;min-width:0;}
+    .ss-info b{display:block;font-size:.85rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ss-info span{font-size:.75rem;color:#8ea3c2;}
+    .ss-ico{width:34px;height:34px;border-radius:10px;border:1px solid rgba(120,150,200,.3);background:rgba(30,48,88,.55);color:#e2e8f0;cursor:pointer;font-size:.95rem;flex:none;}
+    .ss-ico.del:hover{background:rgba(239,68,68,.25);}
+    .ss-row.editing{background:rgba(0,170,255,.1);border-radius:10px;padding-left:6px;}
+    .est-wrap{margin:2px 0 4px;}
+    .est-top{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:#9fb3d1;font-weight:700;}
+    .est-top b{color:#00d4ff;font-weight:900;}
+    .est-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.1);margin-top:5px;overflow:hidden;}
+    .est-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#00d4ff,#0a6dff);}
+    .est-bar.over i{background:linear-gradient(90deg,#ffd23f,#ff8a00);}
     .st-note{margin-top:14px;font-size:.7rem;color:#6f86a8;line-height:1.4;}
     .btn-icon {
       padding: 0.5rem;
@@ -2241,6 +2261,11 @@
               <span class="mi-text"><span>Statistiche di gioco</span><small>Ore per giorno, settimana, mese, anno</small></span>
             </button>
 
+            <button type="button" class="menu-item-btn" onclick="toggleStallReminders();">
+              <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg></span>
+              <span class="mi-text"><span>Promemoria giochi fermi</span><small id="stallMenuSub">Notifica se un gioco resta fermo</small></span>
+            </button>
+
             <div class="mi-group-label">Dati e app</div>
             <button type="button" class="menu-item-btn mi-install" id="installPwaBtn" onclick="installPwaApp();" style="display:none;">
               <span class="mi-ico"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M12 8v6M9.5 12l2.5 2.5 2.5-2.5"/></svg></span>
@@ -2286,6 +2311,7 @@
         <button type="button" class="filter-chip" id="sortChip_rating" onclick="setSortFilter('rating_desc')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg> Più Votati</button>
         <button type="button" class="filter-chip" id="sortChip_hours" onclick="setSortFilter('hours_desc')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><circle cx="12" cy="13" r="8"/><path d="M12 9v4M9 2h6"/></svg> Più Giocati</button>
         <button type="button" class="filter-chip" id="sortChip_title" onclick="setSortFilter('title_asc')"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M3 18l4-12 4 12M4.5 14h5M14 6h6l-6 12h6"/></svg> A - Z</button>
+        <button type="button" class="filter-chip" id="sortChip_remaining" onclick="setSortFilter('remaining_asc')" title="Giochi da iniziare o in corso, dal più vicino alla fine in base alle ore stimate da RAWG"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.14em"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg> Da finire</button>
         <div class="filter-chip-divider"></div>
         <span class="chip-lbl">Genere</span>
         <button type="button" class="filter-chip active" id="genreChip_all" onclick="setGenreFilter('all')">Tutti</button>
@@ -2471,6 +2497,7 @@
       <div class="st-head">
         <div class="gm-eyebrow">PS5 VAULT</div>
         <h3 class="st-title">Statistiche di gioco</h3>
+        <button type="button" class="st-manage" onclick="openSessionsModal()">✎ Gestisci sessioni</button>
       </div>
       <div class="st-tabs" role="tablist">
         <button type="button" class="st-tab active" data-p="day" onclick="setStatsPeriod('day')">Giorno</button>
@@ -2492,6 +2519,32 @@
       <div class="st-sub">Giochi più giocati nel periodo</div>
       <div class="st-top" id="stTop"></div>
       <div class="st-note" id="stNote"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="sessionsModal" onclick="if(event.target.id==='sessionsModal')closeSessionsModal()">
+    <div class="st-card ss-card">
+      <button type="button" class="dt-close" onclick="closeSessionsModal()" aria-label="Chiudi">&times;</button>
+      <div class="st-head">
+        <div class="gm-eyebrow">PS5 VAULT</div>
+        <h3 class="st-title">Sessioni di gioco</h3>
+      </div>
+      <div class="ss-form">
+        <div class="st-sub" id="ssFormTitle">Aggiungi una sessione</div>
+        <div class="form-group"><label class="form-label" for="ssGame">Gioco</label><select id="ssGame" class="form-select" onchange="sessGameChanged()"></select></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label" for="ssStart">Inizio</label><input type="datetime-local" id="ssStart" class="form-input"></div>
+          <div class="form-group"><label class="form-label" for="ssMin">Durata (minuti)</label><input type="number" id="ssMin" class="form-input" min="1" max="1440" inputmode="numeric" placeholder="es. 90"></div>
+        </div>
+        <label class="ss-check"><input type="checkbox" id="ssAddHours" checked> Aggiorna anche le ore totali del gioco</label>
+        <div class="st-note" id="ssHint"></div>
+        <div class="ss-btns">
+          <button type="button" class="btn btn-primary" onclick="saveSessionForm()">Salva</button>
+          <button type="button" class="btn btn-secondary" id="ssCancel" onclick="resetSessionForm()" style="display:none">Annulla modifica</button>
+        </div>
+      </div>
+      <div class="st-sub" style="margin-top:16px">Ultime sessioni</div>
+      <div id="ssList"></div>
     </div>
   </div>
 
@@ -3371,7 +3424,7 @@
 
     let games = [];
     let activeStatusFilter = 'all';
-    let activeSortFilter = 'recent'; // 'recent' | 'rating_desc' | 'hours_desc' | 'title_asc'
+    let activeSortFilter = 'recent'; // 'recent' | 'rating_desc' | 'hours_desc' | 'title_asc' | 'remaining_asc'
     let activeGenreFilter = 'all';
 
     function setSortFilter(sortKey) {
@@ -3381,7 +3434,8 @@
         { key: 'recent', id: 'sortChip_recent' },
         { key: 'rating_desc', id: 'sortChip_rating' },
         { key: 'hours_desc', id: 'sortChip_hours' },
-        { key: 'title_asc', id: 'sortChip_title' }
+        { key: 'title_asc', id: 'sortChip_title' },
+        { key: 'remaining_asc', id: 'sortChip_remaining' }
       ];
       chips.forEach(c => {
         const el = document.getElementById(c.id);
@@ -3419,9 +3473,17 @@
 
     function mergePlayLog(a, b) {
       const seen = new Map();
-      [...a, ...b].forEach(x => { if (x && x.g && x.s && x.d > 0) seen.set(x.g + '|' + x.s, { g: String(x.g), s: Number(x.s), d: Math.round(Number(x.d)) }); });
+      // each entry: { g, s, d, u (last update ms), del (1 = deleted) } - the newest version wins, so edits and deletions sync across devices
+      [...a, ...b].forEach(x => {
+        if (!(x && x.g && x.s && x.d > 0)) return;
+        const n = { g: String(x.g), s: Number(x.s), d: Math.round(Number(x.d)), u: Number(x.u) || 0 };
+        if (x.del) n.del = 1;
+        const k = n.g + '|' + n.s, o = seen.get(k);
+        if (!o || n.u > o.u || (n.u === o.u && n.del && !o.del)) seen.set(k, n);
+      });
       return [...seen.values()].sort((p, q) => p.s - q.s);
     }
+    function liveLog() { return playLog.filter(x => !x.del); }
 
     async function pushPlayLogToCloud() {
       try {
@@ -3446,18 +3508,19 @@
         if (!r.ok) return;
         const rows = await r.json();
         const remote = rows.length ? JSON.parse(rows[0].notes || '[]') : [];
-        const merged = mergePlayLog(playLog, Array.isArray(remote) ? remote : []);
-        const changed = merged.length !== playLog.length;
+        const remoteNorm = mergePlayLog([], Array.isArray(remote) ? remote : []);
+        const merged = mergePlayLog(playLog, remoteNorm);
+        const changed = JSON.stringify(merged) !== JSON.stringify(playLog);
         playLog = merged;
         savePlayLogLocal();
-        if (merged.length !== (Array.isArray(remote) ? remote.length : 0)) pushPlayLogToCloud();
+        if (JSON.stringify(merged) !== JSON.stringify(remoteNorm)) pushPlayLogToCloud();
         if (changed && document.getElementById('statsModal')?.classList.contains('open')) renderStats();
       } catch (e) { /* offline */ }
     }
 
     function recordPlaySession(gameId, startMs, seconds) {
       if (!gameId || !startMs || !(seconds >= 30)) return;   // ignore accidental taps (< 30 s)
-      playLog = mergePlayLog(playLog, [{ g: gameId, s: startMs, d: seconds }]);
+      playLog = mergePlayLog(playLog, [{ g: gameId, s: startMs, d: seconds, u: Date.now() }]);
       savePlayLogLocal();
       pushPlayLogToCloud();
     }
@@ -3930,7 +3993,7 @@
         pool = games;
       }
 
-      const randomGame = pool[Math.floor(Math.random() * pool.length)];
+      const randomGame = pickWeightedGame(pool);
       if (!randomGame) return;
 
       if (randomGame.coverUrl) {
@@ -3941,7 +4004,7 @@
       triggerConfetti();
 
       // Astro Bot speaks up (comic bubble above Astro)
-      astroSay(`Ho scelto: "${randomGame.title}"! 🚀`, 5000);
+      astroSay(`Ho scelto: "${randomGame.title}"! 🚀${pickHint(randomGame)}`, 5000);
 
       // Reset filter so the extracted game is guaranteed visible in grid
       activeStatusFilter = 'all';
@@ -4049,6 +4112,8 @@
             return false;
           }
         }
+        // 'Da finire': only unfinished games with a known estimate
+        if (activeSortFilter === 'remaining_asc' && !((game.status === 'da_iniziare' || game.status === 'in_corso') && getEst(game) > 0)) return false;
         // Text search box
         if (tokens.length && scoreOf(game) < 0) return false;
         return true;
@@ -4057,7 +4122,9 @@
       // Sorting based on active chip
       filtered.sort((a, b) => {
         if (tokens.length) { const d = scoreOf(b) - scoreOf(a); if (d) return d; }
-        if (activeSortFilter === 'rating_desc') {
+        if (activeSortFilter === 'remaining_asc') {
+          return remainingHours(a) - remainingHours(b);
+        } else if (activeSortFilter === 'rating_desc') {
           return (Number(b.rating) || 0) - (Number(a.rating) || 0);
         } else if (activeSortFilter === 'hours_desc') {
           return (Number(b.hours) || 0) - (Number(a.hours) || 0);
@@ -4122,6 +4189,7 @@
                 ${genres.length > 0 ? `<div class="game-genres">${genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('')}</div>` : ''}
               </div>
 
+              ${estimateBlock(game)}
               ${game.notes ? `<p class="game-notes">${escapeHtml(game.notes)}</p>` : ''}
 
               <div class="game-stats-row">
@@ -4652,7 +4720,8 @@
             slug: d.slug || best.slug || '',
             userRating: Number(d.rating || best.rating) || 0,
             ratingsCount: Number(d.ratings_count || best.ratings_count) || 0,
-            description: (d.description_raw || '').trim()
+            description: (d.description_raw || '').trim(),
+            playtime: Number(d.playtime) || 0
           };
         }
       } catch (e) {
@@ -5527,7 +5596,7 @@
     function sessionsByDay() {
       const map = new Map(); // 'YYYY-MM-DD' -> { total, games: {id: sec} , n }
       const key = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      playLog.forEach(x => {
+      liveLog().forEach(x => {
         let start = new Date(x.s), remain = x.d, first = true;
         while (remain > 0) {
           const endOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1).getTime();
@@ -5623,10 +5692,246 @@
           return `<div class="st-row">${cv ? `<img src="${escapeHtml(cv)}" alt="" loading="lazy">` : '<img alt="">'}<div class="st-rname"><b>${escapeHtml(nm)}</b><div class="st-rbar"><i style="width:${Math.round(sec / m0 * 100)}%"></i></div></div><span class="st-rh">${fmt(sec)}</span></div>`;
         }).join('');
       }
-      const first = playLog.length ? new Date(playLog[0].s) : null;
+      const _ll = liveLog(); const first = _ll.length ? new Date(_ll[0].s) : null;
       document.getElementById('stNote').textContent = first
-        ? `Le statistiche contano le sessioni registrate con il timer ▶ Gioca, dal ${first.getDate()} ${IT_MONTHS_L[first.getMonth()]} ${first.getFullYear()}. Le ore inserite a mano e quelle di prima non hanno una data e non compaiono qui.`
-        : 'Le statistiche contano le sessioni registrate con il timer ▶ Gioca. Le ore inserite a mano e quelle precedenti non hanno una data e non compaiono qui.';
+        ? `Le statistiche contano le sessioni registrate con il timer ▶ Gioca, dal ${first.getDate()} ${IT_MONTHS_L[first.getMonth()]} ${first.getFullYear()}. Le ore senza data (inserite a mano o precedenti) non compaiono: puoi assegnarle da «Gestisci sessioni».`
+        : 'Le statistiche contano le sessioni registrate con il timer ▶ Gioca. Le ore senza data (inserite a mano o precedenti) non compaiono: puoi assegnarle da «Gestisci sessioni».';
+    }
+
+
+    // ---- Estimated time to finish (RAWG "playtime") + progress ----
+    const EST_KEY = 'ps5_est_hours_v1';
+    let estMap = {};
+    try { estMap = JSON.parse(localStorage.getItem(EST_KEY) || '{}') || {}; } catch (e) { estMap = {}; }
+    function getEst(game) { const e = estMap[game.id]; return e && e.n === game.title && e.h > 0 ? e.h : 0; }
+    function remainingHours(g) { const est = getEst(g); return est ? Math.max(0, est - (Number(g.hours) || 0)) : 1e9; }
+
+    function estimateBlock(game) {
+      if (game.status === 'completato' || game.status === 'platinato') return '';
+      const est = getEst(game);
+      if (!est) return '';
+      const played = Number(game.hours) || 0;
+      const rawPct = played / est * 100;
+      const pct = Math.min(100, Math.round(rawPct));
+      const over = rawPct >= 100;
+      const tip = 'Stima media RAWG per finire il gioco: ' + formatPlaytime(est);
+      if (played <= 0) return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ~${formatPlaytime(est)} per finirlo</span></div></div>`;
+      return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ${over ? 'Oltre la stima (' + formatPlaytime(est) + ')' : formatPlaytime(played) + ' di ~' + formatPlaytime(est)}</span><b>${pct}%</b></div><div class="est-bar ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div></div>`;
+    }
+
+    let estBusy = false;
+    async function refreshEstimates() {
+      if (estBusy || !games.length) return;
+      const DAY = 86400000;
+      const todo = games.filter(g => {
+        if (g.status === 'completato' || g.status === 'platinato') return false;
+        const e = estMap[g.id];
+        if (!e || e.n !== g.title) return true;
+        return e.h <= 0 && Date.now() - e.t > DAY;   // retry titles RAWG had no estimate for, once a day
+      });
+      if (!todo.length) return;
+      estBusy = true;
+      let found = false;
+      try {
+        for (const g of todo) {
+          let h = 0;
+          try { const r = await rawgLookup(g.title); h = r && r.playtime ? r.playtime : 0; } catch (e) {}
+          estMap[g.id] = { n: g.title, h, t: Date.now() };
+          if (h > 0) found = true;
+        }
+        try { localStorage.setItem(EST_KEY, JSON.stringify(estMap)); } catch (e) {}
+      } finally { estBusy = false; }
+      if (found) renderGames();
+    }
+
+    // "Cosa gioco?": favour games already started and those closest to the end
+    function pickWeightedGame(pool) {
+      const w = pool.map(g => {
+        let x = 1;
+        if (g.status === 'in_corso') x += 2;
+        if (getEst(g) > 0) x += 3 / (1 + remainingHours(g) / 8);
+        return x;
+      });
+      let r = Math.random() * w.reduce((a, b) => a + b, 0);
+      for (let i = 0; i < pool.length; i++) { r -= w[i]; if (r <= 0) return pool[i]; }
+      return pool[pool.length - 1];
+    }
+    function pickHint(g) {
+      if (!getEst(g) || g.status === 'completato' || g.status === 'platinato') return '';
+      const rem = remainingHours(g);
+      return rem <= 0 ? ' (hai già superato la stima!)' : ` Ti mancano ~${formatPlaytime(rem)} per finirlo.`;
+    }
+
+    // ---- Reminders for stalled "In corso" games (local notifications) ----
+    const STALL_DAYS = 14, STALL_REPEAT_DAYS = 7;
+    const STALL_KEY = 'ps5_stall_notif_v1', SINCE_KEY = 'ps5_inprogress_since_v1';
+    let stallCfg = { on: false, last: {} }, inProgSince = {};
+    try { stallCfg = Object.assign({ on: false, last: {} }, JSON.parse(localStorage.getItem(STALL_KEY) || '{}')); } catch (e) {}
+    try { inProgSince = JSON.parse(localStorage.getItem(SINCE_KEY) || '{}') || {}; } catch (e) {}
+    function saveStall() { try { localStorage.setItem(STALL_KEY, JSON.stringify(stallCfg)); localStorage.setItem(SINCE_KEY, JSON.stringify(inProgSince)); } catch (e) {} }
+
+    function trackInProgress() {
+      let ch = false;
+      games.forEach(g => {
+        if (g.status === 'in_corso' && !inProgSince[g.id]) { inProgSince[g.id] = Date.now(); ch = true; }
+        else if (g.status !== 'in_corso' && inProgSince[g.id]) { delete inProgSince[g.id]; ch = true; }
+      });
+      if (ch) saveStall();
+    }
+    function lastActivityMs(g) {
+      let t = inProgSince[g.id] || 0;
+      liveLog().forEach(x => { if (x.g === g.id) t = Math.max(t, x.s + x.d * 1000); });
+      return t;
+    }
+    function stalledList() {
+      return games.filter(g => g.status === 'in_corso' && !(activePlayingSession && activePlayingSession.gameId === g.id))
+        .map(g => ({ g, days: Math.floor((Date.now() - lastActivityMs(g)) / 86400000) }))
+        .filter(x => x.days >= STALL_DAYS).sort((a, b) => b.days - a.days);
+    }
+    async function showStallNotification(title, body) {
+      const opts = { body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'ps5-stall', data: { url: './' } };
+      try {
+        const reg = await Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(rej, 2000))]);
+        await reg.showNotification(title, opts);
+      } catch (e) { try { new Notification(title, opts); } catch (e2) {} }
+    }
+    async function checkStalledGames() {
+      trackInProgress();
+      if (!stallCfg.on || !('Notification' in window) || Notification.permission !== 'granted') return 0;
+      const due = stalledList().filter(x => Date.now() - (stallCfg.last[x.g.id] || 0) >= STALL_REPEAT_DAYS * 86400000);
+      if (!due.length) return 0;
+      const title = due.length === 1 ? 'Gioco fermo da un po\'' : `${due.length} giochi fermi da un po'`;
+      const body = due.length === 1
+        ? `"${due[0].g.title}" non lo tocchi da ${due[0].days} giorni. Ti va di riprenderlo?`
+        : due.slice(0, 3).map(x => `${x.g.title} (${x.days}g)`).join(', ') + (due.length > 3 ? ` e altri ${due.length - 3}` : '') + ' sono fermi. Riprendine uno!';
+      await showStallNotification(title, body);
+      due.forEach(x => { stallCfg.last[x.g.id] = Date.now(); });
+      saveStall();
+      return due.length;
+    }
+    function updateStallMenuLabel() {
+      const el = document.getElementById('stallMenuSub');
+      if (!el) return;
+      if (!('Notification' in window)) el.textContent = 'Non supportato da questo browser';
+      else if (Notification.permission === 'denied') el.textContent = 'Notifiche bloccate nel browser';
+      else el.textContent = stallCfg.on ? `Attivi: avviso dopo ${STALL_DAYS} giorni (tocca per spegnere)` : `Avvisa se un gioco resta fermo ${STALL_DAYS} giorni`;
+    }
+    async function toggleStallReminders() {
+      closeMenuDropdown();
+      if (!('Notification' in window)) { showToast('⚠️ Questo browser non supporta le notifiche'); return; }
+      if (stallCfg.on) { stallCfg.on = false; saveStall(); updateStallMenuLabel(); showToast('🔕 Promemoria giochi fermi disattivati'); return; }
+      let p = Notification.permission;
+      if (p === 'default') { try { p = await Notification.requestPermission(); } catch (e) { p = 'denied'; } }
+      if (p !== 'granted') { updateStallMenuLabel(); showToast('🔕 Notifiche non consentite: abilitale dalle impostazioni del browser per questo sito'); return; }
+      stallCfg.on = true; stallCfg.last = {}; saveStall(); updateStallMenuLabel();
+      const n = await checkStalledGames();
+      showToast(n ? `🔔 Promemoria attivi: ${n} gioc${n === 1 ? 'o fermo' : 'hi fermi'} da riprendere` : `🔔 Promemoria attivi: ti avviso se un gioco "In corso" resta fermo ${STALL_DAYS} giorni`);
+    }
+
+    // ---- Session manager: edit / delete / add sessions by hand ----
+    let sessView = [], sessEdit = null;
+    const pad2 = n => String(n).padStart(2, '0');
+    function toLocalInput(ms) { const d = new Date(ms); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+    function fmtDT(ms) { const d = new Date(ms); return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+    function fmtSec(sec) { const m = Math.round(sec / 60), h = Math.floor(m / 60); return h ? `${h}h ${pad2(m % 60)}m` : `${m}m`; }
+
+    function openSessionsModal() {
+      pullPlayLogFromCloud().then(() => { if (document.getElementById('sessionsModal').classList.contains('open')) renderSessionsList(); });
+      const sel = document.getElementById('ssGame');
+      sel.innerHTML = games.slice().sort((a, b) => (a.title || '').localeCompare(b.title || '')).map(g => `<option value="${escapeHtml(String(g.id))}">${escapeHtml(g.title)}</option>`).join('');
+      resetSessionForm();
+      document.getElementById('sessionsModal').classList.add('open');
+    }
+    function closeSessionsModal() {
+      const m = document.getElementById('sessionsModal');
+      if (!m || !m.classList.contains('open')) return;
+      m.classList.remove('open');
+      if (document.getElementById('statsModal').classList.contains('open')) renderStats();
+    }
+    function resetSessionForm() {
+      sessEdit = null;
+      document.getElementById('ssFormTitle').textContent = 'Aggiungi una sessione';
+      document.getElementById('ssStart').value = toLocalInput(Date.now() - 3600000);
+      document.getElementById('ssMin').value = '';
+      document.getElementById('ssAddHours').checked = true;
+      document.getElementById('ssCancel').style.display = 'none';
+      sessGameChanged();
+      renderSessionsList();
+    }
+    function sessGameChanged() {
+      const id = document.getElementById('ssGame').value;
+      const g = games.find(x => String(x.id) === id);
+      const hint = document.getElementById('ssHint');
+      if (!g) { hint.textContent = ''; return; }
+      let dated = 0; liveLog().forEach(x => { if (x.g === String(g.id)) dated += x.d; });
+      const undated = (Number(g.hours) || 0) - dated / 3600;
+      hint.textContent = undated > 0.05
+        ? `Di "${g.title}" ${formatPlaytime(undated)} non hanno ancora una data. Per assegnarle a un giorno, aggiungi una sessione e togli la spunta qui sopra (le ore sono già nel totale).`
+        : 'Spunta attiva: la durata viene aggiunta (o corretta) anche nel totale delle ore del gioco.';
+    }
+    function bumpHours(gameId, deltaH) {
+      const g = games.find(x => String(x.id) === String(gameId));
+      if (!g || !deltaH) return;
+      g.hours = Math.max(0, Math.round(((Number(g.hours) || 0) + deltaH) * 10000) / 10000);
+      saveToLocalStorage(); syncGameToCloud(g, false); updateStats(); renderGames();
+    }
+    function renderSessionsList() {
+      sessView = liveLog().slice().sort((a, b) => b.s - a.s).slice(0, 40);
+      const el = document.getElementById('ssList');
+      if (!sessView.length) { el.innerHTML = '<div class="st-empty">Nessuna sessione registrata. Aggiungine una qui sopra.</div>'; return; }
+      el.innerHTML = sessView.map((x, i) => {
+        const g = games.find(y => String(y.id) === x.g);
+        const editing = sessEdit && sessEdit.g === x.g && sessEdit.s === x.s;
+        return `<div class="ss-row ${editing ? 'editing' : ''}"><div class="ss-info"><b>${escapeHtml(g ? g.title : 'Gioco rimosso')}</b><span>${fmtDT(x.s)} · ${fmtSec(x.d)}</span></div><button type="button" class="ss-ico" onclick="editSession(${i})" title="Modifica" aria-label="Modifica">✎</button><button type="button" class="ss-ico del" onclick="deleteSession(${i})" title="Elimina" aria-label="Elimina">🗑</button></div>`;
+      }).join('');
+    }
+    function editSession(i) {
+      const x = sessView[i]; if (!x) return;
+      sessEdit = { g: x.g, s: x.s, d: x.d };
+      const sel = document.getElementById('ssGame');
+      if (![...sel.options].some(o => o.value === x.g)) sel.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(x.g)}">Gioco rimosso</option>`);
+      sel.value = x.g;
+      document.getElementById('ssStart').value = toLocalInput(x.s);
+      document.getElementById('ssMin').value = Math.max(1, Math.round(x.d / 60));
+      document.getElementById('ssFormTitle').textContent = 'Modifica sessione';
+      document.getElementById('ssCancel').style.display = '';
+      sessGameChanged(); renderSessionsList();
+      document.getElementById('ssStart').scrollIntoView({ block: 'nearest' });
+    }
+    function saveSessionForm() {
+      if (!requireLogin()) return;
+      const gid = document.getElementById('ssGame').value;
+      const start = new Date(document.getElementById('ssStart').value).getTime();
+      const min = Math.round(Number(document.getElementById('ssMin').value));
+      if (!gid) { showToast('⚠️ Scegli un gioco'); return; }
+      if (!start || isNaN(start)) { showToast('⚠️ Imposta data e ora di inizio'); return; }
+      if (start > Date.now() + 60000) { showToast('⚠️ L\'inizio non può essere nel futuro'); return; }
+      if (!(min >= 1 && min <= 1440)) { showToast('⚠️ La durata deve essere tra 1 e 1440 minuti'); return; }
+      const addH = document.getElementById('ssAddHours').checked;
+      const now = Date.now(), d = min * 60;
+      const out = [{ g: gid, s: start, d, u: now }];
+      if (sessEdit && (sessEdit.g !== gid || sessEdit.s !== start)) out.push({ g: sessEdit.g, s: sessEdit.s, d: sessEdit.d, u: now, del: 1 });
+      playLog = mergePlayLog(playLog, out);
+      savePlayLogLocal(); pushPlayLogToCloud();
+      if (addH) {
+        if (sessEdit) {
+          if (sessEdit.g === gid) bumpHours(gid, (d - sessEdit.d) / 3600);
+          else { bumpHours(sessEdit.g, -sessEdit.d / 3600); bumpHours(gid, d / 3600); }
+        } else bumpHours(gid, d / 3600);
+      }
+      showToast(sessEdit ? '✅ Sessione modificata' : '✅ Sessione aggiunta');
+      resetSessionForm();
+    }
+    function deleteSession(i) {
+      if (!requireLogin()) return;
+      const x = sessView[i]; if (!x) return;
+      const g = games.find(y => String(y.id) === x.g);
+      if (!confirm(`Eliminare la sessione di "${g ? g.title : 'gioco rimosso'}" del ${fmtDT(x.s)} (${fmtSec(x.d)})?\nLa durata verrà sottratta anche dalle ore totali del gioco.`)) return;
+      playLog = mergePlayLog(playLog, [{ g: x.g, s: x.s, d: x.d, u: Date.now(), del: 1 }]);
+      savePlayLogLocal(); pushPlayLogToCloud();
+      bumpHours(x.g, -x.d / 3600);
+      if (sessEdit && sessEdit.g === x.g && sessEdit.s === x.s) { resetSessionForm(); } else renderSessionsList();
+      showToast('🗑 Sessione eliminata');
     }
 
     // ---- Card "⋮" menu: trailer on YouTube (Italian) + delete ----
@@ -5673,7 +5978,7 @@
       if (typeof astroAct === 'function') astroAct('wave');
     }
     document.addEventListener('click', (ev) => { if (!ev.target.closest('#cardMenu') && !ev.target.closest('.btn-icon.more')) closeCardMenu(); });
-    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { closeCardMenu(); closeStatsModal(); } });
+    document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { closeCardMenu(); closeSessionsModal(); closeStatsModal(); } });
     window.addEventListener('scroll', closeCardMenu, { passive: true });
     window.addEventListener('resize', closeCardMenu);
 
@@ -5967,6 +6272,11 @@
       restorePlayingSession();
       loadFromSupabase(false);
       pullPlayLogFromCloud();
+      setTimeout(refreshEstimates, 2500);
+      setInterval(refreshEstimates, 60000);
+      setTimeout(() => { updateStallMenuLabel(); checkStalledGames(); }, 4000);
+      setInterval(checkStalledGames, 3600000);
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) checkStalledGames(); });
       setupAstroDraggable();
       setupAstroAnimations();
 

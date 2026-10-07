@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ps5-vault-cache-v30';
+const CACHE_NAME = 'ps5-vault-cache-v31';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -56,6 +56,17 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => cachedResponse);
 
       return cachedResponse || fetchPromise;
+    })
+  );
+});
+
+// Tapping a reminder notification focuses the app (or opens it)
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const c of list) { if ('focus' in c) return c.focus(); }
+      return self.clients.openWindow('./');
     })
   );
 });
