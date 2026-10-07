@@ -2523,7 +2523,6 @@
     function astroRandomQuote() {
       const quote = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
       astroSay(quote, 3500);
-      playSound('blip');
     }
 
     // Supabase Configuration
@@ -2899,6 +2898,21 @@
       return `${m < 10 ? '0' : ''}${m}m ${s < 10 ? '0' : ''}${s}s`;
     }
 
+    function formatPlaytime(hoursVal) {
+      const val = Number(hoursVal) || 0;
+      if (val === 0) return '0h';
+      const totalMinutes = Math.round(val * 60);
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      if (h > 0 && m > 0) {
+        return `${h}h ${m}m`;
+      } else if (h > 0) {
+        return `${h}h`;
+      } else {
+        return `${m}m`;
+      }
+    }
+
     function updateLiveSessionDisplay() {
       if (!activePlayingSession) return;
       const elapsedSeconds = Math.max(0, (Date.now() - activePlayingSession.startTime) / 1000);
@@ -2914,17 +2928,17 @@
       clearInterval(timerInterval);
 
       const elapsedSeconds = Math.max(0, (Date.now() - startTime) / 1000);
-      const elapsedHours = elapsedSeconds / 3600; // floating hours
+      const elapsedHours = elapsedSeconds / 3600; // actual exact floating hours
 
       activePlayingSession = null;
       localStorage.removeItem('ps5_active_session');
 
       const game = games.find(g => g.id === gameId);
       if (game) {
-        const addedHours = Math.round(elapsedHours * 10) / 10; // round to 1 decimal
-        const finalAdded = Math.max(0.1, addedHours);
+        // High precision: round to 4 decimals so even 1 minute (0.0167h) is recorded accurately
+        const finalAdded = Math.round(elapsedHours * 10000) / 10000;
         const prevHours = Number(game.hours) || 0;
-        const newTotal = Math.round((prevHours + finalAdded) * 10) / 10;
+        const newTotal = Math.round((prevHours + finalAdded) * 10000) / 10000;
         game.hours = newTotal;
 
         saveToLocalStorage();
@@ -2932,10 +2946,14 @@
         updateStats();
         renderGames();
 
+        const durationMinutes = Math.max(1, Math.round(elapsedSeconds / 60));
+        const formattedSessionTime = elapsedSeconds >= 3600 ? formatPlaytime(finalAdded) : `${durationMinutes}m`;
+        const formattedTotalTime = formatPlaytime(newTotal);
+
         if (manualStop) {
           playSound('tada');
-          showToast(`⏹️ Sessione terminata per "${game.title}"! Aggiunte ${finalAdded}h (Tot: ${newTotal}h)`);
-          astroSay(`Ottima sessione su "${game.title}"! (+${finalAdded}h) 🎉`, 4500);
+          showToast(`⏹️ Sessione terminata per "${game.title}"! +${formattedSessionTime} (Tot: ${formattedTotalTime})`);
+          astroSay(`Ottima sessione su "${game.title}"! (+${formattedSessionTime}) 🎉`, 4500);
         }
       }
     }
@@ -3141,7 +3159,7 @@
       document.getElementById('statTotalGames').textContent = total;
       document.getElementById('statInCorso').textContent = inCorso;
       document.getElementById('statCompletati').textContent = completati;
-      document.getElementById('statTotalHours').textContent = totalHours % 1 === 0 ? totalHours + 'h' : totalHours.toFixed(1) + 'h';
+      document.getElementById('statTotalHours').textContent = formatPlaytime(totalHours);
 
       // Update Top Trophy Cabinet
       document.getElementById('sysPlatCount').textContent = platCount;
@@ -3351,7 +3369,7 @@
                   ${game.rating ? `⭐ ${game.rating}<span style="font-size:0.7rem; color:var(--ps-text-muted);">/10</span>` : '<span style="color:var(--ps-text-muted); font-size:0.75rem;">N/D</span>'}
                 </div>
                 <div class="playtime-badge">
-                  ⏱️ ${game.hours ? game.hours + 'h' : '0h'}
+                  ⏱️ ${formatPlaytime(game.hours)}
                 </div>
                 <div class="trophy-badge ${isPlat ? 'plat' : ''}">
                   ${isPlat ? '💎 Platino 100%' : `🎯 ${game.trophies || 0}%`}
@@ -3992,7 +4010,7 @@
       }
 
       // Metrics
-      if (hours) hours.textContent = `${game.hours || 0}h`;
+      if (hours) hours.textContent = formatPlaytime(game.hours);
       if (rating) rating.textContent = game.rating ? `⭐ ${game.rating}/10` : 'N/D';
       if (trophies) {
         const isPlat = game.platinum || game.status === 'platinato';
@@ -4397,17 +4415,14 @@
       loadFromSupabase(false);
       setupAstroDraggable();
 
-      // Periodic playful Astro quotes (spontaneous every 8 seconds)
+      // Periodic playful Astro quotes (spontaneous silent speech bubbles)
       setInterval(() => {
         const speech = document.getElementById('astroSpeech');
         if (speech && !speech.classList.contains('visible')) {
           const quote = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
           astroSay(quote, 3800);
-          if (Math.random() > 0.4) {
-            playSound('blip');
-          }
         }
-      }, 8000);
+      }, 12000);
     }
 
     init();
