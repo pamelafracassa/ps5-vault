@@ -702,19 +702,25 @@
       position: absolute;
       bottom: 12px;
       left: 12px;
-      background: rgba(5, 8, 20, 0.9);
-      border: 2px solid #00f0ff;
+      background: rgba(5, 8, 20, 0.85);
+      border: 1.5px solid rgba(0, 240, 255, 0.7);
       backdrop-filter: blur(10px);
-      padding: 4px 10px;
-      border-radius: 20px;
+      padding: 3px 6px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 0.74rem;
-      font-weight: 800;
-      color: #00f0ff;
-      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 240, 255, 0.45);
       animation: stampBounce 2.5s infinite ease-in-out;
+      width: 42px;
+      height: 42px;
+    }
+
+    .vip-astro-stamp img {
+      width: 32px;
+      height: 38px;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 240, 255, 0.6));
     }
 
     @keyframes stampBounce {
@@ -856,28 +862,31 @@
       border-color: rgba(239, 68, 68, 0.5);
     }
 
-    /* Standalone Floating Astro Bot Figurine Widget */
+    /* Standalone Draggable Floating Astro Bot Figurine Widget */
     .astro-floating-companion {
       position: fixed;
       bottom: 2rem;
       left: 2rem;
-      z-index: 45;
+      z-index: 99;
       display: flex;
       flex-direction: column;
       align-items: center;
-      cursor: pointer;
+      cursor: grab;
       user-select: none;
+      touch-action: none;
       filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 20px rgba(0, 240, 255, 0.45));
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
     }
 
     .astro-floating-companion:hover {
-      transform: translateY(-8px) scale(1.12);
       filter: drop-shadow(0 16px 30px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 28px rgba(0, 240, 255, 0.8));
     }
 
-    .astro-floating-companion:active {
-      transform: scale(0.92);
+    .astro-floating-companion.dragging {
+      cursor: grabbing;
+      transform: scale(1.15) rotate(-5deg);
+      transition: none;
+      filter: drop-shadow(0 20px 35px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 35px rgba(0, 240, 255, 0.9));
     }
 
     .astro-figurine-img {
@@ -885,6 +894,11 @@
       height: 98px;
       object-fit: contain;
       animation: astroHoverFloat 3.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .astro-floating-companion.dragging .astro-figurine-img {
+      animation: none;
     }
 
     @keyframes astroHoverFloat {
@@ -1489,10 +1503,10 @@
     <section class="games-grid" id="gamesContainer"></section>
   </main>
 
-  <!-- Astro Bot Standalone Floating Figurine Widget -->
-  <div class="astro-floating-companion" onclick="astroRandomQuote()" title="Tocca Astro Bot per farlo parlare!">
-    <div class="astro-speech-pop" id="astroSpeech">Tocca qui o premi "Cosa Gioco?" per estrarre!</div>
-    <img src="astro-bot.png" alt="Astro Bot Figurine" class="astro-figurine-img">
+  <!-- Astro Bot Standalone Draggable Figurine Widget -->
+  <div class="astro-floating-companion" id="astroWidget" title="Trascina Astro Bot dove vuoi o toccalo per estrarre!">
+    <div class="astro-speech-pop" id="astroSpeech">Tocca me o premi "Cosa Gioco?" per estrarre!</div>
+    <img src="astro-bot.png" alt="Astro Bot Figurine" class="astro-figurine-img" draggable="false">
   </div>
 
   <!-- Add/Edit Game Modal -->
@@ -1920,18 +1934,22 @@
     ];
 
     let astroPopTimeout = null;
-    function astroRandomQuote() {
+    function astroSay(text, duration = 4000) {
       const speech = document.getElementById('astroSpeech');
       if (speech) {
-        const quote = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
-        speech.textContent = quote;
+        speech.textContent = text;
         speech.classList.add('visible');
-        playSound('blip');
         if (astroPopTimeout) clearTimeout(astroPopTimeout);
         astroPopTimeout = setTimeout(() => {
           speech.classList.remove('visible');
-        }, 4000);
+        }, duration);
       }
+    }
+
+    function astroRandomQuote() {
+      const quote = ASTRO_PHRASES[Math.floor(Math.random() * ASTRO_PHRASES.length)];
+      astroSay(quote, 3500);
+      playSound('blip');
     }
 
     // Supabase Configuration
@@ -2171,34 +2189,75 @@
     }
 
     function pickRandomBacklog() {
-      const backlog = games.filter(g => g.status === 'da_iniziare' || g.status === 'in_corso');
-      const pool = backlog.length > 0 ? backlog : games;
-      if (pool.length === 0) return;
-
-      const randomGame = pool[Math.floor(Math.random() * pool.length)];
-      setHeroBackdrop(randomGame.coverUrl);
-
-      playSound('tada');
-
-      // Playful message
-      const speech = document.getElementById('astroSpeech');
-      if (speech) {
-        speech.textContent = `Astro consiglia: "${randomGame.title}"!`;
-        speech.classList.add('visible');
-        if (astroPopTimeout) clearTimeout(astroPopTimeout);
-        astroPopTimeout = setTimeout(() => {
-          speech.classList.remove('visible');
-        }, 4500);
+      if (!games || games.length === 0) {
+        showToast('⚠️ Nessun gioco disponibile da estrarre');
+        return;
       }
 
-      showToast(`🤖 Astro Bot ha scelto: "${randomGame.title}"! 🚀 Buon divertimento!`);
+      // Priority 1: Da iniziare o in corso
+      let pool = games.filter(g => g.status === 'da_iniziare' || g.status === 'in_corso');
+      
+      // Priority 2: Se tutto è completato o vuoto, pesca da tutti i giochi
+      if (pool.length === 0) {
+        pool = games;
+      }
+
+      const randomGame = pool[Math.floor(Math.random() * pool.length)];
+      if (!randomGame) return;
+
+      if (randomGame.coverUrl) {
+        setHeroBackdrop(randomGame.coverUrl);
+      }
+
+      playSound('tada');
       triggerConfetti();
 
-      // Highlight card in grid
+      // Astro Bot speaks up
+      astroSay(`Astro consiglia: "${randomGame.title}"! 🚀`, 5000);
+      showToast(`🤖 Astro Bot ha estratto: "${randomGame.title}"!`);
+
+      // Reset filter so the extracted game is guaranteed visible in grid
+      activeStatusFilter = 'all';
+      document.querySelectorAll('#statusFilterTabs .filter-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('data-status') === 'all');
+      });
+      const cardAll = document.getElementById('statCardAll');
+      const cardInCorso = document.getElementById('statCardInCorso');
+      const cardCompletati = document.getElementById('statCardCompletati');
+      if (cardAll) cardAll.classList.add('active-filter');
+      if (cardInCorso) cardInCorso.classList.remove('active-filter');
+      if (cardCompletati) cardCompletati.classList.remove('active-filter');
+
+      // Filter to the chosen game title in search bar
       const searchBox = document.getElementById('searchInput');
-      searchBox.value = randomGame.title;
-      renderGames();
-      setTimeout(() => { searchBox.value = ''; }, 3500);
+      if (searchBox) {
+        searchBox.value = randomGame.title;
+        renderGames();
+        
+        // Scroll smoothly to the game card
+        setTimeout(() => {
+          const firstCard = document.querySelector('.game-card');
+          if (firstCard) {
+            firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstCard.style.outline = '3px solid #00f0ff';
+            firstCard.style.boxShadow = '0 0 35px rgba(0, 240, 255, 0.9)';
+            setTimeout(() => {
+              firstCard.style.outline = '';
+              firstCard.style.boxShadow = '';
+            }, 3500);
+          }
+        }, 150);
+
+        // Clear search filter after 4 seconds
+        setTimeout(() => {
+          if (searchBox.value === randomGame.title) {
+            searchBox.value = '';
+            renderGames();
+          }
+        }, 4000);
+      } else {
+        renderGames();
+      }
     }
 
     function renderGames() {
@@ -2281,9 +2340,8 @@
               </div>
 
               ${isPlat ? `
-                <div class="vip-astro-stamp" title="Gioco Platinato con successo!">
-                  <img src="astro-bot.png" alt="Astro" style="width:20px; height:24px; object-fit:contain;">
-                  <span>VIP Bot Sbloccato</span>
+                <div class="vip-astro-stamp" title="Trofeo Platino PlayStation® Sbloccato!">
+                  <img src="platinum-trophy.png" alt="Trofeo Platino">
                 </div>
               ` : ''}
             </div>
@@ -2566,11 +2624,118 @@
       if (e.key === 'Escape') closeModal();
     });
 
+    // Draggable Astro Bot Implementation (Touch & Mouse)
+    function setupAstroDraggable() {
+      const widget = document.getElementById('astroWidget');
+      if (!widget) return;
+
+      let isDragging = false;
+      let startX = 0;
+      let startY = 0;
+      let initialLeft = 0;
+      let initialTop = 0;
+      let hasMoved = false;
+
+      // Restore saved position if available
+      try {
+        const savedPos = localStorage.getItem('astro_widget_pos');
+        if (savedPos) {
+          const { x, y } = JSON.parse(savedPos);
+          if (x >= 0 && x <= window.innerWidth - 60 && y >= 0 && y <= window.innerHeight - 80) {
+            widget.style.left = `${x}px`;
+            widget.style.top = `${y}px`;
+            widget.style.bottom = 'auto';
+            widget.style.right = 'auto';
+          }
+        }
+      } catch (e) {}
+
+      function onPointerDown(e) {
+        // Only left click or single touch
+        if (e.button !== undefined && e.button !== 0) return;
+
+        isDragging = true;
+        hasMoved = false;
+        widget.classList.add('dragging');
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const rect = widget.getBoundingClientRect();
+        startX = clientX;
+        startY = clientY;
+        initialLeft = rect.left;
+        initialTop = rect.top;
+
+        widget.style.bottom = 'auto';
+        widget.style.right = 'auto';
+        widget.style.left = `${initialLeft}px`;
+        widget.style.top = `${initialTop}px`;
+
+        window.addEventListener('pointermove', onPointerMove, { passive: false });
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+
+        if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+          hasMoved = true;
+        }
+
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        // Keep inside screen boundaries
+        const maxX = window.innerWidth - widget.offsetWidth - 10;
+        const maxY = window.innerHeight - widget.offsetHeight - 10;
+
+        newLeft = Math.max(10, Math.min(newLeft, maxX));
+        newTop = Math.max(10, Math.min(newTop, maxY));
+
+        widget.style.left = `${newLeft}px`;
+        widget.style.top = `${newTop}px`;
+      }
+
+      function onPointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        widget.classList.remove('dragging');
+
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+        window.removeEventListener('pointercancel', onPointerUp);
+
+        // Save position in storage
+        const rect = widget.getBoundingClientRect();
+        try {
+          localStorage.setItem('astro_widget_pos', JSON.stringify({ x: rect.left, y: rect.top }));
+        } catch (e) {}
+
+        // If it was just a click/tap without moving -> trigger random game extraction!
+        if (!hasMoved) {
+          pickRandomBacklog();
+        }
+      }
+
+      widget.addEventListener('pointerdown', onPointerDown);
+    }
+
     // Run
     function init() {
       renderPresetThumbnails();
       loadFromLocalStorage();
       loadFromSupabase(false);
+      setupAstroDraggable();
+
       // Periodic playful Astro quote
       setInterval(() => {
         if (Math.random() > 0.6) {
