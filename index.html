@@ -4163,6 +4163,48 @@
       return { genre: detectedGenre, developer, review };
     }
 
+    // ---- Synopsis cleaning: keep story/gameplay, drop release dates, platforms, ports, awards ----
+    function cleanSynopsis(text, maxLen = 520) {
+      if (!text) return '';
+      text = String(text).replace(/\[[^\]]*\]/g, '').replace(/\([^)]*\)/g, m => /\d{4}|[A-Za-z]{3,}/.test(m) && m.length < 40 ? '' : m).replace(/\s+/g, ' ').trim();
+      const prot = text.replace(/\b(Bros|Inc|Ltd|Co|Corp|St|Dr|Mr|Mrs|vs|Jr|Sr)\./g, '$1\u0001');
+      const sents = prot.split(/(?<=[.!?])\s+(?=[A-ZÀ-Ý"“'])/).map(x => x.replace(/\u0001/g, '.'));
+      const BAD = /\b((il gioco |il titolo )?(è|è stato|sono stati) (distribuit|pubblicat|rilasciat|port)|\d{1,2}\s+(gennaio|febbraio|marzo|aprile|maggio|giugno|luglio|agosto|settembre|ottobre|novembre|dicembre)\s+\d{4}|(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}|distribuit[oa]|disponibile (per|dal|su)|pubblicat[oa] (per|su|il|nel)|antologia|Nintendo Switch 2|port(ing|ed)?\b|remaster|è (uscit|stat[oa] (pubblicat|rilasciat))|sono uscit|uscita (una|di)|verrà|will be released|was released|were released|released (on|in|for)|è stato pubblicato (il|nel)|pubblicato il|rilasciat[oa] (il|nel)|versione (per|per il)|a version for|a port|Metacritic|Game Awards|vendut[oei]|copie|sold|copies|premi[oa]?\b|award|nominat)/i;
+      const out = [];
+      sents.forEach((raw, i) => {
+        let t = raw.trim();
+        if (i === 0) {
+          // keep the defining sentence but cut the release/platform tail
+          t = t.replace(/,?\s+(uscit[oa]|pubblicat[oa]|rilasciat[oa]|released)\b[^.]*?(?=\.$|$)/i, '')
+               .replace(/\s+(for|per)\s+(the\s+|le\s+|la\s+)?(console\s+)?(Nintendo|PlayStation|PS[45]|Windows|Microsoft|Xbox|PC|iOS|Android|macOS)[^.]*?(?=\.$|$)/i, '')
+               .replace(/\s+(il|on)\s+\d{1,2}\s+\w+\s+\d{4}[^.]*?(?=\.$|$)/i, '');
+          t = t.replace(/,?\s+(e|and)\s+(pubblicat[oa]|distribuit[oa]|published)\s+(da|by)\s+[^.]*$/i, '').replace(/\s+(e|and|,)\s*$/i, '').replace(/,\s*$/, '').trim();
+          if (!/[.!?]$/.test(t)) t += '.';
+          if (t.length > 25) out.push(t);
+          return;
+        }
+        if (BAD.test(t) || /(è|sono) stat[oi] (distribuit|pubblicat|rilasciat|port)/i.test(t) || /^(il gioco|il titolo)?\s*(è|sono)\s+(disponibil|uscit)/i.test(t)) return;
+        if (/^\W*$/.test(t) || t.length < 25) return;
+        out.push(t);
+      });
+      let res = '';
+      for (const t of out) {
+        if ((res + ' ' + t).trim().length > maxLen && res) break;
+        res = (res + ' ' + t).trim();
+      }
+      return res.replace(/\s+e\.(\s|$)/g, '.$1').replace(/\s{2,}/g, ' ').replace(/\s+([.,;:])/g, '$1').trim();
+    }
+    async function fetchWikiIntro(lang, title) {
+      try {
+        const u = `https://${lang}.wikipedia.org/w/api.php?action=query&redirects=1&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(title)}&format=json&origin=*`;
+        const r = await fetch(u);
+        if (!r.ok) return '';
+        const d = await r.json();
+        const pg = Object.values(d?.query?.pages || {})[0];
+        return (pg && pg.extract) ? pg.extract.trim() : '';
+      } catch (e) { return ''; }
+    }
+
     // Online Game Metadata Auto-Fetch via Curated Dictionary + Wikipedia API
     let coverSearchTimer = null;
     function debounceOnlineCoverSearch(val) {
@@ -4177,7 +4219,7 @@
     }
 
     // Find the Wikipedia page that is really the VIDEO GAME (not a comic, film, person...)
-    async function findVideoGameWikiTitle(q) {
+    async function findVideoGameWikiTitle(q, hintYear) {
       const api = 'https://en.wikipedia.org/w/api.php?origin=*&format=json&action=query';
       const norm = t => t.toLowerCase().replace(/\(.*?\)/g, '').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
       const qTokens = norm(q).split(' ').filter(w => w.length > 1 || /\d/.test(w));
@@ -4206,9 +4248,12 @@
           if (qTokens.length && hit / qTokens.length < 0.99) return;   // every searched word (numbers too) must be in the title
           let score = 10 - idx * 0.3;
           if (tNorm === qNorm) score += 3;                             // exact title
-          score -= Math.max(0, tTokens.filter(w => !/^(19|20)\d\d$|^(video|game)$/.test(w)).length - qTokens.length) * 2.5;  // closest title wins
+          score -= Math.max(0, tTokens.filter(w => !/^(19|20)\d\d$|^(video|game)$/.test(w)).length - qTokens.length) * 4;  // closest title wins
           const yr = parseInt(((title.match(/\((\d{4})/) || d.match(/(19|20)\d\d/) || [])[0] || '').replace('(', '').slice(0, 4) || '0', 10);
-          if (yr >= 2020) score += 8 + (yr - 2020) * 0.3;               // PS5 era, newest edition first
+          if (hintYear && yr) {
+            const diff = Math.abs(yr - hintYear);
+            score += diff === 0 ? 12 : -Math.min(diff, 6) * 2;           // trust the year RAWG gave us
+          } else if (yr >= 2020) score += 8 + (yr - 2020) * 0.3;         // PS5 era, newest edition first
           if (/upcoming/i.test(d)) score -= 6;                           // not released yet
           if (/playstation 5|ps5/i.test(d)) score += 2;
           if (score > bestScore) { bestScore = score; best = title; }
@@ -4323,6 +4368,7 @@
         let foundDev = '';
         let foundGenre = '';
         let foundReview = '';
+        let itIntro = '', enIntro = '';
         let curatedReview = false;
         let rawgInfo = null;
 
@@ -4348,7 +4394,7 @@
 
         // Step 2: Wikipedia for the Italian description (and cover fallback)
         const cleanQuery = (rawg ? rawg.name : query).replace(/[^\w\s:’'-]/gi, ' ').trim();
-        const bestTitle = await findVideoGameWikiTitle(cleanQuery);
+        const bestTitle = await findVideoGameWikiTitle(cleanQuery, rawg && rawg.released ? parseInt(rawg.released.slice(0, 4), 10) : 0);
         const firstHit = bestTitle ? { title: bestTitle } : null;
         {
           if (firstHit && firstHit.title) {
@@ -4366,6 +4412,7 @@
               if (!foundDev && parsed.developer) foundDev = parsed.developer;
               if (!foundGenre && parsed.genre) foundGenre = parsed.genre;
               if (!foundReview && parsed.review) foundReview = parsed.review;
+              if (!curatedReview) enIntro = await fetchWikiIntro('en', firstHit.title) || (sumData.extract || '');
 
               // Italian version: follow the official interlanguage link of the English page
               if (!curatedReview) {
@@ -4383,6 +4430,7 @@
                     const itRes = await fetch(`https://it.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(itTitle.replace(/ /g, '_'))}`);
                     if (itRes.ok) {
                       const itData = await itRes.json();
+                      itIntro = await fetchWikiIntro('it', itTitle) || (itData?.extract || '');
                       if (itData?.extract && itData.extract.length > 50) {
                         const itParsed = parseCleanReviewAndGenre(itData.extract);
                         if (itParsed.review) foundReview = itParsed.review;
@@ -4397,8 +4445,19 @@
           }
         }
 
-        if (!foundReview && rawgInfo && rawgInfo.description) {
-          foundReview = rawgInfo.description.split(/\n+/).filter(Boolean).slice(0, 2).join(' ').slice(0, 600);
+        // Pick the best synopsis: Italian Wikipedia > English Wikipedia (translated) > RAWG (translated)
+        if (!curatedReview) {
+          const MIN = 110;
+          const itClean = cleanSynopsis(itIntro);
+          const enClean = cleanSynopsis(enIntro);
+          const rawgClean = rawgInfo && rawgInfo.description
+            ? cleanSynopsis(rawgInfo.description.split(/\n+/).filter(Boolean).slice(0, 3).join(' '), 480) : '';
+          let pick = '';
+          if (itClean.length >= MIN) pick = itClean;
+          else if (enClean.length >= MIN) pick = enClean;
+          else if (rawgClean.length >= MIN) pick = rawgClean;
+          else pick = [itClean, enClean, rawgClean].sort((a, b) => b.length - a.length)[0] || '';
+          if (pick) foundReview = pick;
         }
 
         // Still English? translate it to Italian
