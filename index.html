@@ -4062,6 +4062,26 @@
       "Deathloop", "Ghostwire: Tokyo", "Sekiro: Shadows Die Twice", "Bloodborne", "Until Dawn"
     ];
 
+    // When a stylised logo cannot be read, brand clues (publisher / series words) still suggest the title
+    const FRANCHISE_HINTS = [
+      { re: /\bea\b.*sports|sports.*\bea\b|\bsports\b|\bfc\s?\d{2}\b|\bfifa\b/i, titles: ["EA SPORTS FC 27", "EA SPORTS FC 26", "EA SPORTS FC 25", "EA SPORTS FC 24"] },
+      { re: /nba\s?2k|2k\s?sports/i, titles: ["NBA 2K26", "NBA 2K25", "NBA 2K24"] },
+      { re: /call\s?of\s?duty|activision|black\s?ops|warfare/i, titles: ["Call of Duty: Black Ops 6", "Call of Duty: Modern Warfare III"] },
+      { re: /madden/i, titles: ["Madden NFL 26", "Madden NFL 25"] },
+      { re: /\bwwe\b|2k\s?games/i, titles: ["WWE 2K25", "WWE 2K24"] },
+      { re: /f1\b|formula/i, titles: ["F1 25", "F1 24"] },
+      { re: /assassin|creed/i, titles: ["Assassin's Creed Shadows", "Assassin's Creed Mirage"] },
+      { re: /\bnhl\b/i, titles: ["NHL 26", "NHL 25"] }
+    ];
+    function franchiseHints(text) {
+      const out = [];
+      for (const h of FRANCHISE_HINTS) if (h.re.test(text || '')) out.push(...h.titles);
+      // a two-digit number next to "FC" read as part of the text, e.g. "FC27" -> prefer that edition
+      const m = (text || '').match(/\bFC\s?(2\d)\b/i);
+      if (m) { const t = 'EA SPORTS FC ' + m[1]; const i = out.indexOf(t); if (i > 0) out.splice(i, 1); if (i !== 0) out.unshift(t); }
+      return out;
+    }
+
     function calculateLevenshteinDistance(a, b) {
       const an = a ? a.length : 0;
       const bn = b ? b.length : 0;
@@ -4245,15 +4265,17 @@
         }
         const ranked = [...merged.values()].sort((a, b) => b.score - a.score);
 
+        const hinted = known ? [] : franchiseHints(fullText);
         const uniqueCandidates = [];
         if (known) uniqueCandidates.push(known.title);
+        else hinted.forEach(h => uniqueCandidates.push(h));
         for (const r of ranked) {
           if (!uniqueCandidates.some(c => c.toLowerCase() === r.text.toLowerCase())) uniqueCandidates.push(r.text);
           if (uniqueCandidates.length >= 6) break;
         }
 
         // 3) if no confident match, ask the online catalogue to validate the top candidates
-        let bestCandidate = known ? known.title : '';
+        let bestCandidate = known ? known.title : (hinted[0] || '');
         if (!bestCandidate && uniqueCandidates.length) {
           if (statusMsg) statusMsg.textContent = 'Verifica del titolo online...';
           for (const cand of uniqueCandidates.slice(0, 3)) {
@@ -4291,7 +4313,7 @@
             candidatesBox.style.display = 'flex';
           }
 
-          showToast(`📸 Titolo letto: "${bestCandidate}". Controlla che sia corretto o scegli un'alternativa.`);
+          showToast(hinted.length && !known ? `📸 Logo non leggibile: suggerisco "${bestCandidate}". Scegli l'edizione giusta tra le alternative.` : `📸 Titolo letto: "${bestCandidate}". Controlla che sia corretto o scegli un'alternativa.`);
           playSound('jump');
           searchGameMetadataOnline(bestCandidate);
         } else {
