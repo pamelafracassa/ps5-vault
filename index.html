@@ -1660,17 +1660,29 @@
 
     @media (max-width: 480px) {
       .ps-top-system-bar {
-        flex-wrap: wrap;
-        gap: 4px;
+        flex-wrap: nowrap;
+        gap: 6px;
         padding: 0.35rem 0.6rem;
       }
+      .system-left-badge > span {
+        display: none;
+      }
       .system-right-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #systemClock {
         display: none;
       }
       .trophy-cabinet-bar {
         font-size: 0.68rem;
         gap: 6px;
         padding: 2px 6px;
+      }
+      .user-pill {
+        padding: 3px 8px;
+        font-size: 0.75rem;
       }
       header {
         top: 27px;
@@ -1788,6 +1800,12 @@
                 Supabase
               </span>
             </div>
+
+            <!-- User Profile / Accedi in hamburger menu -->
+            <button class="menu-item-btn" onclick="closeMenuDropdown(); openAuthModal();" style="background:rgba(0,240,255,0.1); border-color:rgba(0,240,255,0.3); color:#00f0ff; font-weight:700;">
+              <span>👤</span>
+              <span id="menuUserLabel">Profilo / Accedi</span>
+            </button>
 
             <!-- Cosa Gioco? inside Menu -->
             <button class="menu-item-btn astro-pick-item" onclick="closeMenuDropdown(); pickRandomBacklog();">
@@ -2557,6 +2575,7 @@
       const bioSection = document.getElementById('biometricSection');
       const profileEmail = document.getElementById('profileUserEmail');
       const enableTouchIdBox = document.getElementById('enableTouchIdBox');
+      const menuUserLabel = document.getElementById('menuUserLabel');
 
       // Check if WebAuthn / Touch ID is supported
       const hasWebAuthn = window.PublicKeyCredential && window.isSecureContext;
@@ -2573,6 +2592,7 @@
         const initial = email.charAt(0).toUpperCase();
         if (pillLabel) pillLabel.textContent = email.split('@')[0];
         if (avatarDot) avatarDot.textContent = initial;
+        if (menuUserLabel) menuUserLabel.textContent = `Profilo (${email.split('@')[0]})`;
 
         if (loggedSection) loggedSection.style.display = 'flex';
         if (emailForm) emailForm.style.display = 'none';
@@ -2587,6 +2607,7 @@
         // User logged out
         if (pillLabel) pillLabel.textContent = 'Accedi';
         if (avatarDot) avatarDot.textContent = '👤';
+        if (menuUserLabel) menuUserLabel.textContent = 'Accedi / Profilo';
 
         if (loggedSection) loggedSection.style.display = 'none';
         if (emailForm) emailForm.style.display = 'flex';
