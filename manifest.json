@@ -1,6 +1,6 @@
 {
-  "name": "PS5 Vault • Astro Bot Edition",
-  "short_name": "PS5 Vault",
+  "name": "PS5 Buddy • Astro Bot Edition",
+  "short_name": "PS5 Buddy",
   "description": "Libreria personale di giochi PlayStation 5 con database cloud, timer di gioco e Astro Bot.",
   "start_url": "./",
   "scope": "./",
