@@ -5337,6 +5337,76 @@
       } catch (e) { return { error: 'offline' }; }
     }
 
+    // ---- Cover recognition: compares the photo with an index of official box art (colour layout + hue histogram) ----
+    // The index (cover-index.json) is built from IGDB covers; matching runs fully in the browser, nothing is uploaded.
+    let coverIndexPromise = null;
+    function loadCoverIndex() {
+      if (!coverIndexPromise) {
+        coverIndexPromise = fetch('cover-index.json', { cache: 'force-cache' }).then(r => r.ok ? r.json() : null)
+          .then(j => j && j.items ? j.items.map(it => ({ t: it.t, i: it.i, d: { h: it.h.map(v => v / 100), g: it.g.map(v => v / 100) } })) : null)
+          .catch(() => null);
+      }
+      return coverIndexPromise;
+    }
+function coverHsv(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d+6)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;}return [h,mx?d/mx:0,mx];}
+function coverDesc(img,box){
+  const N=32,c=document.createElement('canvas');c.width=N;c.height=N;const x=c.getContext('2d',{willReadFrequently:true});
+  const sw=box?box.w:img.width, sh=box?box.h:img.height, sx=box?box.x:0, sy=box?box.y:0;
+  x.drawImage(img,sx,sy,sw,sh,0,0,N,N);
+  const d=x.getImageData(0,0,N,N).data;
+  // central 70% only: ignore borders where the table/hand/background shows up
+  const lo=Math.round(N*.15),hi=Math.round(N*.85);
+  const hist=new Array(12*3*3).fill(0);let tot=0;const grid=new Array(4*4*3).fill(0),gc=new Array(16).fill(0);
+  // exposure normalisation: scale value channel by mean brightness
+  let mv=0,nn=0;for(let y=lo;y<hi;y++)for(let xx=lo;xx<hi;xx++){const i=(y*N+xx)*4;mv+=Math.max(d[i],d[i+1],d[i+2]);nn++;}mv=(mv/nn)||1;
+  for(let y=lo;y<hi;y++)for(let xx=lo;xx<hi;xx++){
+    const i=(y*N+xx)*4;const k=127/mv*1;const R=Math.min(255,d[i]*k),G=Math.min(255,d[i+1]*k),B=Math.min(255,d[i+2]*k);
+    const [h,sa,v]=coverHsv(R,G,B);
+    const hb=Math.min(11,Math.floor(h/30)),sb=Math.min(2,Math.floor(sa*3)),vb=Math.min(2,Math.floor(v*3));
+    hist[(hb*3+sb)*3+vb]+= (sa>.12||v>.2)?1:0.2; tot++;
+    const gi=Math.min(3,Math.floor((y-lo)/((hi-lo)/4)))*4+Math.min(3,Math.floor((xx-lo)/((hi-lo)/4)));
+    grid[gi*3]+=R;grid[gi*3+1]+=G;grid[gi*3+2]+=B;gc[gi]++;
+  }
+  const hs=hist.map(v=>Math.sqrt(v/tot));            // Hellinger-style
+  const gv=[];for(let g=0;g<16;g++)for(let k=0;k<3;k++)gv.push((grid[g*3+k]/gc[g])/255);
+  const gm=gv.reduce((a,b)=>a+b,0)/gv.length;
+  return {h:hs,g:gv.map(v=>v-gm)};
+}
+function coverCs(a,b){let d=0,na=0,nb=0;for(let i=0;i<a.length;i++){d+=a[i]*b[i];na+=a[i]*a[i];nb+=b[i]*b[i];}return d/Math.sqrt(na*nb||1);}
+function coverCos(a,b){return .65*coverCs(a.h,b.h)+.35*coverCs(a.g,b.g);}
+
+function coverWindows(W,H){ // 3:4 portrait boxes at several sizes, stepped across the photo
+  const out=[];
+  for(const f of [1,.8,.62,.48,.38]){
+    let bh=H*f,bw=bh*0.75; if(bw>W){bw=W*f;bh=bw/0.75;} if(bh>H)continue;
+    const sx=Math.max(1,(W-bw)/ (f>.7?2:4)), sy=Math.max(1,(H-bh)/(f>.7?2:4));
+    for(let y=0;y<=H-bh+1;y+=sy)for(let x=0;x<=W-bw+1;x+=sx)out.push({x,y,w:bw,h:bh});
+  }
+  return out;
+}
+
+
+    // Returns {title, score, margin, sure} or null. "sure" = safe to fill in automatically.
+    async function recognizeCover(img) {
+      const idx = await loadCoverIndex();
+      if (!idx || !idx.length) return null;
+      // the box can be small and anywhere in the photo: slide 3:4 windows of several sizes over a downscaled copy
+      const W0 = img.naturalWidth || img.width, H0 = img.naturalHeight || img.height;
+      const k = Math.min(1, 640 / Math.max(W0, H0));
+      const ph = document.createElement('canvas');
+      ph.width = Math.round(W0 * k); ph.height = Math.round(H0 * k);
+      ph.getContext('2d').drawImage(img, 0, 0, ph.width, ph.height);
+      const qs = coverWindows(ph.width, ph.height).map(b => coverDesc(ph, b));
+      const scored = idx.map(it => {
+        let best = -1;
+        for (const q of qs) { const sc = coverCos(q, it.d); if (sc > best) best = sc; }
+        return { t: it.t, s: best };
+      }).sort((a, b) => b.s - a.s);
+      const a = scored[0], b = scored[1] || { s: 0 };
+      const margin = a.s - b.s;
+      return { title: a.t, score: a.s, margin, sure: a.s >= 0.88 && margin >= 0.04, top: scored.slice(0, 3).map(x => x.t) };
+    }
+
     // Photo OCR Scanner for PS5 Game Covers / Discs
     async function handleCoverPhotoUpload(event) {
       if (!requireLogin()) { event.target.value = ''; return; }
@@ -5377,6 +5447,22 @@
           }
           if (statusMsg) statusMsg.textContent = bc.error === 'rate_limited'
             ? 'Servizio codici occupato, passo alla lettura del titolo...' : 'Codice non in archivio, leggo il titolo...';
+        }
+        // 0b) Cover recognition against official box art: if very sure, no OCR needed
+        let coverGuess = null;
+        try {
+          if (statusMsg) statusMsg.textContent = 'Confronto con le copertine ufficiali...';
+          coverGuess = await recognizeCover(img);
+        } catch (e) { coverGuess = null; }
+        if (coverGuess && coverGuess.sure) {
+          const titleInput = document.getElementById('gameTitle');
+          if (titleInput) titleInput.value = coverGuess.title;
+          const formatSelect = document.getElementById('gameFormat');
+          if (formatSelect) formatSelect.value = 'Disco';
+          showToast('🖼️ Copertina riconosciuta: "' + coverGuess.title + '".');
+          playSound('jump');
+          searchGameMetadataOnline(coverGuess.title);
+          return;
         }
         const vset = buildOcrVariants(img);
 
@@ -5459,6 +5545,13 @@
           if (!uniqueCandidates.some(c => c.toLowerCase() === bestCandidate.toLowerCase())) uniqueCandidates.unshift(bestCandidate);
         }
 
+        // not sure enough for auto-fill, but it still makes a good extra suggestion when OCR is weak
+        if (coverGuess && coverGuess.score >= 0.8 && coverGuess.top) {
+          if (!bestCandidate) bestCandidate = coverGuess.title;
+          for (const t of coverGuess.top.slice().reverse()) {
+            if (!uniqueCandidates.some(c => c.toLowerCase() === t.toLowerCase())) uniqueCandidates.push(t);
+          }
+        }
         if (bestCandidate) {
           const titleInput = document.getElementById('gameTitle');
           if (titleInput) titleInput.value = bestCandidate;

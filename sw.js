@@ -1,8 +1,9 @@
-const CACHE_NAME = 'ps5-vault-cache-v48';
+const CACHE_NAME = 'ps5-vault-cache-v49';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
+  './cover-index.json',
   './astro-bot.png',
   './platinum-trophy.png',
   './icon-192.png',
