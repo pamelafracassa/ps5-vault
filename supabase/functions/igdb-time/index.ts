@@ -2,6 +2,7 @@
 // Secrets required (set them in Supabase > Edge Functions > Secrets, never in the website):
 //   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
 // Call: GET /functions/v1/igdb-time?q=Astro%20Bot  ->  { found, hours, hastily, completely, count, name, igdbId, cover, coverName }
+// Call: GET /functions/v1/igdb-time?ean=0711719588931  ->  { found, ean, rawTitle, title }
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -73,10 +74,34 @@ function json(o: unknown, status = 200) {
   });
 }
 
+// Barcode (EAN/UPC) -> game title, through the free UPCitemdb trial API (it blocks browsers, so it is called from here)
+const cleanBarcodeTitle = (t: string) =>
+  t.replace(/\[[^\]]*\]|\([^)]*\)/g, ' ')
+    .replace(/[-–|,]?\s*(sony\s*)?(playstation\s*5|playstation\s*4|ps5|ps4)\b/ig, ' ')
+    .replace(/\b(for|standard|day one|launch|physical|disc|video game|new|sealed|edition|brand new|italian|pal|eu|uk)\b/ig, ' ')
+    .replace(/[-–|:,]\s*$/g, '').replace(/\s+/g, ' ').trim();
+
+async function barcodeLookup(ean: string) {
+  const code = ean.replace(/\D/g, '');
+  if (code.length < 8 || code.length > 14) return { found: false, error: 'bad_barcode' };
+  const r = await fetch('https://api.upcitemdb.com/prod/trial/lookup?upc=' + code, { headers: { 'Accept': 'application/json' } });
+  if (r.status === 429) return { found: false, error: 'rate_limited' };
+  if (!r.ok) return { found: false, error: 'upc_' + r.status };
+  const j = await r.json();
+  const items: any[] = j.items || [];
+  // prefer a PS5/PS4 game, never a console or bundle
+  const good = items.filter((i) => !/console|bundle|controller|headset|gift card|subscription/i.test(i.title || ''));
+  const pick = good.find((i) => /ps5|playstation\s*5/i.test(i.title || '')) || good[0];
+  if (!pick) return { found: false, ean: code };
+  return { found: true, ean: code, rawTitle: pick.title, title: cleanBarcodeTitle(pick.title) };
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
   try {
     const url = new URL(req.url);
+    const ean = url.searchParams.get('ean');
+    if (ean) return json(await barcodeLookup(ean));
     let q = url.searchParams.get('q') || '';
     if (!q && req.method === 'POST') { try { q = (await req.json()).q || ''; } catch (_) { /* ignore */ } }
     q = q.trim().slice(0, 120);

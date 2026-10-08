@@ -5184,8 +5184,9 @@
     }
 
     function buildOcrVariants(img) {
-      const maxDim = 1600;
-      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      // work around 1800 px on the long side: smaller photos are enlarged (OCR needs ~30px tall letters), huge ones reduced
+      const target = 1800;
+      const scale = Math.max(0.3, Math.min(2, target / Math.max(img.width, img.height)));
       const w = Math.round(img.width * scale);
       const h = Math.round(img.height * scale);
       const make = (fn) => {
@@ -5210,13 +5211,26 @@
       let sum = 0, n = 0;
       for (let i = 0; i < probe.length; i += 16) { sum += 0.299 * probe[i] + 0.587 * probe[i + 1] + 0.114 * probe[i + 2]; n++; }
       const mean = sum / n;
-      return [
-        { name: 'colore', canvas: make(null) },
-        { name: 'grigio', canvas: make(g => g) },
-        { name: 'invertito', canvas: make(g => 255 - g) },
-        { name: 'chiaro su scuro', canvas: make(g => (g > Math.min(235, mean + 55) ? 0 : 255)) },
-        { name: 'scuro su chiaro', canvas: make(g => (g < Math.max(20, mean - 55) ? 0 : 255)) }
-      ];
+      // contrast stretch (2nd-98th percentile) helps washed-out or glossy photos
+      const hist = new Array(256).fill(0); let tot = 0;
+      for (let i = 0; i < probe.length; i += 16) { hist[Math.round(0.299 * probe[i] + 0.587 * probe[i + 1] + 0.114 * probe[i + 2])]++; tot++; }
+      let lo = 0, hi = 255, acc = 0;
+      for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= tot * 0.02) { lo = v; break; } }
+      acc = 0;
+      for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc >= tot * 0.02) { hi = v; break; } }
+      const span = Math.max(40, hi - lo);
+      // core set (fast); the extra ones are only read if the core did not give a confident title
+      return {
+        core: [
+          { name: 'contrasto', canvas: make(g => Math.max(0, Math.min(255, (g - lo) * 255 / span))) },
+          { name: 'colore', canvas: make(null) },
+          { name: 'invertito', canvas: make(g => 255 - Math.max(0, Math.min(255, (g - lo) * 255 / span))) }
+        ],
+        extra: [
+          { name: 'chiaro su scuro', canvas: make(g => (g > Math.min(235, mean + 55) ? 0 : 255)) },
+          { name: 'scuro su chiaro', canvas: make(g => (g < Math.max(20, mean - 55) ? 0 : 255)) }
+        ]
+      };
     }
 
     // Turn OCR output into candidate lines scored by text size (big text = title) and confidence
@@ -5242,6 +5256,87 @@
       return out;
     }
 
+    // ---- Barcode: native BarcodeDetector first, ZXing (loaded on demand) as fallback ----
+    function loadZxing() {
+      if (window.ZXing) return Promise.resolve(window.ZXing);
+      return new Promise((res, rej) => {
+        const sc = document.createElement('script');
+        sc.src = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+        sc.onload = () => res(window.ZXing); sc.onerror = () => rej(new Error('zxing'));
+        document.head.appendChild(sc);
+      });
+    }
+    async function readBarcodeFromImage(img) {
+      const isEan = v => /^\d{8,14}$/.test(v || '');
+      // try the whole photo, then a few crops (barcode is often a small area) and sizes
+      const mk = (sx, sy, sw, sh, maxW) => {
+        const c = document.createElement('canvas');
+        const k = Math.min(1, maxW / sw);
+        c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+        c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+        return c;
+      };
+      const W = img.naturalWidth || img.width, H = img.naturalHeight || img.height;
+      const views = [
+        mk(0, 0, W, H, 1600), mk(0, 0, W, H, 900),
+        mk(0, H / 2, W, H / 2, 1600), mk(0, 0, W, H / 2, 1600),
+        mk(W / 4, H / 4, W / 2, H / 2, 1200)
+      ];
+      if ('BarcodeDetector' in window) {
+        try {
+          const det = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] });
+          for (const v of views) {
+            const r = await det.detect(v);
+            const hit = r.find(x => isEan(x.rawValue));
+            if (hit) return hit.rawValue;
+          }
+        } catch (e) { /* fall through to ZXing */ }
+      }
+      try {
+        const Z = await loadZxing();
+        const hints = new Map();
+        hints.set(Z.DecodeHintType.TRY_HARDER, true);
+        hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E]);
+        const reader = new Z.MultiFormatReader(); reader.setHints(hints);
+        for (const v of views) {
+          try {
+            const lum = new Z.HTMLCanvasElementLuminanceSource(v);
+            const bmp = new Z.BinaryBitmap(new Z.HybridBinarizer(lum));
+            const r = reader.decode(bmp);
+            if (isEan(r.getText())) return r.getText();
+          } catch (e) { /* not in this crop */ }
+        }
+      } catch (e) { /* offline: skip */ }
+      return '';
+    }
+    // IGDB official name for an OCR candidate (only when it is close enough to what was read)
+    async function igdbName(cand) {
+      if (Date.now() < igdbDown) return '';
+      try {
+        const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 4000);
+        const r = await fetch(IGDB_FN + '?q=' + encodeURIComponent(cand), { signal: ctl.signal, headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        clearTimeout(to);
+        if (!r.ok) return '';
+        const j = await r.json();
+        const nm = j && (j.name || j.coverName);
+        if (!nm) return '';
+        const a = cand.toLowerCase().replace(/[^a-z0-9]/g, ''), b = nm.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const sim = 1 - calculateLevenshteinDistance(a, b) / Math.max(a.length, b.length, 1);
+        return sim >= 0.7 ? nm : '';
+      } catch (e) { return ''; }
+    }
+    // barcode -> title through the Edge Function (UPCitemdb). Returns {title} or {error}
+    async function barcodeToTitle(ean) {
+      try {
+        const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 8000);
+        const r = await fetch(IGDB_FN + '?ean=' + encodeURIComponent(ean), { signal: ctl.signal, headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        clearTimeout(to);
+        if (!r.ok) return { error: 'http_' + r.status };
+        const j = await r.json();
+        return j && j.found && j.title ? { title: j.title } : { error: j.error || 'not_found' };
+      } catch (e) { return { error: 'offline' }; }
+    }
+
     // Photo OCR Scanner for PS5 Game Covers / Discs
     async function handleCoverPhotoUpload(event) {
       if (!requireLogin()) { event.target.value = ''; return; }
@@ -5263,19 +5358,51 @@
         if (!window.Tesseract) throw new Error('Libreria Tesseract non caricata');
 
         const img = await loadImageFromFile(file);
-        const variants = buildOcrVariants(img);
 
-        worker = await Tesseract.createWorker('eng');
+        // 0) Barcode first: if the box has a readable EAN it is almost always right and much faster than OCR
+        if (statusMsg) statusMsg.textContent = 'Cerco il codice a barre...';
+        const ean = await readBarcodeFromImage(img);
+        if (ean) {
+          if (statusMsg) statusMsg.textContent = 'Codice ' + ean + ': cerco il gioco...';
+          const bc = await barcodeToTitle(ean);
+          if (bc.title) {
+            const titleInput = document.getElementById('gameTitle');
+            if (titleInput) titleInput.value = bc.title;
+            const formatSelect = document.getElementById('gameFormat');
+            if (formatSelect) formatSelect.value = 'Disco';
+            showToast('📦 Codice a barre letto: "' + bc.title + '".');
+            playSound('jump');
+            searchGameMetadataOnline(bc.title);
+            return;
+          }
+          if (statusMsg) statusMsg.textContent = bc.error === 'rate_limited'
+            ? 'Servizio codici occupato, passo alla lettura del titolo...' : 'Codice non in archivio, leggo il titolo...';
+        }
+        const vset = buildOcrVariants(img);
+
+        // English + Italian: Italian covers have accents and words like "Il", "Gioco"
+        try { worker = await Tesseract.createWorker('eng+ita'); } catch (e) { worker = await Tesseract.createWorker('eng'); }
         await worker.setParameters({ tessedit_pageseg_mode: '11', preserve_interword_spaces: '1' });
 
         let fullText = '';
         const scored = [];
-        for (let i = 0; i < variants.length; i++) {
-          if (statusMsg) statusMsg.textContent = `Lettura copertina (${i + 1}/${variants.length}: ${variants[i].name})...`;
-          const { data } = await worker.recognize(variants[i].canvas);
-          fullText += '\n' + (data.text || '');
-          scored.push(...extractScoredLines(data, variants[i].canvas.height));
-        }
+        const extraTitles = (typeof games !== 'undefined' ? games.map(g => g.title) : []);
+        let quick = null;
+        const runVariants = async (list, offset, total) => {
+          for (let i = 0; i < list.length; i++) {
+            if (statusMsg) statusMsg.textContent = `Lettura copertina (${offset + i + 1}/${total}: ${list[i].name})...`;
+            const { data } = await worker.recognize(list[i].canvas);
+            fullText += '\n' + (data.text || '');
+            scored.push(...extractScoredLines(data, list[i].canvas.height));
+            // stop early as soon as a known title is matched with high confidence
+            quick = matchKnownPs5Game(fullText, extraTitles);
+            if (quick && quick.score >= 0.9) return true;
+          }
+          return false;
+        };
+        const total = vset.core.length + vset.extra.length;
+        const early = await runVariants(vset.core, 0, total);
+        if (!early && !(quick && quick.score >= 0.8)) await runVariants(vset.extra, vset.core.length, total);
 
         if (statusMsg) statusMsg.textContent = 'Identificazione del titolo...';
 
@@ -5309,6 +5436,10 @@
         if (!bestCandidate && uniqueCandidates.length) {
           if (statusMsg) statusMsg.textContent = 'Verifica del titolo online...';
           for (const cand of uniqueCandidates.slice(0, 3)) {
+            try {
+              const ig = await igdbName(cand);
+              if (ig) { bestCandidate = ig; break; }
+            } catch (e) {}
             try {
               const r = await fetch('https://en.wikipedia.org/w/api.php?action=query&list=search&srlimit=1&format=json&origin=*&srsearch=' + encodeURIComponent(cand + ' video game'));
               if (r.ok) {
