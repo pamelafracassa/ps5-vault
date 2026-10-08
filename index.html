@@ -1380,6 +1380,17 @@
     .gm-scan-txt b{font-size:.92rem;color:#fff;font-weight:800;}
     .gm-scan-txt span{font-size:.75rem;color:#8ea3c2;}
     .gm-scan-btn{border:1px solid rgba(0,200,255,.5);background:rgba(0,170,255,.12);color:#fff;font-weight:800;font-size:.82rem;padding:.55rem 1rem;border-radius:999px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .2s;}
+    .gm-scan-btns{display:flex;gap:8px;flex-wrap:wrap;}
+    .bc-live{position:fixed;inset:0;z-index:100000;background:#000;display:none;flex-direction:column;}
+    .bc-live.open{display:flex;}
+    .bc-live video{flex:1;width:100%;min-height:0;object-fit:cover;background:#000;}
+    .bc-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:calc(12px + env(safe-area-inset-top)) 14px 12px;background:linear-gradient(#000a,transparent);color:#fff;font-weight:800;}
+    .bc-top button,.bc-bot button{border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.45);color:#fff;font-weight:800;border-radius:999px;padding:.5rem 1rem;font-family:inherit;cursor:pointer;}
+    .bc-frame{position:absolute;left:50%;top:46%;width:min(78vw,420px);height:min(30vw,170px);transform:translate(-50%,-50%);border:2px solid #00f0ff;border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45);}
+    .bc-frame::after{content:"";position:absolute;left:6%;right:6%;top:50%;height:2px;background:#ff3b5c;box-shadow:0 0 8px #ff3b5c;animation:bcLine 1.6s ease-in-out infinite alternate;}
+    @keyframes bcLine{from{top:18%}to{top:82%}}
+    .bc-bot{position:absolute;left:0;right:0;bottom:0;padding:14px 14px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;align-items:center;background:linear-gradient(transparent,#000b);color:#fff;text-align:center;font-size:.85rem;}
+    @media (prefers-reduced-motion: reduce){.bc-frame::after{animation:none;}}
     .gm-scan-btn:hover{background:linear-gradient(135deg,#0a84ff,#00c8ff);border-color:transparent;}
     .gm-candidates{flex-direction:column;gap:8px;background:rgba(8,18,38,.7);border:1px solid rgba(0,200,255,.25);border-radius:16px;padding:10px 14px;}
     .gm-cand-label{font-size:.72rem;color:#00c8ff;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
@@ -2356,6 +2367,12 @@
   </div>
 
   <!-- Add/Edit Game Modal -->
+  <div class="bc-live" id="bcLive" role="dialog" aria-label="Scanner codice a barre">
+    <video id="bcVideo" playsinline muted></video>
+    <div class="bc-top"><span>Inquadra il codice a barre</span><button type="button" onclick="closeBarcodeScanner()">Chiudi</button></div>
+    <div class="bc-frame"></div>
+    <div class="bc-bot"><span id="bcMsg">Avvio fotocamera...</span><button type="button" id="bcTorch" style="display:none" onclick="toggleBarcodeTorch()">🔦 Luce</button></div>
+  </div>
   <div class="modal-backdrop" id="gameModal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-window gm-window">
       <div class="gm-header">
@@ -2376,7 +2393,10 @@
             <span>Scatta una foto per riconoscere il titolo</span>
           </div>
           <input type="file" id="coverCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="handleCoverPhotoUpload(event)">
-          <button type="button" class="gm-scan-btn" onclick="document.getElementById('coverCameraInput').click()">Scatta foto</button>
+          <div class="gm-scan-btns">
+            <button type="button" class="gm-scan-btn" onclick="openBarcodeScanner()">▮▯▮ Codice a barre</button>
+            <button type="button" class="gm-scan-btn" onclick="document.getElementById('coverCameraInput').click()">Scatta foto</button>
+          </div>
         </div>
 
         <div id="scanStatusIndicator" class="scan-status-loading">
@@ -5412,6 +5432,102 @@ function coverWindows(W,H){ // 3:4 portrait boxes at several sizes, stepped acro
       return { title: a.t, score: a.s, margin, sure: a.s >= 0.88 && margin >= 0.04, top: scored.slice(0, 3).map(x => x.t) };
     }
 
+    // ---- Live barcode scanner (camera preview, reads continuously, no photo needed) ----
+    let bcStream = null, bcRunning = false, bcTorchOn = false, bcDetector = null, bcZ = null;
+    async function openBarcodeScanner() {
+      if (!requireLogin()) return;
+      const box = document.getElementById('bcLive'), video = document.getElementById('bcVideo'), msg = document.getElementById('bcMsg');
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('📷 Questo browser non permette la fotocamera dal vivo: uso la foto.');
+        document.getElementById('coverCameraInput').click(); return;
+      }
+      box.classList.add('open'); msg.textContent = 'Avvio fotocamera...';
+      try {
+        bcStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false });
+      } catch (e) {
+        box.classList.remove('open');
+        showToast('📷 Fotocamera non disponibile o non autorizzata: scatta una foto del codice.');
+        document.getElementById('coverCameraInput').click(); return;
+      }
+      video.srcObject = bcStream;
+      try { await video.play(); } catch (e) {}
+      // continuous autofocus + torch button when the phone supports them
+      try {
+        const tr = bcStream.getVideoTracks()[0], caps = tr.getCapabilities ? tr.getCapabilities() : {};
+        if (caps.focusMode && caps.focusMode.includes('continuous')) await tr.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+        document.getElementById('bcTorch').style.display = caps.torch ? '' : 'none';
+      } catch (e) {}
+      bcTorchOn = false;
+      msg.textContent = 'Avvicinati finché le barre sono nitide e dentro il riquadro';
+      bcRunning = true;
+      bcLoop();
+    }
+    async function toggleBarcodeTorch() {
+      try { bcTorchOn = !bcTorchOn; await bcStream.getVideoTracks()[0].applyConstraints({ advanced: [{ torch: bcTorchOn }] }); } catch (e) { bcTorchOn = false; }
+    }
+    function closeBarcodeScanner() {
+      bcRunning = false;
+      const box = document.getElementById('bcLive'); if (box) box.classList.remove('open');
+      if (bcStream) { bcStream.getTracks().forEach(t => t.stop()); bcStream = null; }
+      const v = document.getElementById('bcVideo'); if (v) v.srcObject = null;
+    }
+    async function bcLoop() {
+      const video = document.getElementById('bcVideo'), msg = document.getElementById('bcMsg');
+      const isEan = v => /^\d{8,14}$/.test(v || '');
+      if ('BarcodeDetector' in window) { try { bcDetector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e'] }); } catch (e) { bcDetector = null; } }
+      let Z = null, zReader = null;
+      if (!bcDetector) {
+        try {
+          Z = await loadZxing();
+          const h = new Map(); h.set(Z.DecodeHintType.TRY_HARDER, true);
+          h.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E]);
+          zReader = new Z.MultiFormatReader(); zReader.setHints(h);
+        } catch (e) { msg.textContent = 'Lettore non disponibile: chiudi e scatta una foto'; return; }
+      }
+      const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+      let code = '';
+      while (bcRunning) {
+        if (video.readyState >= 2 && video.videoWidth) {
+          try {
+            if (bcDetector) {
+              const r = await bcDetector.detect(video);
+              const hit = r.find(x => isEan(x.rawValue)); if (hit) code = hit.rawValue;
+            } else {
+              // ZXing: decode the central band (where the frame is), 1 frame at a time
+              const vw = video.videoWidth, vh = video.videoHeight;
+              const sw = Math.round(vw * 0.8), sh = Math.round(vh * 0.4), sx = Math.round((vw - sw) / 2), sy = Math.round(vh * 0.26);
+              cv.width = Math.min(1000, sw); cv.height = Math.round(cv.width * sh / sw);
+              cx.drawImage(video, sx, sy, sw, sh, 0, 0, cv.width, cv.height);
+              try {
+                const res = zReader.decode(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(cv))));
+                if (isEan(res.getText())) code = res.getText();
+              } catch (e) { /* nothing in this frame */ }
+            }
+          } catch (e) { /* frame not ready */ }
+        }
+        if (code) break;
+        await new Promise(r => setTimeout(r, bcDetector ? 120 : 160));
+      }
+      if (!bcRunning || !code) return;
+      if (navigator.vibrate) navigator.vibrate(60);
+      msg.textContent = 'Codice ' + code + ': cerco il gioco...';
+      const bc = await barcodeToTitle(code);
+      closeBarcodeScanner();
+      if (bc.title) {
+        const titleInput = document.getElementById('gameTitle'); if (titleInput) titleInput.value = bc.title;
+        const formatSelect = document.getElementById('gameFormat'); if (formatSelect) formatSelect.value = 'Disco';
+        showToast('📦 Codice ' + code + ': "' + bc.title + '".');
+        playSound('jump');
+        searchGameMetadataOnline(bc.title);
+      } else {
+        showToast(bc.error === 'rate_limited'
+          ? '⏳ Servizio codici occupato (limite al minuto). Riprova tra poco o scrivi il titolo.'
+          : '📦 Codice ' + code + ' letto, ma non è in archivio: scrivi il titolo o scatta una foto della copertina.');
+      }
+    }
+    // closing the add-game modal also stops the camera
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && bcRunning) closeBarcodeScanner(); });
+
     // Photo OCR Scanner for PS5 Game Covers / Discs
     async function handleCoverPhotoUpload(event) {
       if (!requireLogin()) { event.target.value = ''; return; }
@@ -5816,6 +5932,7 @@ function coverWindows(W,H){ // 3:4 portrait boxes at several sizes, stepped acro
     }
 
     function closeModal() {
+      if (typeof closeBarcodeScanner === 'function') closeBarcodeScanner();
       document.getElementById('gameModal').classList.remove('open');
     }
 
