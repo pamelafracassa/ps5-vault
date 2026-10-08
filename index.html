@@ -6253,25 +6253,37 @@
       if (typeof astroCelebrate === 'function') astroCelebrate();
       if (!window.confetti || ASTRO_NOMOTION) return;
       const plat = kind === 'plat';
-      const colors = plat ? ['#ffd700', '#fff1a8', '#ffffff', '#00d4ff', '#c084fc'] : ['#00f0ff', '#0070d1', '#c084fc', '#ffffff', '#ffd700'];
-      const c = window.confetti;
-      let shapes;
-      try { shapes = [c.shapeFromText ? c.shapeFromText({ text: plat ? '💎' : '⭐', scalar: 2 }) : 'star', 'circle', 'square']; } catch (e) { shapes = ['star', 'circle', 'square']; }
-      // central burst
-      c({ particleCount: plat ? 160 : 110, spread: 85, origin: { y: 0.6 }, colors, shapes, scalar: 1.1, ticks: 220 });
-      // two side cannons, slightly delayed
-      setTimeout(() => {
-        c({ particleCount: plat ? 70 : 45, angle: 60, spread: 60, origin: { x: 0, y: 0.75 }, colors });
-        c({ particleCount: plat ? 70 : 45, angle: 120, spread: 60, origin: { x: 1, y: 0.75 }, colors });
-      }, 250);
-      // platinum: a golden rain from the top
-      if (plat) {
-        let n = 0;
-        const rain = setInterval(() => {
-          c({ particleCount: 14, startVelocity: 12, spread: 120, gravity: 0.7, origin: { x: Math.random(), y: -0.05 }, colors, ticks: 260 });
-          if (++n >= 8) clearInterval(rain);
-        }, 160);
+      const colors = plat
+        ? ['#ffd700', '#fff1a8', '#ffffff', '#00d4ff', '#c084fc', '#ffae00']
+        : ['#00f0ff', '#0070d1', '#c084fc', '#ffffff', '#ffd700', '#ff4d8d', '#4ade80'];
+      // one shared full-screen canvas above everything (modals included)
+      if (!window._confettiCanvas) {
+        const cv = document.createElement('canvas');
+        cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999;';
+        document.body.appendChild(cv);
+        window._confettiCanvas = cv;
+        window._confettiFn = window.confetti.create(cv, { resize: true });
       }
+      const c = window._confettiFn;
+      let shapes = ['star', 'circle', 'square'];
+      try { if (window.confetti.shapeFromText) shapes.push(window.confetti.shapeFromText({ text: plat ? '💎' : '🎮', scalar: 2.2 })); } catch (e) {}
+      const k = plat ? 1.6 : 1;
+      const base = { colors, shapes, ticks: 320, scalar: 1.15, disableForReducedMotion: true };
+      // 1) big central burst + a wider, slower second layer
+      c({ ...base, particleCount: Math.round(150 * k), spread: 90, startVelocity: 55, origin: { x: 0.5, y: 0.65 } });
+      c({ ...base, particleCount: Math.round(90 * k), spread: 140, startVelocity: 35, decay: 0.92, origin: { x: 0.5, y: 0.65 } });
+      // 2) cannons from both bottom corners, in three waves
+      [150, 450, 800].forEach((d, n) => setTimeout(() => {
+        const cnt = Math.round((70 - n * 10) * k);
+        c({ ...base, particleCount: cnt, angle: 60, spread: 65, startVelocity: 62, origin: { x: 0, y: 0.85 } });
+        c({ ...base, particleCount: cnt, angle: 120, spread: 65, startVelocity: 62, origin: { x: 1, y: 0.85 } });
+      }, d));
+      // 3) a confetti rain from the top for ~2 seconds
+      let n = 0;
+      const rain = setInterval(() => {
+        c({ ...base, particleCount: plat ? 22 : 14, startVelocity: 14, spread: 160, gravity: 0.65, drift: (Math.random() - 0.5) * 1.2, origin: { x: Math.random(), y: -0.05 } });
+        if (++n >= (plat ? 16 : 11)) clearInterval(rain);
+      }, 170);
     }
 
     function showToast(msg) {
