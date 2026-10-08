@@ -5660,6 +5660,7 @@
       if (editId) {
         const index = games.findIndex(g => g.id === editId);
         if (index !== -1) {
+          if (gameData.status === 'completato' && games[index].status !== 'completato' && !isPlat) triggerConfetti();
           games[index] = { ...games[index], ...gameData };
           savedItem = games[index];
           showToast('✅ Gioco aggiornato con successo!');
@@ -5672,6 +5673,7 @@
         };
         games.unshift(newGame);
         savedItem = newGame;
+        if (gameData.status === 'completato' && !isPlat) triggerConfetti();
         showToast('🎉 Nuovo gioco aggiunto alla libreria PS5!');
         if (typeof astroAct === 'function') { astroWake(); astroAct('jump', { sparkles: 12 }); }
       }
@@ -5708,6 +5710,7 @@
         showToast(`💎 Complimenti! Platino sbloccato su ${game.title} ✨`);
       } else if (game.status === 'completato') {
         playSound('jump');
+        triggerConfetti();
         showToast(`✅ ${game.title} segnato come Completato!`);
       } else {
         playSound('blip');
