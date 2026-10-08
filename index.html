@@ -1196,6 +1196,16 @@
     .est-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.1);margin-top:5px;overflow:hidden;}
     .est-bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#00d4ff,#0a6dff);}
     .est-bar.over i{background:linear-gradient(90deg,#ffd23f,#ff8a00);}
+    .est-bar i{position:relative;overflow:hidden;}
+    .est-bar i.fill-anim{animation:barFill 1s cubic-bezier(.34,1.35,.64,1) both;}
+    @keyframes barFill{from{width:0}to{width:var(--w)}}
+    .est-bar i.full::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-50%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.75),transparent);animation:barShine 1.1s ease-out .9s 1 both;}
+    @keyframes barShine{from{left:-50%}to{left:120%}}
+    .est-bar.over{animation:barGlow 1.2s ease-out .9s 1;}
+    @keyframes barGlow{0%{box-shadow:0 0 0 0 rgba(255,210,63,.0)}35%{box-shadow:0 0 12px 3px rgba(255,210,63,.65)}100%{box-shadow:0 0 0 0 rgba(255,210,63,0)}}
+    .num-pop{animation:numPop .45s ease-out;}
+    @keyframes numPop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+    @media (prefers-reduced-motion: reduce){.est-bar i.fill-anim,.est-bar i.full::after,.est-bar.over,.num-pop{animation:none!important;}}
     .st-note{margin-top:14px;font-size:.7rem;color:#6f86a8;line-height:1.4;}
     .btn-icon {
       padding: 0.5rem;
@@ -4041,6 +4051,24 @@
       renderGames();
     }
 
+    // Animated counters: numbers climb from the previous value to the new one
+    const ASTRO_NOMOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function animateNumber(el, target, fmt) {
+      if (!el) return;
+      fmt = fmt || (v => String(Math.round(v)));
+      const from = typeof el._nv === 'number' ? el._nv : 0;
+      el._nv = target;
+      if (el._raf) cancelAnimationFrame(el._raf);
+      if (ASTRO_NOMOTION || from === target) { el.textContent = fmt(target); return; }
+      const t0 = performance.now(), dur = from === 0 ? 900 : 500;
+      const step = now => {
+        const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = fmt(from + (target - from) * e);
+        if (p < 1) el._raf = requestAnimationFrame(step);
+        else { el.textContent = fmt(target); el.classList.remove('num-pop'); void el.offsetWidth; el.classList.add('num-pop'); }
+      };
+      el._raf = requestAnimationFrame(step);
+    }
     function updateStats() {
       const total = games.length;
       const inCorso = games.filter(g => g.status === 'in_corso').length;
@@ -4052,15 +4080,15 @@
       document.getElementById('statInCorso').textContent = inCorso;
       document.getElementById('statCompletati').textContent = completati;
       document.getElementById('statTotalHours').textContent = formatPlaytime(totalHours);
-      const hg = document.getElementById('hdrGames'); if (hg) hg.textContent = total;
-      const hd = document.getElementById('hdrDone'); if (hd) hd.textContent = completati;
-      const hh = document.getElementById('hdrHours'); if (hh) hh.textContent = formatPlaytime(totalHours);
+      animateNumber(document.getElementById('hdrGames'), total);
+      animateNumber(document.getElementById('hdrDone'), completati);
+      animateNumber(document.getElementById('hdrHours'), totalHours, formatPlaytime);
 
       // Update Top Trophy Cabinet
-      document.getElementById('sysPlatCount').textContent = platCount;
-      document.getElementById('sysGoldCount').textContent = completati * 3 + platCount * 2;
-      document.getElementById('sysSilverCount').textContent = Math.round(totalHours * 0.4);
-      document.getElementById('sysBronzeCount').textContent = total * 12 + inCorso * 4;
+      animateNumber(document.getElementById('sysPlatCount'), platCount);
+      animateNumber(document.getElementById('sysGoldCount'), completati * 3 + platCount * 2);
+      animateNumber(document.getElementById('sysSilverCount'), Math.round(totalHours * 0.4));
+      animateNumber(document.getElementById('sysBronzeCount'), total * 12 + inCorso * 4);
     }
 
     function getStatusLabel(status) {
@@ -5411,7 +5439,7 @@
       const game = games.find(g => g.id === detailGameId);
       if (!game) return;
       detailApplyChange(game, { status: 'platinato', platinum: true, trophies: 100 }, '💎 Platino sbloccato!');
-      triggerConfetti();
+      triggerConfetti('plat');
     }
     function detailDelete() {
       if (!requireLogin()) return;
@@ -5625,7 +5653,7 @@
       };
 
       if (isPlat) {
-        triggerConfetti();
+        triggerConfetti('plat');
       }
 
       let savedItem = null;
@@ -5676,7 +5704,7 @@
         game.platinum = true;
         game.trophies = 100;
         playSound('tada');
-        triggerConfetti();
+        triggerConfetti('plat');
         showToast(`💎 Complimenti! Platino sbloccato su ${game.title} ✨`);
       } else if (game.status === 'completato') {
         playSound('jump');
@@ -5891,7 +5919,16 @@
       const over = rawPct >= 100;
       const tip = 'Stima (' + estSource(game) + ') per finire il gioco: ' + formatPlaytime(est);
       if (played <= 0) return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ~${formatPlaytime(est)} per finirlo</span></div></div>`;
-      return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ${over ? 'Oltre la stima (' + formatPlaytime(est) + ')' : formatPlaytime(played) + ' di ~' + formatPlaytime(est)}</span><b>${pct}%</b></div><div class="est-bar ${over ? 'over' : ''}"><i style="width:${pct}%"></i></div></div>`;
+      return `<div class="est-wrap" title="${tip}"><div class="est-top"><span>⏱ ${over ? 'Oltre la stima (' + formatPlaytime(est) + ')' : formatPlaytime(played) + ' di ~' + formatPlaytime(est)}</span><b>${pct}%</b></div><div class="est-bar ${over ? 'over' : ''}"><i class="${barAnimClass(game, pct)}${over ? ' full' : ''}" style="--w:${pct}%;width:${pct}%"></i></div></div>`;
+    }
+
+    // Progress bars grow from 0 only the first time a given value is shown (re-renders stay still)
+    const barSeen = new Set();
+    function barAnimClass(game, pct) {
+      const k = game.id + ':' + pct;
+      if (barSeen.has(k)) return '';
+      barSeen.add(k);
+      return 'fill-anim';
     }
 
     // IGDB "time to beat" through a Supabase Edge Function (keeps the Twitch secret off the website)
@@ -6209,15 +6246,28 @@
       }
     }
 
-    function triggerConfetti() {
+    function triggerConfetti(kind) {
       if (typeof astroCelebrate === 'function') astroCelebrate();
-      if (window.confetti) {
-        window.confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#00f0ff', '#0070d1', '#c084fc', '#ffffff', '#ffd700']
-        });
+      if (!window.confetti || ASTRO_NOMOTION) return;
+      const plat = kind === 'plat';
+      const colors = plat ? ['#ffd700', '#fff1a8', '#ffffff', '#00d4ff', '#c084fc'] : ['#00f0ff', '#0070d1', '#c084fc', '#ffffff', '#ffd700'];
+      const c = window.confetti;
+      let shapes;
+      try { shapes = [c.shapeFromText ? c.shapeFromText({ text: plat ? '💎' : '⭐', scalar: 2 }) : 'star', 'circle', 'square']; } catch (e) { shapes = ['star', 'circle', 'square']; }
+      // central burst
+      c({ particleCount: plat ? 160 : 110, spread: 85, origin: { y: 0.6 }, colors, shapes, scalar: 1.1, ticks: 220 });
+      // two side cannons, slightly delayed
+      setTimeout(() => {
+        c({ particleCount: plat ? 70 : 45, angle: 60, spread: 60, origin: { x: 0, y: 0.75 }, colors });
+        c({ particleCount: plat ? 70 : 45, angle: 120, spread: 60, origin: { x: 1, y: 0.75 }, colors });
+      }, 250);
+      // platinum: a golden rain from the top
+      if (plat) {
+        let n = 0;
+        const rain = setInterval(() => {
+          c({ particleCount: 14, startVelocity: 12, spread: 120, gravity: 0.7, origin: { x: Math.random(), y: -0.05 }, colors, ticks: 260 });
+          if (++n >= 8) clearInterval(rain);
+        }, 160);
       }
     }
 
