@@ -5322,7 +5322,12 @@
         if (!nm) return '';
         const a = cand.toLowerCase().replace(/[^a-z0-9]/g, ''), b = nm.toLowerCase().replace(/[^a-z0-9]/g, '');
         const sim = 1 - calculateLevenshteinDistance(a, b) / Math.max(a.length, b.length, 1);
-        return sim >= 0.7 ? nm : '';
+        if (sim >= 0.7) return nm;
+        // partial read ("wukong" for "Black Myth: Wukong"): accept when every word read is a whole word of the official title
+        const cw = cand.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(w => w.length >= 4);
+        const nw = nm.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/);
+        if (cw.length && cw.every(w => nw.includes(w))) return nm;
+        return '';
       } catch (e) { return ''; }
     }
     // barcode -> title through the Edge Function (UPCitemdb). Returns {title} or {error}
@@ -5545,6 +5550,18 @@ function coverWindows(W,H){ // 3:4 portrait boxes at several sizes, stepped acro
           if (!uniqueCandidates.some(c => c.toLowerCase() === bestCandidate.toLowerCase())) uniqueCandidates.unshift(bestCandidate);
         }
 
+        // a short or partial title (e.g. "wukong") is expanded to the official IGDB name when it clearly contains it
+        if (bestCandidate) {
+          try {
+            const off = await igdbName(bestCandidate);
+            if (off && off.toLowerCase() !== bestCandidate.toLowerCase()) {
+              if (!uniqueCandidates.some(c => c.toLowerCase() === bestCandidate.toLowerCase())) uniqueCandidates.push(bestCandidate);
+              bestCandidate = off;
+              uniqueCandidates.splice(uniqueCandidates.findIndex(c => c.toLowerCase() === off.toLowerCase()) >= 0 ? uniqueCandidates.findIndex(c => c.toLowerCase() === off.toLowerCase()) : uniqueCandidates.length, 1);
+              uniqueCandidates.unshift(off);
+            }
+          } catch (e) {}
+        }
         // not sure enough for auto-fill, but it still makes a good extra suggestion when OCR is weak
         if (coverGuess && coverGuess.score >= 0.8 && coverGuess.top) {
           if (!bestCandidate) bestCandidate = coverGuess.title;
