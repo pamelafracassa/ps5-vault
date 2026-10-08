@@ -2726,11 +2726,17 @@
       "resident evil 4": "https://image.api.playstation.com/vulcan/ap/rnd/202210/0706/EVWyZD63pahuh95eKloFaJuC.png"
     };
 
+    const COVER_EXCLUDE = {
+      'last of us': /part\s*(ii|2)\b/, 'horizon': /zero dawn|call of the mountain/, 'elden ring': /nightreign/,
+      'resident evil 4': /requiem/
+    };
     function getOfficialCoverForTitle(title) {
       if (!title) return null;
       const lower = title.toLowerCase();
       for (const [key, url] of Object.entries(OFFICIAL_COVERS_MAP)) {
-        if (lower.includes(key)) return url;
+        if (!lower.includes(key)) continue;
+        if (COVER_EXCLUDE[key] && COVER_EXCLUDE[key].test(lower)) continue;   // "last of us" must not catch Part II, etc.
+        return url;
       }
       return null;
     }
@@ -4781,6 +4787,9 @@
 
         // Step 1c: official PlayStation Store art (sharper than RAWG screenshots). Curated covers keep priority.
         let psPromise = null;
+        let igdbImg = '';
+        if (!foundImg) igdbImg = await igdbCover(rawg ? rawg.name : query);
+        if (igdbImg) foundImg = igdbImg;
         if (!foundImg) {
           const PS_DEADLINE = 2000; // if the Store is slow, RAWG/Wikipedia art is used instead
           psPromise = Promise.race([
@@ -4885,7 +4894,8 @@
             else if (rawgInfo.userRating && rawgInfo.ratingsCount >= 20) bits.push('Utenti ' + rawgInfo.userRating.toFixed(1) + '/5');
             bits.push('dati da RAWG');
           }
-          if (psSource) bits.push('copertina PlayStation Store');
+          if (igdbImg) bits.push('copertina IGDB');
+          else if (psSource) bits.push('copertina PlayStation Store');
           metaEl.textContent = bits.join(' · ');
         }
         // Suggested rating (1-10) from RAWG, only if the field is empty
@@ -5806,6 +5816,23 @@
         const j = await r.json();
         return j && j.found && j.hours > 0 ? j.hours : 0;
       } catch (e) { igdbDown = Date.now() + 10 * 60000; return null; }
+    }
+
+    // IGDB official box art (via the same Edge Function). Returns '' when unavailable.
+    const igdbCoverCache = new Map();
+    async function igdbCover(title) {
+      const k = psNorm(title);
+      if (igdbCoverCache.has(k)) return igdbCoverCache.get(k);
+      if (Date.now() < igdbDown) return '';
+      let url = '';
+      try {
+        const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 4000);
+        const r = await fetch(IGDB_FN + '?q=' + encodeURIComponent(title), { signal: ctl.signal, headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY } });
+        clearTimeout(to);
+        if (r.ok) { const j = await r.json(); url = j && j.cover ? j.cover : ''; }
+      } catch (e) { /* offline / function missing: other sources are used */ }
+      igdbCoverCache.set(k, url);
+      return url;
     }
 
     let estBusy = false;

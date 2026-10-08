@@ -1,7 +1,7 @@
 // Supabase Edge Function: returns the "time to beat" of a PS5 game from IGDB.
 // Secrets required (set them in Supabase > Edge Functions > Secrets, never in the website):
 //   TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
-// Call: GET /functions/v1/igdb-time?q=Astro%20Bot  ->  { found, hours, hastily, completely, count, name, igdbId }
+// Call: GET /functions/v1/igdb-time?q=Astro%20Bot  ->  { found, hours, hastily, completely, count, name, igdbId, cover, coverName }
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -83,12 +83,16 @@ Deno.serve(async (req) => {
     if (q.length < 2) return json({ found: false, error: 'missing_query' }, 400);
 
     const esc = q.replace(/["\\]/g, ' ');
-    const fields = 'fields name,platforms,first_release_date,version_parent,parent_game; limit 12;';
+    const fields = 'fields name,platforms,first_release_date,version_parent,parent_game,cover.image_id; limit 12;';
     // PS5 first, then any platform as a fallback
     let games = await igdb('games', `search "${esc}"; ${fields} where platforms = (${PS5});`);
     if (!games.length) games = await igdb('games', `search "${esc}"; ${fields}`);
     const ranked = rank(q, games).slice(0, 5);
     if (!ranked.length) return json({ found: false });
+    // official box art of the best match (3:4, ~528x748)
+    const cv = ranked.find((g: any) => g.cover && g.cover.image_id);
+    const cover = cv ? `https://images.igdb.com/igdb/image/upload/t_cover_big_2x/${cv.cover.image_id}.jpg` : null;
+    const coverName = cv ? cv.name : null;
 
     // time to beat may sit on the game itself or on its "version parent" (standard edition)
     const ids = new Set<number>();
@@ -113,10 +117,12 @@ Deno.serve(async (req) => {
           count: t.count || 0,
           name: g.name,
           igdbId: g.id,
+          cover,
+          coverName,
         });
       }
     }
-    return json({ found: false, name: ranked[0].name, igdbId: ranked[0].id });
+    return json({ found: false, name: ranked[0].name, igdbId: ranked[0].id, cover, coverName });
   } catch (e) {
     return json({ found: false, error: String((e as Error).message || e) }, 500);
   }
