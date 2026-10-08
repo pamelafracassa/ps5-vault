@@ -4334,7 +4334,7 @@
 
               <div class="game-actions" onclick="event.stopPropagation()">
                 <button class="btn btn-secondary btn-card" onclick="editGame('${game.id}', event)">✎ Modifica</button>
-                <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}', event)" title="Avanza stato rapido">▶ Avanza</button>
+                <button class="btn btn-secondary btn-card" onclick="quickCycleStatus('${game.id}', event)" title="Avanza stato rapido">${nextStatusLabel(game)}</button>
                 <button class="btn-icon more" onclick="openCardMenu('${game.id}', event)" title="Altre azioni" aria-haspopup="true">⋮</button>
               </div>
             </div>
@@ -5690,6 +5690,16 @@
       }
     }
 
+    // Label of the quick-advance button = the status it will set next
+    function nextStatusLabel(game) {
+      switch (game.status) {
+        case 'in_corso': return '✔ Completato';
+        case 'completato': return '💎 Platinato';
+        case 'platinato': return '↺ Backlog';
+        case 'da_iniziare': return '▶ In Corso';
+        default: return '≡ Backlog';    // wishlist moves to Backlog first
+      }
+    }
     function quickCycleStatus(id) {
       if (!requireLogin()) return;
       const game = games.find(g => g.id === id);
